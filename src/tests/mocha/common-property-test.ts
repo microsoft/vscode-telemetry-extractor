@@ -13,7 +13,7 @@ describe.only('GDPR common property extraction', () => {
     const parser = new Parser([path.join(cwd(), sourceDir)], excludeDirs, true, true);
     //@ts-ignore
     const filePaths = parser.findFilesWithCommonProperties(path.join(cwd(), sourceDir));
-    assertHelper.sameValues(filePaths, ['/Users/lramos/vscode-telemetry/src/tests/mocha/resources/common-prop.ts']);
+    assertHelper.sameValues(filePaths, [path.join(cwd(), '/src/tests/mocha/resources/common-prop.ts')]);
   });
 
   it('extract declarations', function () {

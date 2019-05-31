@@ -42,7 +42,7 @@ This will generate output similar to:
 ```bash
 ....running.
 extracting....
-...writing /Users/lramos/vscode-telemetry/declarations-resolved.json
+...writing /Users/lramos/vscode-telemetry-extractor/declarations-resolved.json
 ```
 
 This creates a JSON file in `./declarations-resolved.json`. The JSON is formatted with 4 spaces as indentation by default.
@@ -76,7 +76,7 @@ extracting....
 extracting....
 extracting....
 extracting....
-...writing /Users/lramos/vscode-telemetry/declarations-extensions-resolved.json
+...writing /Users/lramos/vscode-telemetry-extractor/declarations-extensions-resolved.json
 ```
 
 This creates the inventory in `./declarations-extensions-resolved.json`. The JSON is formatted with 4 spaces as indetation by default
