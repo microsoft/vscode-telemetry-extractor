@@ -3,7 +3,7 @@ import { cwd } from 'process';
 import * as assertHelper from './assert-helper';
 import * as path from 'path';
 import * as assert from 'assert';
-import { nameSort } from "./declartion-tests";
+import { nameSort } from "./declaration-tests";
 import { getResolvedDeclaration } from "../../lib/save-declarations";
 import { ParserOptions } from "../../cli-options";
 import { Property } from "../../lib/common-properties";
