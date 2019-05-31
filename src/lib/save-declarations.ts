@@ -20,7 +20,7 @@ function writeToFile(outputDir: string, contents: object, fileName: string, emit
 
 export async function getResolvedDeclaration(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions, emitProgressMessage = true) {
     if (emitProgressMessage) {
-        console.log('extracting....');
+        console.log('...extracting');
     }
     const parser = new Parser(sourceDirs, excludedDirs, options.includeIsMeasurement, options.applyEndpoints);
     let declarations = await parser.extractDeclarations();
