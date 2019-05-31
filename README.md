@@ -1,3 +1,17 @@
+**Note**: This project is in constant devlopment and will continue to change drastically
+
+# Telemetetry Extractor for VS Code and associated source repositories
+
+This tooling allows for the extraction of [GDPR formatted comments](./documentation/code-annotations.md) from the VS Code source repository and
+produces a JSON file containing the telemetry events which are collected.
+
+## Setup
+```bash
+    npm install
+    npm run setup-repos
+    tsc --watch
+```
+For the various supported commands please see [**Using the tool**](./documentation/using-the-tool.md)
 
 # Contributing
 

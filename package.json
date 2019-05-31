@@ -1,0 +1,27 @@
+{
+  "name": "vscode-telemetry",
+  "version": "0.0.1",
+  "description": "Extracts telemetry from VS Code",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha out/tests/mocha/*.js",
+    "setup-repos": "./setup-repositories.sh",
+    "clean": "rm ./declarations-extensions-resolved.json && rm ./declarations-resolved.json",
+    "clean-all": "rm -rf ./src/telemetry-sources && rm ./declarations-extensions-resolved.json && rm ./declarations-resolved.json",
+    "extract-core": "node ./out/cli-extract.js --sourceDir ./src/telemetry-sources/vscode --excludedDirPattern extensions  --outputDir . --applyEndpoints --includeIsMeasurement --patchWebsiteEvents",
+    "extract-extensions": "node ./out/cli-extract-extensions.js --sourceDir ./src/telemetry-sources/ --outputDir . --applyEndpoints --includeIsMeasurement",
+    "extract-all": "npm run-script extract-core && npm run-script extract-extensions"
+  },
+  "author": "lramos15",
+  "license": "MIT",
+  "dependencies": {
+    "command-line-args": "^5.1.1",
+    "vscode-ripgrep": "^1.2.5"
+  },
+  "devDependencies": {
+    "@types/command-line-args": "^5.0.0",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^12.0.2",
+    "mocha": "^6.1.4"
+  }
+}
