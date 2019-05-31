@@ -21,7 +21,7 @@ const optionDefinitions = [
     { name: 'patchDebugEvents', alias: 'p', type: Boolean, defaultValue: false },
     { name: 'patchWebsiteEvents', alias: 'w', type: Boolean, defaultValue: false },
     { name: 'applyEndpoints', alias: 'e', type: Boolean, defaultValue: false},
-    { name: 'includeIsMeasurement', alisa: 'm', type: Boolean, defaultValue: false}
+    { name: 'includeIsMeasurement', alias: 'm', type: Boolean, defaultValue: false}
 ];
 
 export interface ParserOptions {
