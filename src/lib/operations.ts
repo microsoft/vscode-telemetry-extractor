@@ -34,7 +34,7 @@ export function findOrCreate(searchTarget: Events | Fragments, name: string) {
     return found;
 }
 
-export function mergeWildcards(wildcard: any, target: Event | Fragment) {
+export function mergeWildcards(wildcard: any, target: Event | Fragment, applyEndpoints: boolean) {
     let wildCard = target.properties.find((item) => {
         return item instanceof Wildcard;
     }) as Wildcard;
@@ -43,7 +43,11 @@ export function mergeWildcards(wildcard: any, target: Event | Fragment) {
         wildCard = new Wildcard();
         target.properties.push(wildCard);
     }
-    wildCard.entries.push(new WildcardEntry(wildcard[0][keywords.prefix], wildcard[0][keywords.classification]));
+    if (applyEndpoints) {
+        wildCard.entries.push(new WildcardEntry(wildcard[0][keywords.prefix], wildcard[0][keywords.classification], 'none'));
+    } else {
+        wildCard.entries.push(new WildcardEntry(wildcard[0][keywords.prefix], wildcard[0][keywords.classification]));
+    }
 }
 
 export function populateProperties(properties: any, target: Event | Fragment, applyEndpoints = false, includeMeasurements = false) {
@@ -55,7 +59,7 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
             // We consider the property name the inline name so when we resolve we can do prop.Inline for the new properties
             target.properties.push(new Inline(propertyName, currentProperty[keywords.inline]));
         } else if (propertyName === keywords.wildcard) {
-            mergeWildcards(currentProperty, target);
+            mergeWildcards(currentProperty, target, applyEndpoints);
         } else {
             const prop = new Property(propertyName, currentProperty.classification, currentProperty.purpose);
             if (applyEndpoints) {

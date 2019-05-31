@@ -5,7 +5,6 @@ import * as path from 'path';
 import * as assert from 'assert';
 import { Event, Events } from "../../lib/events";
 import { Fragment, Fragments } from "../../lib/fragments";
-//@ts-ignore
 import { getResolvedDeclaration } from '../../lib/save-declarations';
 import { ParserOptions } from "../../cli-options";
 import { Declarations } from "../../lib/declarations";

@@ -31,4 +31,5 @@ export interface IWildcard {
 export interface IWildcardEntry {
     prefix: string;
     classification: {classification: string, purpose: string};
+    endpoint: string | undefined;
 }

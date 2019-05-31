@@ -8,7 +8,7 @@ import { Property } from "../../lib/common-properties";
 const sourceDir = 'src/tests/mocha/resources/';
 const excludeDirs = ['source', 'source-1'];
 
-describe.only('GDPR common property extraction', () => {
+describe('GDPR common property extraction', () => {
   it('find files', function () {
     const parser = new Parser([path.join(cwd(), sourceDir)], excludeDirs, true, true);
     //@ts-ignore

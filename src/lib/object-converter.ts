@@ -2,7 +2,6 @@ import { OutputtedDeclarations } from "./declarations";
 import { Property } from "./common-properties";
 import { Wildcard } from "./events";
 import * as keywords from './keywords';
-import { options } from "../cli-options";
 
 // Converts the declarations array to an object format for easy readability.
 
@@ -22,8 +21,7 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
                     if (found) continue;
                     const newEntry = Object.create(null);
                     newEntry[keywords.prefix] = entry.prefix;
-
-                    if (options.applyEndpoints) {
+                    if (entry.endpoint) {
                         newEntry[keywords.classification] = {classification: entry.classification.classification, purpose: entry.classification.purpose, endPoint: "none"};
                     } else {
                         newEntry[keywords.classification] = entry.classification;

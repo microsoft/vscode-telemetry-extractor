@@ -11,7 +11,7 @@ export class Events implements ITelemetryData {
 
 export class Event implements ITelemetryDataPoint {
     public name: string;
-    // It gets a little more complicated here as events can have includes as well
+    // It gets a little more complicated here as events can have a bunch of different things
     public properties: Array<Property | Include | Inline | Wildcard>;
     constructor (name: string) {
         this.name =  name;
@@ -45,8 +45,10 @@ export class Wildcard implements IWildcard {
 export class WildcardEntry implements IWildcardEntry {
     public prefix: string;
     public classification: {classification: string, purpose: string};
-    constructor (prefix: string, classification: {classification: string, purpose: string}) {
+    public endpoint: string | undefined;
+    constructor (prefix: string, classification: {classification: string, purpose: string}, endPoint?: string | undefined) {
         this.prefix = prefix;
         this.classification = classification;
+        this.endpoint = this.endpoint;
     }
 }
