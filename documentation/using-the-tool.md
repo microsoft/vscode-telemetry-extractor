@@ -121,3 +121,11 @@ add tests to ensure that any code you add doesn't break as well.
 ```bash
     npm run test
 ```
+
+## Updating the repos
+It is more efficient to run `git pull` on each repo to update the repositories rather than cloning them again and therefore a command
+is provided for you to do just that.
+
+```bash
+    npm run update-repos
+```
