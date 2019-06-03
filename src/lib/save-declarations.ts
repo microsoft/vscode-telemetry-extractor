@@ -11,7 +11,7 @@ import { SourceSpec } from '../cli-extract-extensions';
 import { CommonProperties } from './common-properties';
 import { patchDebugEvents } from './debug-patch';
 
-function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
+export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
     const json = JSON.stringify(contents, null, 4);
     const outputFile = path.resolve(outputDir, `${fileName}.json`);
     if (emitProgressMessage) console.log(`...writing ${outputFile}`);
@@ -36,7 +36,6 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
             patchWebsiteEvents(declarations.events);
         }
         const formattedDeclarations = await transformOutput({events: declarations.events, commonProperties: declarations.commonProperties});
-        //const formattedDeclarations = {events: declarations.events, commonProperties: declarations.commonProperties}
         writeToFile(outputDir, formattedDeclarations, 'declarations-resolved', true);
     } catch (error) {
         console.error(`Error: ${error}`);
