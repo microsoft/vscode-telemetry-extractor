@@ -49,6 +49,6 @@ export class WildcardEntry implements IWildcardEntry {
     constructor (prefix: string, classification: {classification: string, purpose: string}, endPoint?: string | undefined) {
         this.prefix = prefix;
         this.classification = classification;
-        this.endpoint = this.endpoint;
+        this.endpoint = endPoint;
     }
 }
