@@ -6,7 +6,7 @@ This tooling allows for the extraction of [GDPR formatted comments](./documentat
 produces a JSON file containing the telemetry events which are collected.
 
 ## Prerequisites
-* If running windows please read [this](./documentation/windows.md)
+* If running Windows and not utilizing WSL please read [this](./documentation/windows.md)
 * Git installed and in your path
 * Typescript (3.5+) installed and in your path
 * Node LTS (10.15.3) installed and in your path 
