@@ -5,11 +5,17 @@
 This tooling allows for the extraction of [GDPR formatted comments](./documentation/code-annotations.md) from the VS Code source repository and
 produces a JSON file containing the telemetry events which are collected.
 
+## Prerequisites
+* If running windows please read [this](./documentation/windows.md)
+* Git installed and in your path
+* Typescript (3.5+) installed and in your path
+* Node LTS (10.15.3) installed and in your path 
+
 ## Setup
 ```bash
     npm install
     npm run setup-repos
-    tsc --watch
+    tsc
 ```
 For the various supported commands please see [**Using the tool**](./documentation/using-the-tool.md)
 
