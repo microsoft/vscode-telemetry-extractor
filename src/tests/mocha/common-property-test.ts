@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { Parser } from "../../lib/parser";
 import * as assert from 'assert';
 import * as assertHelper from './assert-helper';

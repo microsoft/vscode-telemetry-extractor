@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { IProperty } from "./telemetry-interfaces";
 
 export class CommonProperties {

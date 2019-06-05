@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { Events, Event } from "./events";
 import { Property } from "./common-properties";
 

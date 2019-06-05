@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { Parser } from "../../lib/parser";
 import { Property, CommonProperties } from '../../lib/common-properties'; 
 import { cwd } from 'process';

@@ -1,4 +1,5 @@
-
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { sendEvent, EventData } from "./lib/telemetry";
 import { createF1, createF2 } from './folderA/fileA1';
 import { createF6 } from './folderB/fileB2'

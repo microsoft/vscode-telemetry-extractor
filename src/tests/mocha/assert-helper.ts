@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import * as assert from 'assert';
 
 export function sameValues(array1: string[], array2: string[]) {

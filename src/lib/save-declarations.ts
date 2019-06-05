@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import * as path from 'path';
 import { Parser } from './parser';
 import { ParserOptions } from '../cli-options';
@@ -5,8 +7,7 @@ import * as fileWriter from './file-writer';
 import { resolveDeclarations, Declarations, OutputtedDeclarations } from './declarations';
 import { transformOutput } from './object-converter';
 import { patchWebsiteEvents } from './website-patch';
-import { Event, Events } from './events';
-import { Fragment, Fragments } from './fragments';
+import { Events } from './events';
 import { SourceSpec } from '../cli-extract-extensions';
 import { CommonProperties } from './common-properties';
 import { patchDebugEvents } from './debug-patch';

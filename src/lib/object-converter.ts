@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { OutputtedDeclarations } from "./declarations";
 import { Property } from "./common-properties";
 import { Wildcard } from "./events";

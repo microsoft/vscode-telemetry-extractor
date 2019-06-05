@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import commandLineArgs from 'command-line-args';
 import * as path from 'path';
 

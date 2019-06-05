@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { Fragments } from "./fragments";
 import { Events, Include, Inline } from "./events";
 import { CommonProperties, Property } from "./common-properties";

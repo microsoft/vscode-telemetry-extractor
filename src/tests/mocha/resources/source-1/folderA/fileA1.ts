@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { EventData } from '../lib/telemetry';
 
 /* __GDPR__FRAGMENT__

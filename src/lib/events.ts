@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { IProperty, IInclude, ITelemetryDataPoint, ITelemetryData, IInline, IWildcard, IWildcardEntry } from './telemetry-interfaces';
 import { Property } from './common-properties';
 

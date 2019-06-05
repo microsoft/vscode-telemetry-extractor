@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import * as fs from 'fs';
 // Compares the GDPR json file and my JSON file to look for discrepencies
 function compare() {

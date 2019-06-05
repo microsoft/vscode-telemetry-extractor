@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 /* __GDPR__FRAGMENT__
    "F1" : {
      "property_F1P1": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },

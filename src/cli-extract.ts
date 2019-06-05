@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { saveDeclarations } from "./lib/save-declarations";
 import { options, ParserOptions } from "./cli-options";
 

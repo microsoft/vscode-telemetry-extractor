@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { options } from './cli-options';
 import { ParserOptions } from './cli-options';
 import * as path from 'path';
