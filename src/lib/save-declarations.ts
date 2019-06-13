@@ -11,6 +11,7 @@ import { Events } from './events';
 import { SourceSpec } from '../cli-extract-extensions';
 import { CommonProperties } from './common-properties';
 import { patchDebugEvents } from './debug-patch';
+import { TsParser } from './ts-parser';
 
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
     const json = JSON.stringify(contents, null, 4);
@@ -36,7 +37,12 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
         if (options.addWebsiteEventsWorkaround) {
             patchWebsiteEvents(declarations.events);
         }
-        const formattedDeclarations = await transformOutput({events: declarations.events, commonProperties: declarations.commonProperties});
+        const formattedDeclarations: any = await transformOutput({events: declarations.events, commonProperties: declarations.commonProperties});
+        // We parse the events declared with types and then overwrite
+        const typescriptDeclarations = new TsParser(sourceDirs, excludedDirs, options.includeIsMeasurement, options.applyEndpoints).parseFiles();
+        for (const dec in typescriptDeclarations) {
+            formattedDeclarations.events[dec] = typescriptDeclarations[dec];
+        }
         writeToFile(outputDir, formattedDeclarations, 'declarations-resolved', true);
     } catch (error) {
         console.error(`Error: ${error}`);
