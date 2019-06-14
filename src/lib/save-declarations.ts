@@ -52,13 +52,21 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
 export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>, outputDir: string) {
     try {
         const allDeclarations: OutputtedDeclarations = {events: new Events(), commonProperties: new CommonProperties()};
+        const allTypeScriptDeclarations = Object.create(null);
         for (const spec of sourceSpecs) {
             const declarations = await getResolvedDeclaration(spec.sourceDirs, spec.excludedDirs, spec.parserOptions);
+            let typescriptDeclarations = new TsParser(spec.sourceDirs, spec.excludedDirs, spec.parserOptions.includeIsMeasurement, spec.parserOptions.applyEndpoints).parseFiles();
             if (spec.parserOptions.eventPrefix != '') {
                 declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
                     event.name = spec.parserOptions.eventPrefix + event.name;
                     return event;
                 });
+                const modifiedDeclartions = Object.create(null);
+                // Modify the object keys to be prefixed with the specified prefix
+                for (const key in typescriptDeclarations) {
+                    modifiedDeclartions[spec.parserOptions.eventPrefix + key] = typescriptDeclarations[key];
+                }
+                typescriptDeclarations = modifiedDeclartions;
             }
             if (spec.parserOptions.addDebugEventsWorkaround) {
                 patchDebugEvents(declarations.events, spec.parserOptions.eventPrefix);
@@ -67,8 +75,12 @@ export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>, 
             // Throwing out fragments as they have already been used to resolve that extensions declarations
             allDeclarations.commonProperties.properties = allDeclarations.commonProperties.properties.concat(declarations.commonProperties.properties);
             allDeclarations.events.dataPoints = allDeclarations.events.dataPoints.concat(declarations.events.dataPoints);
+            Object.assign(allTypeScriptDeclarations, typescriptDeclarations);
         }
-        const formattedDeclarations = await transformOutput(allDeclarations);
+        const formattedDeclarations: any = await transformOutput(allDeclarations);
+        for (const dec in allTypeScriptDeclarations) {
+            formattedDeclarations.events[dec] = allTypeScriptDeclarations[dec];
+        }
         writeToFile(outputDir, formattedDeclarations, 'declarations-extensions-resolved', true);
     } catch (error) {
         console.error(`Error: ${error}`);
