@@ -1,6 +1,6 @@
 # Annotating your Code
 
-*NOTE*: If using Typescript we recommend annotating your telemetry events with typings as shown [here](typescript-code-annotations.md)
+**NOTE**: If using Typescript we recommend annotating your telemetry events with typings as shown [here](typescript-code-annotations.md)
 
 All telemetry events we send need to be described. For each property of each event we need to know what kind of data they contain and for what reason we collect the data.
 
