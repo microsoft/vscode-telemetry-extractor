@@ -2,7 +2,7 @@
 
 # Telemetetry Extractor for VS Code and associated source repositories
 
-This tooling allows for the extraction of [GDPR formatted comments](./documentation/code-annotations.md) from the VS Code source repository and
+This tooling allows for the extraction of [GDPR formatted comments](./documentation/comment-code-annotations.md) from the VS Code source repository and
 produces a JSON file containing the telemetry events which are collected.
 
 ## Prerequisites
