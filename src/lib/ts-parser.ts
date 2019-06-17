@@ -1,5 +1,8 @@
 import { Project, ScriptTarget, SyntaxKind, Symbol, Node, CallExpression } from "ts-morph";
 import {cwd} from 'process';
+import * as cp from 'child_process';
+import * as path from 'path';
+import { rgPath } from "vscode-ripgrep";
 
 interface IGDPRProperty {
     propName: string;
@@ -99,14 +102,37 @@ export class TsParser {
         this.project = new Project({
             compilerOptions: {
                 target: ScriptTarget.ES5
-            }
+            },
+            tsConfigFilePath: '/Users/lramos/vscode-telemetry-extractor/src/telemetry-sources/vscode/src/tsconfig.json',
+            addFilesFromTsConfig: false
         });
-        let excludedDirsGlob = this.excludedDirs.map((d) => `!**/${d}/**`);
-        // Adds all the .TS files from every source dir
+        const fileGlobs: string[] = [];
+        const workingDir = path.join(cwd(), 'src/telemetry-sources');
         this.sourceDirs.forEach((dir) => {
-            const currentGlob = [`${dir}/**/*.ts`].concat(excludedDirsGlob);
-            this.project.addExistingSourceFiles(currentGlob);
+            dir = dir.replace(workingDir, '');
+            fileGlobs.push(`'${dir}/**/*.ts'`);
         });
+        // Excluded added lasts because order determines what takes effect
+        this.excludedDirs.forEach((dir) => {
+            dir = dir.replace(workingDir, '');
+            fileGlobs.push(`'!**/${dir}/**'`);
+        });
+        let rg_glob = '';
+        for (const fg of fileGlobs) {
+            rg_glob += ` --glob ${fg}`;
+        }
+        const cmd = `${rgPath} --files-with-matches publicLog2 ${rg_glob} --no-ignore`;
+        try {
+            const retrieved_paths = cp.execSync(cmd, {encoding: 'ascii', cwd: workingDir});
+            // Split the paths into an array
+            retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
+                f = path.join('src/telemetry-sources', f)
+                this.project.addExistingSourceFileIfExists(f);
+                return f;
+            });
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     public parseFiles() {
@@ -123,7 +149,7 @@ export class TsParser {
                 if (typeArgs.length != 2) {
                     throw new Error(`Missing generic arguments on public log call ${pl}`);
                 }
-                // Create an event from the name of the first type passed in because the event type
+                // Create an event from the name of the first argument passed in
                 const event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length-1);
                 const created_event = new GDPREvent(event_name);
                 // We want the second one because public log is in the form <Event, Classification> and we care about the classification
