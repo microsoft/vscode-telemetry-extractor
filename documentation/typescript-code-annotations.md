@@ -170,6 +170,8 @@ The process of defining and sending the event are the same as the previous two
         oldKeyMaps: 'abcd',
         confirmed: true
     };
+
+    publicLog<DisableOtherKeymaps, DisableOtherKeymapsClassification>('disableOtherKeymaps', disableKeymapsEvent);
 ```
 
 ## Currently Not Supported
