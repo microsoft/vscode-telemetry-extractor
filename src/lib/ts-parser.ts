@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { Project, ScriptTarget, SyntaxKind, Symbol, Node, CallExpression } from "ts-morph";
 import {cwd} from 'process';
 import * as cp from 'child_process';
