@@ -39,7 +39,10 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
         }
         const formattedDeclarations: any = await transformOutput({events: declarations.events, commonProperties: declarations.commonProperties});
         // We parse the events declared with types and then overwrite
-        const typescriptDeclarations = new TsParser(sourceDirs, excludedDirs, options.includeIsMeasurement, options.applyEndpoints).parseFiles();
+        const typescriptDeclarations = Object.create(null);
+        sourceDirs.forEach((dir) => {
+            Object.assign(typescriptDeclarations, new TsParser(dir, excludedDirs, options.includeIsMeasurement, options.applyEndpoints).parseFiles());
+        });
         for (const dec in typescriptDeclarations) {
             formattedDeclarations.events[dec] = typescriptDeclarations[dec];
         }
@@ -55,7 +58,11 @@ export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>, 
         const allTypeScriptDeclarations = Object.create(null);
         for (const spec of sourceSpecs) {
             const declarations = await getResolvedDeclaration(spec.sourceDirs, spec.excludedDirs, spec.parserOptions);
-            let typescriptDeclarations = new TsParser(spec.sourceDirs, spec.excludedDirs, spec.parserOptions.includeIsMeasurement, spec.parserOptions.applyEndpoints).parseFiles();
+            let typescriptDeclarations = Object.create(null);
+            // The parser does not know how to handle multiple source directories due to different TS configs, so we manually have to parse each source dir
+            spec.sourceDirs.forEach((dir) => {
+               Object.assign(typescriptDeclarations, new TsParser(dir, spec.excludedDirs, spec.parserOptions.includeIsMeasurement, spec.parserOptions.applyEndpoints).parseFiles()); 
+            });
             if (spec.parserOptions.eventPrefix != '') {
                 declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
                     event.name = spec.parserOptions.eventPrefix + event.name;

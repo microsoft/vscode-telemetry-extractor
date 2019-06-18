@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { Project, ScriptTarget, SyntaxKind, Symbol, Node, CallExpression } from "ts-morph";
-import {cwd} from 'process';
+import { cwd } from 'process';
+import * as fs from 'fs';
 import * as cp from 'child_process';
 import * as path from 'path';
 import { rgPath } from "vscode-ripgrep";
@@ -44,8 +45,6 @@ class NodeVisitor {
         const type = currentNode.getTypeAtLocation(this.pl_node);
         if (type.isStringLiteral() || type.isBooleanLiteral()) {
             if (previousNode) {
-                // console.log('Prop name: ' + this.prop_name);
-                // console.log(previousNode.getEscapedName())
                 // This means it is an inline because we had to recurse deeper than the first level to find the properties
                 if (this.prop_name !== previousNode.getEscapedName() && !this.prop_name.includes(`.${previousNode.getEscapedName()}`)) {
                     this.prop_name = `${this.prop_name}.${previousNode.getEscapedName()}`;
@@ -91,29 +90,33 @@ class NodeVisitor {
 }
 
 export class TsParser {
-    private sourceDirs: string[];
+    private sourceDir: string;
     private excludedDirs: string[];
     private includeIsMeasurement: boolean;
     private applyEndpoints: boolean;
     private project: Project;
-    constructor(sourceDirs: string[], excludedDirs: string[], includeIsMeasurement: boolean, applyEndpoints: boolean) {
-        this.sourceDirs = sourceDirs;
+    constructor(sourceDir: string, excludedDirs: string[], includeIsMeasurement: boolean, applyEndpoints: boolean) {
+        this.sourceDir = sourceDir;
         this.excludedDirs = excludedDirs;
         this.includeIsMeasurement = includeIsMeasurement;
         this.applyEndpoints = applyEndpoints;
-        this.project = new Project({
-            compilerOptions: {
-                target: ScriptTarget.ES5
-            },
-            tsConfigFilePath: '/Users/lramos/vscode-telemetry-extractor/src/telemetry-sources/vscode/src/tsconfig.json',
-            addFilesFromTsConfig: false
-        });
+        // We search for a TS config as that allows the language service to handle weird imports
+        if (fs.existsSync(path.join(this.sourceDir, 'src/tsconfig.json'))) {
+            this.project = new Project({
+                tsConfigFilePath: path.join(this.sourceDir, 'src/tsconfig.json'),
+                addFilesFromTsConfig: false
+            });
+        } else if (fs.existsSync(path.join(this.sourceDir, 'tsconfig.json'))) {
+            this.project = new Project({
+                tsConfigFilePath: path.join(this.sourceDir, 'tsconfig.json'),
+                addFilesFromTsConfig: false
+            });
+        } else {
+            this.project = new Project({});
+        }
         const fileGlobs: string[] = [];
         const workingDir = path.join(cwd(), 'src/telemetry-sources');
-        this.sourceDirs.forEach((dir) => {
-            dir = dir.replace(workingDir, '');
-            fileGlobs.push(`'${dir}/**/*.ts'`);
-        });
+        fileGlobs.push(`'${this.sourceDir.replace(workingDir, '')}/**/*.ts'`);
         // Excluded added lasts because order determines what takes effect
         this.excludedDirs.forEach((dir) => {
             dir = dir.replace(workingDir, '');
@@ -132,9 +135,8 @@ export class TsParser {
                 this.project.addExistingSourceFileIfExists(f);
                 return f;
             });
-        } catch (err) {
-            console.error(err);
-        }
+        // Empty catch because this fails when there are no typescript annotations which causes weird error messages
+        } catch {}
     }
 
     public parseFiles() {
