@@ -17,6 +17,7 @@ function resolveDirectories(options: commandLineArgs.CommandLineOptions): comman
 }
 
 const optionDefinitions = [
+    { name: 'extractionMethod', type: String},
     { name: 'sourceDir', alias: 's', type: String, multiple: true},
     { name: 'excludedDirPattern', alias: 'x', type: String, multiple: true, defaultValue: [] },
     { name: 'outputDir', alias: 'o', type: String },

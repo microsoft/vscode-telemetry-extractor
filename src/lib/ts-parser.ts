@@ -42,7 +42,12 @@ class NodeVisitor {
     }
 
     private visitNode(currentNode: Symbol, previousNode?: Symbol) {
-        const type = currentNode.getTypeAtLocation(this.pl_node);
+        let type = currentNode.getTypeAtLocation(this.pl_node);
+        // If we mark a property as optional then it is nullable, however we want all properties 
+        // So we want its non nullable type tl;dr this chops off the | undefined
+        if (type.isNullable()) {
+            type = type.getNonNullableType();
+        }
         if (type.isStringLiteral() || type.isBooleanLiteral()) {
             if (previousNode) {
                 // This means it is an inline because we had to recurse deeper than the first level to find the properties
