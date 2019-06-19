@@ -65,7 +65,7 @@ class NodeVisitor {
             if (type.isStringLiteral()) {
                 this.resolved_property[currentNode.getEscapedName()] = type.getText().substring(1, type.getText().length - 1);
             } else {
-                this.resolved_property[currentNode.getEscapedName()] = type.getText();
+                this.resolved_property[currentNode.getEscapedName()] = type.getText() === 'true';
             }
             return;
         }
