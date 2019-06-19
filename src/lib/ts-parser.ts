@@ -14,7 +14,7 @@ interface IGDPRProperty {
     endpoint?: string;
     isMeasurement?: boolean;
 }
-class GDPREvent { 
+class GDPREvent {
     public eventName: string;
     public properties: Array<IGDPRProperty>;
     constructor(name: string) {
@@ -33,8 +33,8 @@ class NodeVisitor {
     private applyEndpoints: boolean;
     public properties: Array<any> = [];
     private resolved_property: any = Object.create(null);
-    constructor (callexpress_node: Node, prop_name: string, includeIsMeasurement: boolean, applyEndpoints: boolean) {
-        this.pl_node = callexpress_node; 
+    constructor(callexpress_node: Node, prop_name: string, includeIsMeasurement: boolean, applyEndpoints: boolean) {
+        this.pl_node = callexpress_node;
         this.prop_name = prop_name;
         this.original_prop_name = prop_name;
         this.includeIsMeasurement = includeIsMeasurement;
@@ -64,7 +64,7 @@ class NodeVisitor {
             // If it's a string we strip the quotes
             if (type.isStringLiteral()) {
                 this.resolved_property[currentNode.getEscapedName()] = type.getText().substring(1, type.getText().length - 1);
-            }else {
+            } else {
                 this.resolved_property[currentNode.getEscapedName()] = type.getText();
             }
             return;
@@ -133,24 +133,24 @@ export class TsParser {
         }
         const cmd = `${rgPath} --files-with-matches publicLog2 ${rg_glob} --no-ignore`;
         try {
-            const retrieved_paths = cp.execSync(cmd, {encoding: 'ascii', cwd: workingDir});
+            const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii', cwd: workingDir });
             // Split the paths into an array
             retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
                 f = path.join('src/telemetry-sources', f)
                 this.project.addExistingSourceFileIfExists(f);
                 return f;
             });
-        // Empty catch because this fails when there are no typescript annotations which causes weird error messages
-        } catch {}
+            // Empty catch because this fails when there are no typescript annotations which causes weird error messages
+        } catch { }
     }
 
     public parseFiles() {
         let publicLogUse: Array<CallExpression> = [];
         this.project.getSourceFiles().forEach((source) => {
-            const descendants = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getText().includes('publicLog2'));
+            const descendants = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLog2'));
             publicLogUse = descendants.concat(publicLogUse);
         });
-        
+
         const events = Object.create(null);
         publicLogUse.forEach((pl) => {
             try {
@@ -159,7 +159,7 @@ export class TsParser {
                     throw new Error(`Missing generic arguments on public log call ${pl}`);
                 }
                 // Create an event from the name of the first argument passed in
-                const event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length-1);
+                const event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
                 const created_event = new GDPREvent(event_name);
                 // We want the second one because public log is in the form <Event, Classification> and we care about the classification
                 const type_properties = typeArgs[1].getType().getProperties();
@@ -173,7 +173,10 @@ export class TsParser {
                     Object.assign(events[event_name], prop);
                 });
             } catch (err) {
-                //console.error(err);
+                // If the publicLog call isn't generic that means we're just sending an event name with no classifications
+                // that are unique to that event (it just has common properties)
+                const event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
+                events[event_name] = {};
             }
         });
         return events;
