@@ -158,6 +158,9 @@ export class TsParser {
                 if (typeArgs.length != 2) {
                     throw new Error(`Missing generic arguments on public log call ${pl}`);
                 }
+                if (pl.getArguments()[0].getText() === "eventName") {
+                    return;
+                }
                 // Create an event from the name of the first argument passed in
                 const event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
                 const created_event = new GDPREvent(event_name);
@@ -173,6 +176,9 @@ export class TsParser {
                     Object.assign(events[event_name], prop);
                 });
             } catch (err) {
+                if (pl.getArguments()[0].getText() === "eventName") {
+                    return;
+                }
                 // If the publicLog call isn't generic that means we're just sending an event name with no classifications
                 // that are unique to that event (it just has common properties)
                 const event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
