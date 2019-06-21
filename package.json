@@ -5,7 +5,7 @@
   "main": "out/extractor.js",
   "scripts": {
     "test": "mocha out/tests/mocha/*.js",
-    "setup-repos": "./setup-repositories.sh",
+    "setup-repos": "node ./out/setup-repos.js",
     "update-repos": "./update-repositories.sh",
     "clean": "rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
     "clean-all": "rm -rf ./src/telemetry-sources && rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
