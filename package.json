@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha out/tests/mocha/*.js",
     "setup-repos": "node ./out/setup-repos.js",
-    "update-repos": "./update-repositories.sh",
+    "update-repos": "node ./out/update-repos.js",
     "clean": "rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
     "clean-all": "rm -rf ./src/telemetry-sources && rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
     "extract-core": "node ./out/cli-extract.js --sourceDir ./src/telemetry-sources/vscode --excludedDirPattern extensions  --outputDir . --applyEndpoints --includeIsMeasurement --patchWebsiteEvents",
