@@ -14,7 +14,7 @@ import { patchDebugEvents } from './debug-patch';
 import { TsParser } from './ts-parser';
 
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
-    const json = JSON.stringify(contents, null, 4);
+    const json = JSON.stringify(contents);
     const outputFile = path.resolve(outputDir, `${fileName}.json`);
     if (emitProgressMessage) console.log(`...writing ${outputFile}`);
     return fileWriter.writeFile(outputFile, json);
@@ -37,7 +37,7 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
         if (options.addWebsiteEventsWorkaround) {
             patchWebsiteEvents(declarations.events);
         }
-        const formattedDeclarations: any = await transformOutput({events: declarations.events, commonProperties: declarations.commonProperties});
+        const formattedDeclarations: any = await transformOutput({ events: declarations.events, commonProperties: declarations.commonProperties });
         // We parse the events declared with types and then overwrite
         const typescriptDeclarations = Object.create(null);
         sourceDirs.forEach((dir) => {
@@ -54,14 +54,14 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
 
 export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>, outputDir: string) {
     try {
-        const allDeclarations: OutputtedDeclarations = {events: new Events(), commonProperties: new CommonProperties()};
+        const allDeclarations: OutputtedDeclarations = { events: new Events(), commonProperties: new CommonProperties() };
         const allTypeScriptDeclarations = Object.create(null);
         for (const spec of sourceSpecs) {
             const declarations = await getResolvedDeclaration(spec.sourceDirs, spec.excludedDirs, spec.parserOptions);
             let typescriptDeclarations = Object.create(null);
             // The parser does not know how to handle multiple source directories due to different TS configs, so we manually have to parse each source dir
             spec.sourceDirs.forEach((dir) => {
-               Object.assign(typescriptDeclarations, new TsParser(dir, spec.excludedDirs, spec.parserOptions.includeIsMeasurement, spec.parserOptions.applyEndpoints).parseFiles()); 
+                Object.assign(typescriptDeclarations, new TsParser(dir, spec.excludedDirs, spec.parserOptions.includeIsMeasurement, spec.parserOptions.applyEndpoints).parseFiles());
             });
             if (spec.parserOptions.eventPrefix != '') {
                 declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
