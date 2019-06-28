@@ -2,6 +2,8 @@ cd src
 mkdir telemetry-sources
 cd telemetry-sources
 
+git config --system core.longpaths true
+
 git clone --depth 1 https://github.com/Microsoft/vscode-extension-telemetry.git
 git clone --depth 1 https://github.com/Microsoft/vscode-chrome-debug-core.git
 git clone --depth 1 https://github.com/Microsoft/vscode-chrome-debug.git
