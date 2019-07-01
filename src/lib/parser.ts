@@ -17,7 +17,7 @@ export class Parser {
     private includeIsMeasurement: boolean;
     private applyEndpoints: boolean;
 
-    constructor(sourceDirs: string[], excludedDirs: string[], includeIsMeasurement: boolean, applyEndpoints: boolean){
+    constructor(sourceDirs: string[], excludedDirs: string[], includeIsMeasurement: boolean, applyEndpoints: boolean) {
         this.sourceDirs = sourceDirs;
         this.excludedDirs = excludedDirs;
         this.includeIsMeasurement = includeIsMeasurement;
@@ -28,13 +28,13 @@ export class Parser {
         while (dir.startsWith('/')) {
             dir = dir.substr(1);
         }
-        return `--glob "!${dir}/**" `;
+        return `--glob "!**/${dir}/**" `;
     }
 
     private extractComments(absoluteFilePaths: string[], commentMatcher: RegExp, collector: Function) {
         absoluteFilePaths.forEach(absoluteFilePath => {
             if (absoluteFilePath) {
-                const fileContents = fs.readFileSync (absoluteFilePath);
+                const fileContents = fs.readFileSync(absoluteFilePath);
                 let match;
                 while (match = commentMatcher.exec(fileContents.toString())) {
                     collector(absoluteFilePath, match);
@@ -43,7 +43,7 @@ export class Parser {
         });
 
     }
-    
+
     // Converts relative paths to absolute utilizing the CWD
     private asAbsoluteFilePaths(relativeFilePaths: string[]) {
         return relativeFilePaths.map(r => path.resolve(r));
@@ -147,7 +147,7 @@ export class Parser {
         const cmd = `${rgPath} --files-with-matches --glob "*.ts" ${exclusions} --regexp "${ripgrepPattern}" -- ${sourceDir}`;
         try {
             let filePaths = cp.execSync(cmd, { encoding: 'ascii', cwd: `${sourceDir}` });
-            return filePaths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0);  
+            return filePaths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0);
         } catch (err) {
             // ripgrep's return code != 0 if there are no matches
             return [];
@@ -158,16 +158,16 @@ export class Parser {
         const fragments = this.findFragments(sourceDir);
         const events = this.findEvents(sourceDir);
         const commonProperties = this.findCommonProperties(sourceDir);
-        return {fragments: fragments, events: events, commonProperties: commonProperties};
+        return { fragments: fragments, events: events, commonProperties: commonProperties };
     }
 
     public extractDeclarations(): Promise<Declarations> {
         return new Promise((resolve, reject) => {
             // Find all the properties for all files
-            const promises  = this.sourceDirs.map(sd => this.parse(sd));
+            const promises = this.sourceDirs.map(sd => this.parse(sd));
             // Now we must merge them into one superset of all declarations
             Promise.all(promises).then(parseResult => {
-                const declarations = {fragments: new Fragments(), events: new Events(), commonProperties: new CommonProperties()};
+                const declarations = { fragments: new Fragments(), events: new Events(), commonProperties: new CommonProperties() };
                 for (const currentResult of parseResult) {
                     merge(declarations.fragments, currentResult.fragments);
                     merge(declarations.events, currentResult.events);
