@@ -171,7 +171,10 @@ export class TsParser {
                     const node_visitor = new NodeVisitor(pl, propName, this.includeIsMeasurement, this.applyEndpoints);
                     created_event.properties = created_event.properties.concat(node_visitor.resolveProperties(prop));
                 });
-                events[event_name] = Object.create(null);
+                // We don't want to overwrite an event if we have already defined it, we just want to add to it
+                if (!events[event_name]) {
+                    events[event_name] = Object.create(null);
+                }
                 created_event.properties.forEach((prop) => {
                     Object.assign(events[event_name], prop);
                 });
