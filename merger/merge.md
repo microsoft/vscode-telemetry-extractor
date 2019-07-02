@@ -36,8 +36,8 @@ Your files will now be merge into one .json file in the form of:
                     "classification": "CLASSIFICATION",
                     "purpose": "PURPOSE"
                 }
-        }
-    },
+            }
+        },
         "commonProperties": {
             "propertyName": {
                 "classification": "CLASSIFICATION",
