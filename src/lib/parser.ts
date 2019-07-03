@@ -28,7 +28,7 @@ export class Parser {
         while (dir.startsWith('/')) {
             dir = dir.substr(1);
         }
-        return `--glob "!**/${dir}/**" `;
+        return `--glob "!${dir}/**" `;
     }
 
     private extractComments(absoluteFilePaths: string[], commentMatcher: RegExp, collector: Function) {

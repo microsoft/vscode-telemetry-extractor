@@ -4,7 +4,7 @@ import { saveDeclarations } from "./lib/save-declarations";
 import { options, ParserOptions } from "./cli-options";
 
 const parserOptions: ParserOptions = {
-    eventPrefix: '',
+    eventPrefix: options.eventPrefix,
     addDebugEventsWorkaround: options.patchDebugEvents,
     addWebsiteEventsWorkaround: options.patchWebsiteEvents,
     includeIsMeasurement: options.includeIsMeasurement,

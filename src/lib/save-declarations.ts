@@ -33,16 +33,28 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
 export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions, outputDir: string) {
     try {
         const declarations = await getResolvedDeclaration(sourceDirs, excludedDirs, options);
+        // We parse the events declared with types and then overwrite
+        let typescriptDeclarations = Object.create(null);
+        sourceDirs.forEach((dir) => {
+            Object.assign(typescriptDeclarations, new TsParser(dir, excludedDirs, options.includeIsMeasurement, options.applyEndpoints).parseFiles());
+        });
+        if (options.eventPrefix != '') {
+            declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
+                event.name = options.eventPrefix + event.name;
+                return event;
+            });
+            const modifiedDeclartions = Object.create(null);
+            // Modify the object keys to be prefixed with the specified prefix
+            for (const key in typescriptDeclarations) {
+                modifiedDeclartions[options.eventPrefix + key] = typescriptDeclarations[key];
+            }
+            typescriptDeclarations = modifiedDeclartions;
+        }
         // We will just apply the website events after the resolve process since they're already resolved
         if (options.addWebsiteEventsWorkaround) {
             patchWebsiteEvents(declarations.events);
         }
         const formattedDeclarations: any = await transformOutput({ events: declarations.events, commonProperties: declarations.commonProperties });
-        // We parse the events declared with types and then overwrite
-        const typescriptDeclarations = Object.create(null);
-        sourceDirs.forEach((dir) => {
-            Object.assign(typescriptDeclarations, new TsParser(dir, excludedDirs, options.includeIsMeasurement, options.applyEndpoints).parseFiles());
-        });
         for (const dec in typescriptDeclarations) {
             formattedDeclarations.events[dec] = typescriptDeclarations[dec];
         }

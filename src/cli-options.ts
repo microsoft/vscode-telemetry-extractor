@@ -21,6 +21,7 @@ const optionDefinitions = [
     { name: 'sourceDir', alias: 's', type: String, multiple: true},
     { name: 'excludedDirPattern', alias: 'x', type: String, multiple: true, defaultValue: [] },
     { name: 'outputDir', alias: 'o', type: String },
+    { name: 'eventPrefix', type: String, defaultValue: ''},
     { name: 'patchDebugEvents', alias: 'p', type: Boolean, defaultValue: false },
     { name: 'patchWebsiteEvents', alias: 'w', type: Boolean, defaultValue: false },
     { name: 'applyEndpoints', alias: 'e', type: Boolean, defaultValue: false},
