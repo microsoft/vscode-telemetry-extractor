@@ -13,14 +13,12 @@ if (options.help || !(options.sourceDir && options.outputDir)) {
 } else {
     const extractionMethod = (options.extractionMethod as string).toLowerCase();
     switch (extractionMethod) {
-        case ExtractionMethods.Core:
-            require('./cli-extract');
-            break;
         case ExtractionMethods.Extensions:
             require('./cli-extract-extensions');
             break;
+        case ExtractionMethods.Core:
         default:
-            console.error('ERROR: Unknown extraction method, valid methods are core or extensions')
+            require('./cli-extract');
             break;
     }
 }
