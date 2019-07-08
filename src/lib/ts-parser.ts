@@ -51,8 +51,8 @@ class NodeVisitor {
         if (type.isStringLiteral() || type.isBooleanLiteral()) {
             if (previousNode) {
                 // This means it is an inline because we had to recurse deeper than the first level to find the properties
-                if (this.prop_name !== previousNode.getEscapedName() && !this.prop_name.includes(`.${previousNode.getEscapedName()}`)) {
-                    this.prop_name = `${this.prop_name}.${previousNode.getEscapedName()}`;
+                if (this.prop_name !== previousNode.getEscapedName().toLowerCase() && !this.prop_name.includes(`.${previousNode.getEscapedName().toLowerCase()}`)) {
+                    this.prop_name = `${this.prop_name}.${previousNode.getEscapedName().toLowerCase()}`;
                     this.inline = true;
                 }
             }
@@ -63,9 +63,9 @@ class NodeVisitor {
 
             // If it's a string we strip the quotes
             if (type.isStringLiteral()) {
-                this.resolved_property[currentNode.getEscapedName()] = type.getText().substring(1, type.getText().length - 1);
+                this.resolved_property[currentNode.getEscapedName().toLowerCase()] = type.getText().substring(1, type.getText().length - 1);
             } else {
-                this.resolved_property[currentNode.getEscapedName()] = type.getText() === 'true';
+                this.resolved_property[currentNode.getEscapedName().toLowerCase()] = type.getText() === 'true';
             }
             return;
         }
@@ -167,7 +167,7 @@ export class TsParser {
                 // We want the second one because public log is in the form <Event, Classification> and we care about the classification
                 const type_properties = typeArgs[1].getType().getProperties();
                 type_properties.forEach((prop) => {
-                    const propName = prop.getEscapedName();
+                    const propName = prop.getEscapedName().toLowerCase();
                     const node_visitor = new NodeVisitor(pl, propName, this.includeIsMeasurement, this.applyEndpoints);
                     created_event.properties = created_event.properties.concat(node_visitor.resolveProperties(prop));
                 });
