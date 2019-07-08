@@ -4,14 +4,12 @@ This tooling allows for the extraction of [GDPR formatted comments](./documentat
 produces a JSON file containing the telemetry events which are collected.
 
 ## Prerequisites
-* Git installed and in your path
 * Typescript (3.5+) installed and in your path
 * Node LTS (10.15.3) installed and in your path 
 
 ## Setup
 ```bash
     npm install
-    npm run setup-repos
     tsc
 ```
 For the various supported commands please see [**Using the tool**](./documentation/using-the-tool.md)
