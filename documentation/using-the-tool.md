@@ -32,86 +32,34 @@ The inventories will be generated as `json` files. They have the following basic
 
 Note: If the code annotations have syntax errors, the inventory generation will fail.
 
-## VS Code Core (no built-in extensions)
-To get the telemetry which just the VS Code core collects
+
+## Viewing what the command has to offer
+```bash
+vscode-telemetry-extractor --help
+Allows the extraction of telemetry annotation from code. For more details please read: https://github.com/microsoft/vscode-telemetry-extractor/blob/master/README.md
+
+-s --sourceDir                          The folder which you want to extract telemetry from
+-x --excludedDirPattern                 A subdirectory which you would like to exclude from the extraction
+-o --outputDir                          The directory which you would like the outputted JSON file to be placed in
+-p --eventPrefix                        The string you wish to prepend to every telemetry event.
+-h --help                               Displays the help dialog which provides more information on how to use the tool
+```
+
+## Extracting telemetry events
+To extract telemetry events from your code you must provide a source directory and output directory.
+The source directory is the folder containing the code which you wish to extract the events. The output directory is the location which the resulting JSON report will be placed.
 
 ```bash
-   npm run extract-core
+   vscode-telemetry-extract -s PATH_TO_YOUR_CODE -o PATH_TO_PLACE_JSON
 ```
 This will generate output similar to:
 ```bash
 ....running.
 ...extracting
-...writing /Users/lramos/vscode-telemetry-extractor/declarations-resolved.json
+...writing <OUTPUTDIR>/declarations-resolved.json
 ```
-
-This creates a JSON file in `./declarations-resolved.json`. The JSON is formatted with 4 spaces as indentation by default.
-
-
-## VS Code Extensions
-
-To generate an telemetry file for VS Code extensions (built-in and those that are maintained by VS Code).
-
-```bash
-   npm run extract-extensions
-```
-
-This will generate output similar to:
-```bash
-...running
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...extracting
-...writing /Users/lramos/vscode-telemetry-extractor/declarations-extensions-resolved.json
-```
-
-This creates the inventory in `./declarations-extensions-resolved.json`. The JSON is formatted with 4 spaces as indetation by default
-
-## Extracting Both
-
-To generate a telemetry file for both.
-
-```bash
-    npm run extract-all
-```
-
-This will just just run the two commands specified together.
 
 # Other Functionalities
-
-## Cleaning up your folder
-
-To clean up your folder after using the tool, two commands are provided.
-
-### Clean
-
-To delete just the generated JSON.
-
-```bash
-    npm run clean
-```
-
-### Clean all
-
-To delete both the generated JSON and the cloned repositories
-
-```bash
-    npm run clean-all
-```
 
 ## Running Tests
 
@@ -120,12 +68,4 @@ add tests to ensure that any code you add doesn't break as well.
 
 ```bash
     npm run test
-```
-
-## Updating the repos
-It is more efficient to run `git pull` on each repo to update the repositories rather than cloning them again and therefore a command
-is provided for you to do just that.
-
-```bash
-    npm run update-repos
 ```

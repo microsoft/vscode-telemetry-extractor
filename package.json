@@ -17,6 +17,9 @@
     "merge": "rm -f ./merger/merged-telemetry.json && node ./out/merge.js",
     "postinstall": "tsc"
   },
+  "bin": {
+    "vscode-telemetry-extractor": "./out/extractor.js"
+  },
   "author": "lramos15",
   "license": "MIT",
   "dependencies": {

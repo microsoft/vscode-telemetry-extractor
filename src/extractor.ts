@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { options } from './cli-options';
@@ -7,7 +8,7 @@ const enum ExtractionMethods {
     Extensions = "extensions"
 }
 
-if (options.help) {
+if (options.help || !(options.sourceDir && options.outputDir)) {
     require('./cli-help');
 } else {
     const extractionMethod = (options.extractionMethod as string).toLowerCase();
