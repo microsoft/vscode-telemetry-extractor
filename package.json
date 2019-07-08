@@ -9,9 +9,6 @@
   },
   "scripts": {
     "test": "mocha out/tests/mocha/*.js",
-    "setup-repos": "node ./out/setup-repos.js",
-    "setup-extension-repos": "node ./out/setup-extension-repos.js",
-    "update-repos": "node ./out/update-repos.js",
     "clean": "rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
     "clean-all": "rm -rf ./src/telemetry-sources && rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
     "extract-core": "node ./out/cli-extract.js --sourceDir ./src/telemetry-sources/vscode --excludedDirPattern extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints --includeIsMeasurement --patchWebsiteEvents",
