@@ -64,6 +64,6 @@ const sourceSpecs: SourceSpec[] = [
 ];
 
 console.log(`...running`);
-saveExtensionDeclarations(sourceSpecs, options.outputDir).then((declarations) => {
+saveExtensionDeclarations(sourceSpecs).then((declarations) => {
     writeToFile(options.outputDir, declarations, 'declarations-extensions-resolved', true);
 });

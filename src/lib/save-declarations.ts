@@ -9,7 +9,6 @@ import { transformOutput } from './object-converter';
 import { Events } from './events';
 import { SourceSpec } from '../cli-extract-extensions';
 import { CommonProperties } from './common-properties';
-import { patchDebugEvents } from './debug-patch';
 import { TsParser } from './ts-parser';
 
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
@@ -60,7 +59,7 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
     }
 }
 
-export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>, outputDir: string): Promise<any> {
+export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>): Promise<object> {
     try {
         const allDeclarations: OutputtedDeclarations = { events: new Events(), commonProperties: new CommonProperties() };
         const allTypeScriptDeclarations = Object.create(null);
@@ -93,8 +92,9 @@ export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>, 
         for (const dec in allTypeScriptDeclarations) {
             formattedDeclarations.events[dec] = allTypeScriptDeclarations[dec];
         }
-        return formattedDeclarations;
+        return Promise.resolve(formattedDeclarations);
     } catch (error) {
         console.error(`Error: ${error}`);
+        return Promise.reject(error);
     }
 }
