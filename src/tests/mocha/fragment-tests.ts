@@ -47,7 +47,6 @@ describe('GDPR Fragments', () => {
         it ('Resolve inlines + includes', async () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
-                addDebugEventsWorkaround: false,
                 includeIsMeasurement: true,
                 applyEndpoints: true
             };
@@ -76,7 +75,6 @@ describe('GDPR Fragments', () => {
             const hardSource = path.join(cwd(), 'src/tests/mocha/resources/difficult-include');
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
-                addDebugEventsWorkaround: false,
                 includeIsMeasurement: true,
                 applyEndpoints: true
             };

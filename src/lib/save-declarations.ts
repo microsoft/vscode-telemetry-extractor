@@ -82,9 +82,6 @@ export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>, 
                 }
                 typescriptDeclarations = modifiedDeclartions;
             }
-            if (spec.parserOptions.addDebugEventsWorkaround) {
-                patchDebugEvents(declarations.events, spec.parserOptions.eventPrefix);
-            }
             // We concatenate each extensions properties into a central one
             // Throwing out fragments as they have already been used to resolve that extensions declarations
             allDeclarations.commonProperties.properties = allDeclarations.commonProperties.properties.concat(declarations.commonProperties.properties);

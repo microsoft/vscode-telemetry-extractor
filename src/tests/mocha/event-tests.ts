@@ -52,7 +52,6 @@ describe('Resolve Tests', () => {
     it('resolve inline + include', async () => {
         const parserOptions: ParserOptions = {
             eventPrefix: '',
-            addDebugEventsWorkaround: false,
             includeIsMeasurement: true,
             applyEndpoints: true
         };
