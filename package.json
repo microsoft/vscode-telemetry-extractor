@@ -1,6 +1,6 @@
 {
   "name": "vscode-telemetry-extractor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Extracts telemetry from VS Code",
   "main": "out/extractor.js",
   "repository": {
@@ -15,7 +15,6 @@
     "extract-extensions": "node ./out/cli-extract-extensions.js --sourceDir ./src/telemetry-sources/ --outputDir . --applyEndpoints --includeIsMeasurement",
     "extract-all": "npm run-script extract-core && npm run-script extract-extensions",
     "merge": "rm -f ./merger/merged-telemetry.json && node ./out/merge.js",
-    "postinstall": "tsc",
     "compile": "tsc"
   },
   "bin": {
