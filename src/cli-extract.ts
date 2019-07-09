@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { saveDeclarations } from "./lib/save-declarations";
+import { saveDeclarations, writeToFile } from "./lib/save-declarations";
 import { options, ParserOptions } from "./cli-options";
 
 const parserOptions: ParserOptions = {
@@ -10,4 +10,6 @@ const parserOptions: ParserOptions = {
 };
 
 console.log('....running.');
-saveDeclarations(options.sourceDir, options.excludedDirPattern, parserOptions, options.outputDir);
+saveDeclarations(options.sourceDir, options.excludedDirPattern, parserOptions, options.outputDir).then((declarations) => {
+    writeToFile(options.outputDir, declarations, 'declarations-resolved', true);
+});

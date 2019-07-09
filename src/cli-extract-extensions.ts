@@ -3,7 +3,7 @@
 import { options } from './cli-options';
 import { ParserOptions } from './cli-options';
 import * as path from 'path';
-import { saveExtensionDeclarations } from './lib/save-declarations';
+import { saveExtensionDeclarations, writeToFile } from './lib/save-declarations';
 
 export interface SourceSpec {
     sourceDirs: string[],
@@ -64,4 +64,6 @@ const sourceSpecs: SourceSpec[] = [
 ];
 
 console.log(`...running`);
-saveExtensionDeclarations(sourceSpecs, options.outputDir);
+saveExtensionDeclarations(sourceSpecs, options.outputDir).then((declarations) => {
+    writeToFile(options.outputDir, declarations, 'declarations-extensions-resolved', true);
+});
