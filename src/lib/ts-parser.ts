@@ -120,11 +120,9 @@ export class TsParser {
             this.project = new Project({});
         }
         const fileGlobs: string[] = [];
-        const workingDir = path.join(cwd(), 'src/telemetry-sources');
-        fileGlobs.push(`'${this.sourceDir.replace(workingDir, '')}/**/*.ts'`);
+        fileGlobs.push(`'**/*.ts'`);
         // Excluded added lasts because order determines what takes effect
         this.excludedDirs.forEach((dir) => {
-            dir = dir.replace(workingDir, '');
             fileGlobs.push(`'!${dir}/**'`);
         });
         let rg_glob = '';
@@ -133,10 +131,10 @@ export class TsParser {
         }
         const cmd = `${rgPath} --files-with-matches publicLog2 ${rg_glob} --no-ignore`;
         try {
-            const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii', cwd: workingDir });
+            const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii', cwd: this.sourceDir });
             // Split the paths into an array
             retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
-                f = path.join('src/telemetry-sources', f)
+                f = path.join(this.sourceDir, f)
                 this.project.addExistingSourceFileIfExists(f);
                 return f;
             });
