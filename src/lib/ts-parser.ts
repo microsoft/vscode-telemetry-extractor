@@ -125,7 +125,7 @@ export class TsParser {
         // Excluded added lasts because order determines what takes effect
         this.excludedDirs.forEach((dir) => {
             dir = dir.replace(workingDir, '');
-            fileGlobs.push(`'!**/${dir}/**'`);
+            fileGlobs.push(`'!${dir}/**'`);
         });
         let rg_glob = '';
         for (const fg of fileGlobs) {
