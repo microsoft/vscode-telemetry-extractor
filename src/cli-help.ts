@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { optionDefinitions } from './cli-options';
 
 function buildHelpMessage() {
