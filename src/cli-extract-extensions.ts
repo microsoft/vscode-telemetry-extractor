@@ -33,7 +33,6 @@ function generateParserOptions(eventPrefix = '') {
 
 function generateSourceSpec (eventPrefix: string, sourceDirs: string[]): SourceSpec {
     const sourceSpec: SourceSpec = {
-        // The commandline only specifies one source for extensions and therefore it's a single element array
         sourceDirs: sourceDirs.map(s => path.resolve(options.sourceDir, s)),
         excludedDirs: [],
         parserOptions: generateParserOptions(eventPrefix)
