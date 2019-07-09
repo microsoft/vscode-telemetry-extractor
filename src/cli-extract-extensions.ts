@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { options } from './cli-options';
-import { ParserOptions } from './cli-options';
+import { options, ParserOptions } from './cli-options';
 import * as path from 'path';
 import { saveExtensionDeclarations, writeToFile } from './lib/save-declarations';
 
@@ -33,7 +32,8 @@ function generateParserOptions(eventPrefix = '') {
 
 function generateSourceSpec (eventPrefix: string, sourceDirs: string[]): SourceSpec {
     const sourceSpec: SourceSpec = {
-        sourceDirs: sourceDirs.map(s => path.resolve(options.sourceDir, s)),
+        // The specified sourceDir when extracting extensions is the root folder containing all the extension folders, so we resolve each path
+        sourceDirs: sourceDirs.map(s => path.resolve(options.sourceDir[0], s)),
         excludedDirs: [],
         parserOptions: generateParserOptions(eventPrefix)
     };
