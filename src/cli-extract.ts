@@ -6,7 +6,6 @@ import { options, ParserOptions } from "./cli-options";
 const parserOptions: ParserOptions = {
     eventPrefix: options.eventPrefix,
     addDebugEventsWorkaround: options.patchDebugEvents,
-    addWebsiteEventsWorkaround: options.patchWebsiteEvents,
     includeIsMeasurement: options.includeIsMeasurement,
     applyEndpoints: options.applyEndpoints
 };

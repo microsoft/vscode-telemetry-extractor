@@ -5,12 +5,10 @@ import { Property, CommonProperties } from '../../lib/common-properties';
 import { cwd } from 'process';
 import * as path from 'path';
 import * as assert from 'assert';
-import { Event, Events } from "../../lib/events";
-import { Fragment, Fragments } from "../../lib/fragments";
+import { Event } from "../../lib/events";
+import { Fragment } from "../../lib/fragments";
 import { getResolvedDeclaration } from '../../lib/save-declarations';
 import { ParserOptions } from "../../cli-options";
-import { Declarations } from "../../lib/declarations";
-import { patchWebsiteEvents } from "../../lib/website-patch";
 
 const sourceDirs = [path.join(cwd(),'src/tests/mocha/resources/source')];
 const excludedDirs = ['excluded'];
@@ -55,7 +53,6 @@ describe('GDPR Declaration Tests', () => {
         const parserOptions: ParserOptions = {
             eventPrefix: '',
             addDebugEventsWorkaround: false,
-            addWebsiteEventsWorkaround: false,
             includeIsMeasurement: true,
             applyEndpoints: true
         };
@@ -63,16 +60,5 @@ describe('GDPR Declaration Tests', () => {
         assert.ok(declarations);
         assert.strictEqual(declarations.events.dataPoints.length, 3);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);
-    });
-    it('patch website events', () => {
-        const declarations: Declarations = {events: new Events(), commonProperties: new CommonProperties(), fragments: new Fragments()};
-        patchWebsiteEvents(declarations.events);
-        assert.strictEqual(declarations.events.dataPoints.length, 3);
-        assert.strictEqual(declarations.events.dataPoints[0].name,'websiteTracking/newUserInstall');
-        assert.strictEqual(declarations.events.dataPoints[0].properties.length, 2);
-        assert.strictEqual(declarations.events.dataPoints[1].name,'websitetracking/dbconnectionlog');
-        assert.strictEqual(declarations.events.dataPoints[1].properties.length, 1);
-        assert.strictEqual(declarations.events.dataPoints[2].name,'nps/surveyResult');
-        assert.strictEqual(declarations.events.dataPoints[2].properties.length, 7);
     });
 });

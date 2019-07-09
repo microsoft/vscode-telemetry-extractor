@@ -48,7 +48,6 @@ describe('GDPR Fragments', () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
                 addDebugEventsWorkaround: false,
-                addWebsiteEventsWorkaround: false,
                 includeIsMeasurement: true,
                 applyEndpoints: true
             };
@@ -78,7 +77,6 @@ describe('GDPR Fragments', () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
                 addDebugEventsWorkaround: false,
-                addWebsiteEventsWorkaround: false,
                 includeIsMeasurement: true,
                 applyEndpoints: true
             };

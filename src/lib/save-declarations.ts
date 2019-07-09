@@ -6,7 +6,6 @@ import { ParserOptions } from '../cli-options';
 import * as fileWriter from './file-writer';
 import { resolveDeclarations, Declarations, OutputtedDeclarations } from './declarations';
 import { transformOutput } from './object-converter';
-import { patchWebsiteEvents } from './website-patch';
 import { Events } from './events';
 import { SourceSpec } from '../cli-extract-extensions';
 import { CommonProperties } from './common-properties';
@@ -49,10 +48,6 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
                 modifiedDeclartions[options.eventPrefix + key] = typescriptDeclarations[key];
             }
             typescriptDeclarations = modifiedDeclartions;
-        }
-        // We will just apply the website events after the resolve process since they're already resolved
-        if (options.addWebsiteEventsWorkaround) {
-            patchWebsiteEvents(declarations.events);
         }
         const formattedDeclarations: any = await transformOutput({ events: declarations.events, commonProperties: declarations.commonProperties });
         for (const dec in typescriptDeclarations) {

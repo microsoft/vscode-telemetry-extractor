@@ -14,7 +14,6 @@ export interface SourceSpec {
 const defaultParserOptions: ParserOptions = {
     eventPrefix: '',
     addDebugEventsWorkaround: options.patchDebugEvents,
-    addWebsiteEventsWorkaround: options.patchWebsiteEvents,
     includeIsMeasurement: options.includeIsMeasurement,
     applyEndpoints: options.applyEndpoints
 };
@@ -25,7 +24,6 @@ function generateParserOptions(eventPrefix = '', addDebugEventsWorkaround: boole
         const newParserOptions: ParserOptions = {
             eventPrefix: eventPrefix,
             addDebugEventsWorkaround: addDebugEventsWorkaround,
-            addWebsiteEventsWorkaround: options.patchWebsiteEvents,
             includeIsMeasurement: options.includeIsMeasurement,
             applyEndpoints: options.applyEndpoints
         };

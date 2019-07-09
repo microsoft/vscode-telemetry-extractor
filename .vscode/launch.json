@@ -15,8 +15,7 @@
                 "--excludedDirPattern=extensions",
                 "--outputDir=${workspaceRoot}",
                 "--applyEndpoints",
-                "--includeIsMeasurement",
-                "--patchWebsiteEvents"
+                "--includeIsMeasurement"
 
             ]
         },

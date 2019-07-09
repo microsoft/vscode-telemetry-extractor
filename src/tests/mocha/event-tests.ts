@@ -53,7 +53,6 @@ describe('Resolve Tests', () => {
         const parserOptions: ParserOptions = {
             eventPrefix: '',
             addDebugEventsWorkaround: false,
-            addWebsiteEventsWorkaround: false,
             includeIsMeasurement: true,
             applyEndpoints: true
         };
