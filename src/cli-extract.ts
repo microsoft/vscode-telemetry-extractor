@@ -10,6 +10,6 @@ const parserOptions: ParserOptions = {
 };
 
 console.log('....running.');
-saveDeclarations(options.sourceDir, options.excludedDirPattern, parserOptions, options.outputDir).then((declarations) => {
+saveDeclarations(options.sourceDir, options.excludedDirPattern, parserOptions).then((declarations) => {
     writeToFile(options.outputDir, declarations, 'declarations-resolved', true);
 });

@@ -29,7 +29,7 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
     return declarations;
 }
 
-export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions, outputDir: string): Promise<any> {
+export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<object> {
     try {
         const declarations = await getResolvedDeclaration(sourceDirs, excludedDirs, options);
         // We parse the events declared with types and then overwrite
@@ -53,9 +53,10 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
         for (const dec in typescriptDeclarations) {
             formattedDeclarations.events[dec] = typescriptDeclarations[dec];
         }
-        return formattedDeclarations;
+        return Promise.resolve(formattedDeclarations);
     } catch (error) {
         console.error(`Error: ${error}`);
+        return Promise.reject(error);
     }
 }
 
