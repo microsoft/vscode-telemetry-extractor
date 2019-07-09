@@ -5,4 +5,5 @@ out
 declarations-resolved.json
 declarations-extensions-resolved.json
 merger/*
-!merge/*.md
+yarn.lock
+!merger/*.md
