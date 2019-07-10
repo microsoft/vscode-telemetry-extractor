@@ -1,4 +1,5 @@
-
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 /**
  * The options which the parser takes in
  * evenetPrefix: The prefix to append to all telemetry event names

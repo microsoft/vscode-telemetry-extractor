@@ -2,7 +2,8 @@
   "name": "vscode-telemetry-extractor",
   "version": "1.0.0",
   "description": "Extracts telemetry from VS Code",
-  "main": "out/extractor.js",
+  "main": "out/index.js",
+  "typings": "vscode-telemetry-extractor.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/vscode-telemetry-extractor"

@@ -33,4 +33,4 @@ export interface ParserOptions {
     applyEndpoints: boolean;
 }
 
-export const options = resolveDirectories(commandLineArgs(optionDefinitions, { partial: false}));
+export const options = resolveDirectories(commandLineArgs(optionDefinitions, { partial: true}));
