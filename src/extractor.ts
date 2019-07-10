@@ -12,7 +12,7 @@ const enum ExtractionMethods {
     Core = "core",
     Extensions = "extensions"
 }
-if (options.config !== '') {
+if (options.config) {
     try {
         const config = JSON.parse(fs.readFileSync(options.config).toString());
         const sourceSpecs: SourceSpec[] = [];

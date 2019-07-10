@@ -39,7 +39,8 @@ vscode-telemetry-extractor --help
 Allows the extraction of telemetry annotation from code. For more details please read: https://github.com/microsoft/vscode-telemetry-extractor/blob/master/README.md
 
 -s --sourceDir                          The folder which you want to extract telemetry from
--x --excludedDirPattern                 A subdirectory which you would like to exclude from the extraction
+-x --excludedDir                        A subdirectory which you would like to exclude from the extraction
+-c --config                             A JSON Configuration file containing extraction details
 -o --outputDir                          The directory which you would like the outputted JSON file to be placed in
 -p --eventPrefix                        The string you wish to prepend to every telemetry event.
 -h --help                               Displays the help dialog which provides more information on how to use the tool
@@ -57,6 +58,36 @@ This will generate output similar to:
 ....running.
 ...extracting
 ...writing <OUTPUTDIR>/declarations-resolved.json
+```
+
+## Using a config file
+The extractor also supports config files which can be passed in via a command line arguments to custom the way the tool parses.
+An example config file can be found below.
+```json
+[
+    {
+        "eventPrefix": "typescript-language-features/",
+        "workingDir": "/Users/lramos/vscode-telemetry-extractor/src/telemetry-sources",
+        "sourceDirs": [
+            "vscode/extensions/typescript-language-features",
+            "Typescript"
+        ],
+        "excludedDirs": [],
+        "includeIsMeasurement": true,
+        "applyEndpoints": true
+    },
+    {
+        "eventPrefix": "msjsdiag.chrome/",
+        "workingDir": "/Users/lramos/vscode-telemetry-extractor/src/telemetry-sources",
+        "sourceDirs": [
+            "vscode-chrome-debug-core",
+            "vscode-chrome-debug"
+        ],
+        "excludedDirs": [],
+        "includeIsMeasurement": true,
+        "applyEndpoints": true
+    }
+]
 ```
 
 # Other Functionalities
