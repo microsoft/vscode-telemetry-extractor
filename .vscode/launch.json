@@ -59,6 +59,12 @@
             ],
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to process",
+            "port": 9229
         }
     ]
 }
