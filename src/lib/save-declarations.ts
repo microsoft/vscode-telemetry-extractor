@@ -28,7 +28,7 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
     return declarations;
 }
 
-export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<{events: any, commonProperties: any}> {
+export async function extractAndResolveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<{events: any, commonProperties: any}> {
     try {
         const declarations = await getResolvedDeclaration(sourceDirs, excludedDirs, options);
         // We parse the events declared with types and then overwrite
@@ -59,7 +59,7 @@ export async function saveDeclarations(sourceDirs: Array<string>, excludedDirs: 
     }
 }
 
-export async function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: any, commonProperties: any}> {
+export async function extractAndResolveExtensionDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: any, commonProperties: any}> {
     try {
         const allDeclarations: OutputtedDeclarations = { events: new Events(), commonProperties: new CommonProperties() };
         const allTypeScriptDeclarations = Object.create(null);
