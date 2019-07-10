@@ -19,7 +19,8 @@ function resolveDirectories(options: commandLineArgs.CommandLineOptions): comman
 export const optionDefinitions = [
     { name: 'extractionMethod', type: String},
     { name: 'sourceDir', alias: 's', description: 'The folder which you want to extract telemetry from', type: String, multiple: true},
-    { name: 'excludedDirPattern', alias: 'x', description: 'A subdirectory which you would like to exclude from the extraction', type: String, multiple: true, defaultValue: [] },
+    { name: 'excludedDir', alias: 'x', description: 'A subdirectory which you would like to exclude from the extraction', type: String, multiple: true, defaultValue: [] },
+    { name: 'config', alias: 'c', description: 'A JSON Configuration file containing extraction details', type: String},
     { name: 'outputDir', alias: 'o', description: 'The directory which you would like the outputted JSON file to be placed in', type: String },
     { name: 'eventPrefix', alias: 'p', type: String, description: 'The string you wish to prepend to every telemetry event.', defaultValue: ''},
     { name: 'help', alias: 'h', type: Boolean, description: 'Displays the help dialog which provides more information on how to use the tool', defaultValue: false},
