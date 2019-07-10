@@ -4,7 +4,6 @@ This tooling allows for the extraction of [GDPR formatted comments](./documentat
 produces a JSON file containing the telemetry events which are collected.
 
 ## Prerequisites
-* Typescript (3.5+) installed and in your path
 * Node LTS (10.15.3) installed and in your path 
 
 ## Setup
