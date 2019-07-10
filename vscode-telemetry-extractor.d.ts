@@ -30,11 +30,11 @@ export interface SourceSpec {
  * @param excludedDirs The directories within the source dirs to exclude from extraction
  * @param options The parser options to use when parsing the code
  */
-export declare function saveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<object>;
+export declare function saveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<{events: any, commonProperties: any}>;
 
 
 /**
  * Extracts and resolves all typescript declarations from a series of different sources into a formatted object
  * @param sourceSpecs The various sources and their options which you would like to extract from
  */
-export declare function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>): Promise<object>;
+export declare function saveExtensionDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: any, commonProperties: any}>;
