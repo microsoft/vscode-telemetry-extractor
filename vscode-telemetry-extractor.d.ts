@@ -24,17 +24,49 @@ export interface SourceSpec {
     parserOptions: ParserOptions
 }
 
+export interface CommonProperties {
+    [key: string]: CommonProperty;
+}
+
+export interface CommonProperty {
+    name: string;
+    classification: string;
+    purpose: string;
+    endPoint?: string;
+    isMeasurement?: boolean;
+}
+
+export interface Events {
+    [key: string]: Event;
+}
+
+export interface Event {
+    [key: string]: Properties;
+}
+
+export interface Properties {
+    [key: string]: Property;
+}
+
+export interface Property {
+    name: string;
+    classification: string;
+    purpose: string;
+    endPoint?: string;
+    isMeasurement?: boolean;
+}
+
 /**
  * Extracts and resolves all typescript declarations into an object
  * @param sourceDirs The directories to extract telemetry from
  * @param excludedDirs The directories within the source dirs to exclude from extraction
  * @param options The parser options to use when parsing the code
  */
-export declare function extractAndResolveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<{events: any, commonProperties: any}>;
+export declare function extractAndResolveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<{events: Events, commonProperties: CommonProperties}>;
 
 
 /**
  * Extracts and resolves all typescript declarations from a series of different sources into a formatted object
  * @param sourceSpecs The various sources and their options which you would like to extract from
  */
-export declare function extractAndResolveExtensionDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: any, commonProperties: any}>;
+export declare function extractAndResolveExtensionDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: Events, commonProperties: CommonProperties}>;
