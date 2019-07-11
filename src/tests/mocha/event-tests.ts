@@ -17,7 +17,7 @@ const multipleExcludes = ['excluded', 'folder2'];
 
 describe ('Events Tests', () => {
     it('find files - no exclusions', () => {
-        const parser = new Parser([sourceDir], [], false, false);
+        const parser = new Parser([sourceDir], [], false);
         //@ts-ignore
         const filePaths = parser.findFilesWithEvents(sourceDir);
         assertHelper.sameValues(filePaths, [
@@ -26,7 +26,7 @@ describe ('Events Tests', () => {
             path.join(cwd(), 'src/tests/mocha/resources/source/excluded/excludedFile.ts')]);
     });
     it('find files - with exclusions', () => {
-        const parser = new Parser([sourceDir], excludedDirs, false, false);
+        const parser = new Parser([sourceDir], excludedDirs, false);
         //@ts-ignore
         const filePaths = parser.findFilesWithEvents(sourceDir);
         assertHelper.sameValues(filePaths, [
@@ -34,13 +34,13 @@ describe ('Events Tests', () => {
             path.join(cwd(), 'src/tests/mocha/resources/source/file2.ts')]);
     });
     it('find files - with multiple exclusions', () => {
-        const parser = new Parser([sourceDir2], multipleExcludes, false, false);
+        const parser = new Parser([sourceDir2], multipleExcludes, false);
         //@ts-ignore
         const filePaths = parser.findFilesWithEvents(sourceDir2);
         assertHelper.sameValues(filePaths, [path.join(cwd(),'src/tests/mocha/resources/source-1/folder1/file1.ts')]);
     });
     it('extract event declaration', async () => {
-        const parser = new Parser([sourceDir], excludedDirs, false, false);
+        const parser = new Parser([sourceDir], excludedDirs, false);
         //@ts-ignore
         const events = parser.findEvents(sourceDir);
         assert.strictEqual(events.dataPoints.length, 3);
@@ -52,7 +52,6 @@ describe('Resolve Tests', () => {
     it('resolve inline + include', async () => {
         const parserOptions: ParserOptions = {
             eventPrefix: '',
-            includeIsMeasurement: true,
             applyEndpoints: true,
             patchDebugEvents: false
         };

@@ -14,8 +14,7 @@
                 "--sourceDir=${workspaceRoot}/src/telemetry-sources/vscode",
                 "--excludedDirPattern=extensions",
                 "--outputDir=${workspaceRoot}",
-                "--applyEndpoints",
-                "--includeIsMeasurement"
+                "--applyEndpoints"
 
             ]
         },
@@ -28,8 +27,7 @@
             "args": [
                 "--sourceDir=${workspaceRoot}/src/telemetry-sources/",
                 "--outputDir=${workspaceRoot}",
-                "--applyEndpoints",
-                "--includeIsMeasurement"
+                "--applyEndpoints"
             ]
         },
         {

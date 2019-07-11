@@ -5,12 +5,10 @@ import { PathLike } from "fs";
 /**
  * The options which the parser takes in
  * evenetPrefix: The prefix to append to all telemetry event names
- * includeIsMeasurement: Whether or not to include the isMeasurement property on events in the final report
  * applyEndpoints: Whether to include the endPoints property on events in the final report
  */
 export interface ParserOptions {
     eventPrefix: string;
-    includeIsMeasurement: boolean;
     applyEndpoints: boolean;
     patchDebugEvents: boolean;
 }

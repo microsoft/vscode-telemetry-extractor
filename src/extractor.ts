@@ -25,13 +25,12 @@ export function convertConfigToSourceSpecs(file: PathLike): SourceSpec[] {
             }
             const parserOptions: ParserOptions = {
                 eventPrefix: spec.eventPrefix,
-                includeIsMeasurement: spec.includeIsMeasurement,
                 applyEndpoints: spec.applyEndpoints,
                 patchDebugEvents: spec.patchDebugEvents
             }
             const sourceSpec: SourceSpec = {
                 sourceDirs: (spec.sourceDirs as string[]).map(s => path.resolve(spec.workingDir, s)),
-                excludedDirs: spec.excludedDirs,
+                excludedDirs: (spec.excludedDirs as string[]).map(s => path.resolve(spec.workingDir, s)),
                 parserOptions: parserOptions
             }
             sourceSpecs.push(sourceSpec);
@@ -63,7 +62,6 @@ if (options.config) {
 } else {
     const parserOptions: ParserOptions = {
         eventPrefix: options.eventPrefix,
-        includeIsMeasurement: options.includeIsMeasurement,
         applyEndpoints: options.applyEndpoints,
         patchDebugEvents: false
     };

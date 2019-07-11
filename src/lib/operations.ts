@@ -52,7 +52,7 @@ export function mergeWildcards(wildcard: any, target: Event | Fragment, applyEnd
     }
 }
 
-export function populateProperties(properties: any, target: Event | Fragment, applyEndpoints = false, includeMeasurements = false) {
+export function populateProperties(properties: any, target: Event | Fragment, applyEndpoints = false) {
     for (const propertyName in properties) {
         const currentProperty = properties[propertyName];
         if (propertyName === keywords.include) {
@@ -68,7 +68,7 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
                 const endpoint = currentProperty.endpoint ? currentProperty.endpoint : 'none';
                 prop.endPoint = endpoint;
             }
-            if (includeMeasurements && currentProperty.isMeasurement) {
+            if (currentProperty.isMeasurement) {
                 prop.isMeasurement = currentProperty.isMeasurement;
             }
             target.properties.push(prop);

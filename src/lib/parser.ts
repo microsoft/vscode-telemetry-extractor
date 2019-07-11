@@ -14,13 +14,11 @@ export class Parser {
 
     private sourceDirs: string[];
     private excludedDirs: string[];
-    private includeIsMeasurement: boolean;
     private applyEndpoints: boolean;
 
-    constructor(sourceDirs: string[], excludedDirs: string[], includeIsMeasurement: boolean, applyEndpoints: boolean) {
+    constructor(sourceDirs: string[], excludedDirs: string[], applyEndpoints: boolean) {
         this.sourceDirs = sourceDirs;
         this.excludedDirs = excludedDirs;
-        this.includeIsMeasurement = includeIsMeasurement;
         this.applyEndpoints = applyEndpoints;
     }
 
@@ -71,7 +69,7 @@ export class Parser {
                     const endpoint = properties.endPoint ? properties.endPoint : 'none';
                     prop.endPoint = endpoint;
                 }
-                if (this.includeIsMeasurement && properties.isMeasurement) {
+                if (properties.isMeasurement) {
                     prop.isMeasurement = properties.isMeasurement;
                 }
                 commonPropertyDeclarations.properties.push(prop);
@@ -104,7 +102,7 @@ export class Parser {
                 // Checks to see if we have a fragment of the given name, else creates.
                 const fragment = findOrCreate(fragmentDeclarations, fragmentName);
                 const fragmentProperties = fragmentDeclaration[fragmentName];
-                populateProperties(fragmentProperties, fragment, this.applyEndpoints, this.includeIsMeasurement);
+                populateProperties(fragmentProperties, fragment, this.applyEndpoints);
             } catch (error) {
                 console.error(`Fragment Declaration Error: ${error} in file ${filePath}`);
                 console.error(`Source comment:\n${match[0]}`);
@@ -132,7 +130,7 @@ export class Parser {
                 const event = findOrCreate(eventDeclarations, eventName);
                 // Get the propeties which the event possesses
                 const eventProperties = eventDeclaration[eventName];
-                populateProperties(eventProperties, event, this.applyEndpoints, this.includeIsMeasurement);
+                populateProperties(eventProperties, event, this.applyEndpoints);
             } catch (error) {
                 console.error(`Event Declaration Error: ${error} in file ${filePath}`);
                 console.error(`Source comment:\n${match[0]}`);

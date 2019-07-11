@@ -23,13 +23,11 @@ export const optionDefinitions = [
     { name: 'outputDir', alias: 'o', description: 'The directory which you would like the outputted JSON file to be placed in', type: String },
     { name: 'eventPrefix', alias: 'p', type: String, description: 'The string you wish to prepend to every telemetry event.', defaultValue: ''},
     { name: 'help', alias: 'h', type: Boolean, description: 'Displays the help dialog which provides more information on how to use the tool', defaultValue: false},
-    { name: 'applyEndpoints', alias: 'e', type: Boolean, defaultValue: false},
-    { name: 'includeIsMeasurement', alias: 'm', type: Boolean, defaultValue: false}
+    { name: 'applyEndpoints', alias: 'e', type: Boolean, defaultValue: false}
 ];
 
 export interface ParserOptions {
     eventPrefix: string;
-    includeIsMeasurement: boolean;
     applyEndpoints: boolean;
     patchDebugEvents: boolean;
 }

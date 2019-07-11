@@ -29,15 +29,13 @@ class NodeVisitor {
     private prop_name: string;
     private inline: boolean = false;
     private original_prop_name: string;
-    private includeIsMeasurement: boolean;
     private applyEndpoints: boolean;
     public properties: Array<any> = [];
     private resolved_property: any = Object.create(null);
-    constructor(callexpress_node: Node, prop_name: string, includeIsMeasurement: boolean, applyEndpoints: boolean) {
+    constructor(callexpress_node: Node, prop_name: string, applyEndpoints: boolean) {
         this.pl_node = callexpress_node;
         this.prop_name = prop_name;
         this.original_prop_name = prop_name;
-        this.includeIsMeasurement = includeIsMeasurement;
         this.applyEndpoints = applyEndpoints;
     }
 
@@ -56,8 +54,6 @@ class NodeVisitor {
                     this.inline = true;
                 }
             }
-            // If we don't want to include measurements we skip them
-            if (currentNode.getEscapedName().toLowerCase() === "ismeasurement" && !this.includeIsMeasurement) return;
             // If we don't want endpoints skip them
             if (currentNode.getEscapedName().toLowerCase() === "endpoint" && !this.applyEndpoints) return;
 
@@ -97,13 +93,11 @@ class NodeVisitor {
 export class TsParser {
     private sourceDir: string;
     private excludedDirs: string[];
-    private includeIsMeasurement: boolean;
     private applyEndpoints: boolean;
     private project: Project;
-    constructor(sourceDir: string, excludedDirs: string[], includeIsMeasurement: boolean, applyEndpoints: boolean) {
+    constructor(sourceDir: string, excludedDirs: string[], applyEndpoints: boolean) {
         this.sourceDir = sourceDir;
         this.excludedDirs = excludedDirs;
-        this.includeIsMeasurement = includeIsMeasurement;
         this.applyEndpoints = applyEndpoints;
         // We search for a TS config as that allows the language service to handle weird imports
         if (fs.existsSync(path.join(this.sourceDir, 'src/tsconfig.json'))) {
@@ -166,7 +160,7 @@ export class TsParser {
                 const type_properties = typeArgs[1].getType().getProperties();
                 type_properties.forEach((prop) => {
                     const propName = prop.getEscapedName().toLowerCase();
-                    const node_visitor = new NodeVisitor(pl, propName, this.includeIsMeasurement, this.applyEndpoints);
+                    const node_visitor = new NodeVisitor(pl, propName, this.applyEndpoints);
                     created_event.properties = created_event.properties.concat(node_visitor.resolveProperties(prop));
                 });
                 // We don't want to overwrite an event if we have already defined it, we just want to add to it

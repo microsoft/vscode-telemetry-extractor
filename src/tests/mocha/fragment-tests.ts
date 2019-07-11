@@ -18,7 +18,7 @@ describe('GDPR Fragments', () => {
 
     describe('extract declarations', () => {
         it('Find files with fragments', () => {
-            const parser = new Parser([sourceDir], excludedDirs, true, true);
+            const parser = new Parser([sourceDir], excludedDirs, true);
             //@ts-ignore
             const filePaths = parser.findFilesWithFragments(sourceDir);
             assert.ok(filePaths);
@@ -29,7 +29,7 @@ describe('GDPR Fragments', () => {
         });
 
         it('Extract fragment declarations', () => {
-            const parser = new Parser([sourceDir], excludedDirs, true, true);
+            const parser = new Parser([sourceDir], excludedDirs, true);
             //@ts-ignore
             const fragments = parser.findFragments(sourceDir);
             assert.ok(fragments.dataPoints);
@@ -47,7 +47,6 @@ describe('GDPR Fragments', () => {
         it ('Resolve inlines + includes', async () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
-                includeIsMeasurement: true,
                 applyEndpoints: true,
                 patchDebugEvents: false
             };
@@ -76,7 +75,6 @@ describe('GDPR Fragments', () => {
             const hardSource = path.join(cwd(), 'src/tests/mocha/resources/difficult-include');
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
-                includeIsMeasurement: true,
                 applyEndpoints: true,
                 patchDebugEvents: false
             };

@@ -73,7 +73,6 @@ An example config file can be found below.
             "Typescript"
         ],
         "excludedDirs": [],
-        "includeIsMeasurement": true,
         "applyEndpoints": true
     },
     {
@@ -84,7 +83,6 @@ An example config file can be found below.
             "vscode-chrome-debug"
         ],
         "excludedDirs": [],
-        "includeIsMeasurement": true,
         "applyEndpoints": true
     }
 ]
