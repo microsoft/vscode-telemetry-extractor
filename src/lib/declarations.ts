@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Fragments } from "./fragments";
-import { Events, Include, Inline } from "./events";
+import { Fragments, Fragment } from "./fragments";
+import { Events, Include, Inline, Event } from "./events";
 import { CommonProperties, Property } from "./common-properties";
 
 export interface Declarations {
@@ -32,6 +32,9 @@ function resolveIncludes(target: Events | Fragments, fragments: Fragments) {
                     });
                     if (fragment) item.properties = item.properties.concat(fragment.properties);
                 }
+                // This is an inefficient solution, but since adding and removing from the array
+                // messes up the iteration we just restart it until we can get through the whole loop without any includes
+                i = 0;
             }
         }
     }

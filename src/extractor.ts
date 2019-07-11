@@ -6,12 +6,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { SourceSpec } from './cli-extract-extensions';
 import { cwd } from 'process';
-import { writeToFile, extractAndResolveExtensionDeclarations} from './lib/save-declarations';
+import { writeToFile, extractAndResolveDeclarations} from './lib/save-declarations';
 
-const enum ExtractionMethods {
-    Core = "core",
-    Extensions = "extensions"
-}
 if (options.config) {
     try {
         const config = JSON.parse(fs.readFileSync(options.config).toString());
@@ -25,10 +21,14 @@ if (options.config) {
             if (!spec.workingDir) {
                 spec.workingDir = cwd();
             }
+            if (!spec.patchDebugEvents) {
+                spec.patchDebugEvents = false;
+            }
             const parserOptions: ParserOptions = {
                 eventPrefix: spec.eventPrefix,
                 includeIsMeasurement: spec.includeIsMeasurement,
-                applyEndpoints: spec.applyEndpoints
+                applyEndpoints: spec.applyEndpoints,
+                patchDebugEvents: spec.patchDebugEvents
             }
             const sourceSpec: SourceSpec = {
                 sourceDirs: (spec.sourceDirs as string[]).map(s => path.resolve(spec.workingDir, s)),
@@ -37,31 +37,36 @@ if (options.config) {
             }
             sourceSpecs.push(sourceSpec);
         }
-        if (options.outputDir) {
-            extractAndResolveExtensionDeclarations(sourceSpecs).then((declarations) => {
+        extractAndResolveDeclarations(sourceSpecs).then((declarations) => {
+            if (options.outputDir) {
                 writeToFile(options.outputDir, declarations, 'config-resolved', true);
-            });
-        } else {
-            extractAndResolveExtensionDeclarations(sourceSpecs).then(declarations => console.log(JSON.stringify(declarations)));
-        }
+            } else {
+                console.log(JSON.stringify(declarations));
+            } 
+        });
     } catch (err) {
         console.error(err);
     }
 } else if (options.help || !(options.sourceDir && options.outputDir)) {
     require('./cli-help');
 } else {
-    let extractionMethod = ExtractionMethods.Core.toString();
-    if (options.extractionMethod) {
-        extractionMethod = (options.extractionMethod as string).toLowerCase();
-    }
-    switch (extractionMethod) {
-        case ExtractionMethods.Extensions:
-            require('./cli-extract-extensions');
-            break;
-        case ExtractionMethods.Core:
-        default:
-            extractionMethod = ExtractionMethods.Core;
-            require('./cli-extract');
-            break;
-    }
+    const parserOptions: ParserOptions = {
+        eventPrefix: options.eventPrefix,
+        includeIsMeasurement: options.includeIsMeasurement,
+        applyEndpoints: options.applyEndpoints,
+        patchDebugEvents: false
+    };
+    console.log('....running.');
+    const sourceSpec: SourceSpec = {
+        sourceDirs: options.sourceDir,
+        excludedDirs: options.excludedDirs === undefined ? [] : options.excludedDirs,
+        parserOptions: parserOptions
+    };
+    extractAndResolveDeclarations([sourceSpec]).then((declarations) => {
+        if (options.outputDir) {
+            writeToFile(options.outputDir, declarations, 'declarations-resolved', true);
+        } else {
+            console.log(JSON.stringify(declarations));
+        }
+    });
 }

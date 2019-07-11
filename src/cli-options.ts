@@ -17,7 +17,6 @@ function resolveDirectories(options: commandLineArgs.CommandLineOptions): comman
 }
 
 export const optionDefinitions = [
-    { name: 'extractionMethod', type: String},
     { name: 'sourceDir', alias: 's', description: 'The folder which you want to extract telemetry from', type: String, multiple: true},
     { name: 'excludedDir', alias: 'x', description: 'A subdirectory which you would like to exclude from the extraction', type: String, multiple: true, defaultValue: [] },
     { name: 'config', alias: 'c', description: 'A JSON Configuration file containing extraction details', type: String},
@@ -32,6 +31,7 @@ export interface ParserOptions {
     eventPrefix: string;
     includeIsMeasurement: boolean;
     applyEndpoints: boolean;
+    patchDebugEvents: boolean;
 }
 
 export const options = resolveDirectories(commandLineArgs(optionDefinitions, { partial: true}));

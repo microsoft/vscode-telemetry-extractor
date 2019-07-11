@@ -10,6 +10,7 @@ import { Events } from './events';
 import { SourceSpec } from '../cli-extract-extensions';
 import { CommonProperties } from './common-properties';
 import { TsParser } from './ts-parser';
+import { patchDebugEvents } from './debug-patch';
 
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
     const json = JSON.stringify(contents);
@@ -28,7 +29,7 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
     return declarations;
 }
 
-export async function extractAndResolveDeclarations(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<{events: any, commonProperties: any}> {
+export async function extractAndResolveDeclarationsDEPRECATED(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<{events: any, commonProperties: any}> {
     try {
         const declarations = await getResolvedDeclaration(sourceDirs, excludedDirs, options);
         // We parse the events declared with types and then overwrite
@@ -47,6 +48,7 @@ export async function extractAndResolveDeclarations(sourceDirs: Array<string>, e
                 modifiedDeclartions[options.eventPrefix + key] = typescriptDeclarations[key];
             }
             typescriptDeclarations = modifiedDeclartions;
+            
         }
         const formattedDeclarations: any = await transformOutput({ events: declarations.events, commonProperties: declarations.commonProperties });
         for (const dec in typescriptDeclarations) {
@@ -59,7 +61,7 @@ export async function extractAndResolveDeclarations(sourceDirs: Array<string>, e
     }
 }
 
-export async function extractAndResolveExtensionDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: any, commonProperties: any}> {
+export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: any, commonProperties: any}> {
     try {
         const allDeclarations: OutputtedDeclarations = { events: new Events(), commonProperties: new CommonProperties() };
         const allTypeScriptDeclarations = Object.create(null);
@@ -81,6 +83,9 @@ export async function extractAndResolveExtensionDeclarations(sourceSpecs: Array<
                     modifiedDeclartions[spec.parserOptions.eventPrefix + key] = typescriptDeclarations[key];
                 }
                 typescriptDeclarations = modifiedDeclartions;
+                if (spec.parserOptions.patchDebugEvents) {
+	                patchDebugEvents(declarations.events, spec.parserOptions.eventPrefix);
+	            }
             }
             // We concatenate each extensions properties into a central one
             // Throwing out fragments as they have already been used to resolve that extensions declarations

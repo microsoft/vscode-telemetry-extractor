@@ -53,7 +53,8 @@ describe('Resolve Tests', () => {
         const parserOptions: ParserOptions = {
             eventPrefix: '',
             includeIsMeasurement: true,
-            applyEndpoints: true
+            applyEndpoints: true,
+            patchDebugEvents: false
         };
         const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
         assert.ok(declarations.events);

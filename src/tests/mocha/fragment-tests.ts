@@ -48,7 +48,8 @@ describe('GDPR Fragments', () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
                 includeIsMeasurement: true,
-                applyEndpoints: true
+                applyEndpoints: true,
+                patchDebugEvents: false
             };
             const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
             const resolvedFragments = declarations.fragments;
@@ -76,7 +77,8 @@ describe('GDPR Fragments', () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
                 includeIsMeasurement: true,
-                applyEndpoints: true
+                applyEndpoints: true,
+                patchDebugEvents: false
             };
             const declarations = await getResolvedDeclaration([hardSource], [], parserOptions);
             assert.ok(declarations.fragments);

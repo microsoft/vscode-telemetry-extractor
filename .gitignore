@@ -6,4 +6,5 @@ declarations-resolved.json
 declarations-extensions-resolved.json
 merger/*
 yarn.lock
+.vscode/settings.json
 !merger/*.md

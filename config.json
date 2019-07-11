@@ -1,0 +1,25 @@
+[
+    {
+        "eventPrefix": "typescript-language-features/",
+        "workingDir": "/Users/lramos/vscode-telemetry-extractor/src/telemetry-sources",
+        "sourceDirs": [
+            "vscode/extensions/typescript-language-features",
+            "Typescript"
+        ],
+        "excludedDirs": [],
+        "includeIsMeasurement": true,
+        "applyEndpoints": true
+    },
+    {
+        "eventPrefix": "msjsdiag.chrome/",
+        "workingDir": "/Users/lramos/vscode-telemetry-extractor/src/telemetry-sources",
+        "sourceDirs": [
+            "vscode-chrome-debug-core",
+            "vscode-chrome-debug"
+        ],
+        "excludedDirs": [],
+        "includeIsMeasurement": true,
+        "applyEndpoints": true,
+        "patchDebugEvents": true
+    }
+]

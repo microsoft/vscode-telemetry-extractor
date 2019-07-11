@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 import { options, ParserOptions } from './cli-options';
 import * as path from 'path';
-import { extractAndResolveExtensionDeclarations, writeToFile } from './lib/save-declarations';
+import { extractAndResolveDeclarations, writeToFile } from './lib/save-declarations';
 
 export interface SourceSpec {
     sourceDirs: string[],
@@ -13,7 +13,8 @@ export interface SourceSpec {
 const defaultParserOptions: ParserOptions = {
     eventPrefix: '',
     includeIsMeasurement: options.includeIsMeasurement,
-    applyEndpoints: options.applyEndpoints
+    applyEndpoints: options.applyEndpoints,
+    patchDebugEvents: false
 };
 
 // If they're different from default we generate a new one, else we keep the same 
@@ -22,7 +23,9 @@ function generateParserOptions(eventPrefix = '') {
         const newParserOptions: ParserOptions = {
             eventPrefix: eventPrefix,
             includeIsMeasurement: options.includeIsMeasurement,
-            applyEndpoints: options.applyEndpoints
+            applyEndpoints: options.applyEndpoints,
+            patchDebugEvents: false
+            
         };
         return newParserOptions;
     } else {
@@ -64,6 +67,6 @@ const sourceSpecs: SourceSpec[] = [
 ];
 
 console.log(`...running`);
-extractAndResolveExtensionDeclarations(sourceSpecs).then((declarations) => {
+extractAndResolveDeclarations(sourceSpecs).then((declarations) => {
     writeToFile(options.outputDir, declarations, 'declarations-extensions-resolved', true);
 });
