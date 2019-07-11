@@ -1,3 +1,5 @@
+import { PathLike } from "fs";
+
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 /**
@@ -62,3 +64,9 @@ export interface Property {
  * @param sourceSpecs The various sources and their options which you would like to extract from
  */
 export declare function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: Events, commonProperties: CommonProperties}>;
+
+/**
+ * Parses a valid extractor config file into an array of sourceSpecs that can be passed into an extract function
+ * @param file The path to the configuration file
+ */
+export declare function convertConfigToSourceSpecs(file: PathLike): SourceSpec[]
