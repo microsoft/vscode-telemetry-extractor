@@ -7,7 +7,7 @@ import * as fileWriter from './file-writer';
 import { resolveDeclarations, Declarations, OutputtedDeclarations } from './declarations';
 import { transformOutput } from './object-converter';
 import { Events } from './events';
-import { SourceSpec } from '../cli-extract-extensions';
+import { SourceSpec } from '../extractor';
 import { CommonProperties } from './common-properties';
 import { TsParser } from './ts-parser';
 import { patchDebugEvents } from './debug-patch';
@@ -27,38 +27,6 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
     let declarations = await parser.extractDeclarations();
     declarations = resolveDeclarations(declarations);
     return declarations;
-}
-
-export async function extractAndResolveDeclarationsDEPRECATED(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions): Promise<{events: any, commonProperties: any}> {
-    try {
-        const declarations = await getResolvedDeclaration(sourceDirs, excludedDirs, options);
-        // We parse the events declared with types and then overwrite
-        let typescriptDeclarations = Object.create(null);
-        sourceDirs.forEach((dir) => {
-            Object.assign(typescriptDeclarations, new TsParser(dir, excludedDirs, options.includeIsMeasurement, options.applyEndpoints).parseFiles());
-        });
-        if (options.eventPrefix != '') {
-            declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
-                event.name = options.eventPrefix + event.name;
-                return event;
-            });
-            const modifiedDeclartions = Object.create(null);
-            // Modify the object keys to be prefixed with the specified prefix
-            for (const key in typescriptDeclarations) {
-                modifiedDeclartions[options.eventPrefix + key] = typescriptDeclarations[key];
-            }
-            typescriptDeclarations = modifiedDeclartions;
-            
-        }
-        const formattedDeclarations: any = await transformOutput({ events: declarations.events, commonProperties: declarations.commonProperties });
-        for (const dec in typescriptDeclarations) {
-            formattedDeclarations.events[dec] = typescriptDeclarations[dec];
-        }
-        return Promise.resolve(formattedDeclarations);
-    } catch (error) {
-        console.error(`Error: ${error}`);
-        return Promise.reject(error);
-    }
 }
 
 export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: any, commonProperties: any}> {
