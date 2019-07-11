@@ -29,8 +29,8 @@ export function convertConfigToSourceSpecs(file: PathLike): SourceSpec[] {
                 patchDebugEvents: spec.patchDebugEvents
             }
             const sourceSpec: SourceSpec = {
-                sourceDirs: (spec.sourceDirs as string[]).map(s => path.resolve(spec.workingDir, s)),
-                excludedDirs: (spec.excludedDirs as string[]).map(s => path.resolve(spec.workingDir, s)),
+                sourceDirs: resolveDirectories(spec.sourceDirs, spec.workingDir),
+                excludedDirs: resolveDirectories(spec.excludedDirs, spec.workingDir),
                 parserOptions: parserOptions
             }
             sourceSpecs.push(sourceSpec);
@@ -67,7 +67,7 @@ if (options.config) {
     };
     console.log('....running.');
     const sourceSpec: SourceSpec = {
-        sourceDirs: options.sourceDir,
+        sourceDirs: resolveDirectories(options.sourceDirs),
         excludedDirs: options.excludedDirs === undefined ? [] : options.excludedDirs,
         parserOptions: parserOptions
     };
@@ -78,4 +78,17 @@ if (options.config) {
             console.log(JSON.stringify(declarations));
         }
     });
+}
+
+// Resolves an array of paths
+function resolveDirectories(dirs: string[], workingDir?: string): string[]{
+    if (workingDir) {
+        if (path.isAbsolute(workingDir)) {
+            return dirs.map(s => path.resolve(workingDir, s));
+        } else {
+            return dirs.map(s => path.resolve(cwd(), workingDir, s));
+        }
+    } else {
+        return dirs.map(s => path.resolve(cwd(), s));
+    }
 }
