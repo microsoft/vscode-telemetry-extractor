@@ -61,8 +61,8 @@ This will generate output similar to:
 ```
 
 ## Using a config file
-The extractor also supports config files which can be passed in via a command line arguments to custom the way the tool parses.
-An example config file can be found below.
+The extractor also supports config files which can be passed in via a command line arguments to customize the way the tool parses.
+An example config file can be found below. Note: sourceDirs and excludedDirs must be made relative to the workingDirectory
 ```json
 [
     {
@@ -83,10 +83,16 @@ An example config file can be found below.
             "vscode-chrome-debug"
         ],
         "excludedDirs": [],
-        "applyEndpoints": true
+        "applyEndpoints": true,
+        "lowerCaseEvents": true
     }
 ]
 ```
+
+Some defaults:
+1. If no working directory is provided it will use your current working directory
+2. excludedDirs defaults to an empty array
+3. If the working directory provided is relative it must be relative to the current working directory
 
 # Other Functionalities
 
