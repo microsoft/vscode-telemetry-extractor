@@ -12,7 +12,7 @@
     "test": "mocha out/tests/mocha/*.js",
     "clean": "rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
     "clean-all": "rm -rf ./src/telemetry-sources && rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
-    "extract-core": "node ./out/extractor.js --sourceDir ./src/telemetry-sources/vscode --excludedDirPattern extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints",
+    "extract-core": "node ./out/extractor.js --sourceDir ./src/telemetry-sources/vscode --excludedDir extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints",
     "merge": "rm -f ./merger/merged-telemetry.json && node ./out/merge.js",
     "compile": "tsc"
   },
