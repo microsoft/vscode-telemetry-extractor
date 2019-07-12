@@ -94,11 +94,13 @@ export class TsParser {
     private sourceDir: string;
     private excludedDirs: string[];
     private applyEndpoints: boolean;
+    private lowerCaseEvents: boolean;
     private project: Project;
-    constructor(sourceDir: string, excludedDirs: string[], applyEndpoints: boolean) {
+    constructor(sourceDir: string, excludedDirs: string[], applyEndpoints: boolean, lowerCaseEvents: boolean) {
         this.sourceDir = sourceDir;
         this.excludedDirs = excludedDirs;
         this.applyEndpoints = applyEndpoints;
+        this.lowerCaseEvents = lowerCaseEvents;
         // We search for a TS config as that allows the language service to handle weird imports
         if (fs.existsSync(path.join(this.sourceDir, 'src/tsconfig.json'))) {
             this.project = new Project({
@@ -154,7 +156,8 @@ export class TsParser {
                     return;
                 }
                 // Create an event from the name of the first argument passed in
-                const event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
+                let event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
+                event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 const created_event = new GDPREvent(event_name);
                 // We want the second one because public log is in the form <Event, Classification> and we care about the classification
                 const type_properties = typeArgs[1].getType().getProperties();
@@ -176,7 +179,8 @@ export class TsParser {
                 }
                 // If the publicLog call isn't generic that means we're just sending an event name with no classifications
                 // that are unique to that event (it just has common properties)
-                const event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
+                let event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
+                event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 events[event_name] = {};
             }
         });

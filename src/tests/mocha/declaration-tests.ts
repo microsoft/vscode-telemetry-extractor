@@ -26,7 +26,7 @@ export function nameSort(arrayToSort: Array<Event | Fragment>) {
 }
 describe('GDPR Declaration Tests', () => {
     it('extract declarations', async () => {
-        const parser = new Parser(sourceDirs, excludedDirs, true);
+        const parser = new Parser(sourceDirs, excludedDirs, true, false);
         const declarations = await parser.extractDeclarations();
         assert.ok(declarations);
         assert.strictEqual(declarations.events.dataPoints.length, 3);
@@ -53,7 +53,8 @@ describe('GDPR Declaration Tests', () => {
         const parserOptions: ParserOptions = {
             eventPrefix: '',
             applyEndpoints: true,
-            patchDebugEvents: false
+            patchDebugEvents: false,
+            lowerCaseEvents: false
         };
         const declarations = await getResolvedDeclaration(sourceDirs, excludedDirs, parserOptions);
         assert.ok(declarations);

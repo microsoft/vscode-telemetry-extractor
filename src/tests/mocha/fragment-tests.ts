@@ -18,7 +18,7 @@ describe('GDPR Fragments', () => {
 
     describe('extract declarations', () => {
         it('Find files with fragments', () => {
-            const parser = new Parser([sourceDir], excludedDirs, true);
+            const parser = new Parser([sourceDir], excludedDirs, true, false);
             //@ts-ignore
             const filePaths = parser.findFilesWithFragments(sourceDir);
             assert.ok(filePaths);
@@ -29,7 +29,7 @@ describe('GDPR Fragments', () => {
         });
 
         it('Extract fragment declarations', () => {
-            const parser = new Parser([sourceDir], excludedDirs, true);
+            const parser = new Parser([sourceDir], excludedDirs, true, false);
             //@ts-ignore
             const fragments = parser.findFragments(sourceDir);
             assert.ok(fragments.dataPoints);
@@ -48,7 +48,8 @@ describe('GDPR Fragments', () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
                 applyEndpoints: true,
-                patchDebugEvents: false
+                patchDebugEvents: false,
+                lowerCaseEvents: false
             };
             const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
             const resolvedFragments = declarations.fragments;
@@ -76,7 +77,8 @@ describe('GDPR Fragments', () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
                 applyEndpoints: true,
-                patchDebugEvents: false
+                patchDebugEvents: false,
+                lowerCaseEvents: false
             };
             const declarations = await getResolvedDeclaration([hardSource], [], parserOptions);
             assert.ok(declarations.fragments);

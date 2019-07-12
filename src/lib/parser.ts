@@ -16,10 +16,13 @@ export class Parser {
     private excludedDirs: string[];
     private applyEndpoints: boolean;
 
-    constructor(sourceDirs: string[], excludedDirs: string[], applyEndpoints: boolean) {
+    private lowerCaseEvents: boolean;
+
+    constructor(sourceDirs: string[], excludedDirs: string[], applyEndpoints: boolean, lowerCaseEvents: boolean) {
         this.sourceDirs = sourceDirs;
         this.excludedDirs = excludedDirs;
         this.applyEndpoints = applyEndpoints;
+        this.lowerCaseEvents = lowerCaseEvents;
     }
 
     private toRipGrepOption(dir: string) {
@@ -126,10 +129,11 @@ export class Parser {
         this.extractComments(filesWithEvents, eventMatcher, (filePath: string, match: Array<string>) => {
             try {
                 const eventDeclaration = JSON.parse(`{ ${match[1]} }`);
-                const eventName = Object.keys(eventDeclaration)[0];
+                let eventName = Object.keys(eventDeclaration)[0];
+                eventName = this.lowerCaseEvents ? eventName.toLowerCase() : eventName;
                 const event = findOrCreate(eventDeclarations, eventName);
                 // Get the propeties which the event possesses
-                const eventProperties = eventDeclaration[eventName];
+                const eventProperties = eventDeclaration[Object.keys(eventDeclaration)[0]];
                 populateProperties(eventProperties, event, this.applyEndpoints);
             } catch (error) {
                 console.error(`Event Declaration Error: ${error} in file ${filePath}`);

@@ -23,7 +23,7 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
     if (emitProgressMessage) {
         console.log('...extracting');
     }
-    const parser = new Parser(sourceDirs, excludedDirs, options.applyEndpoints);
+    const parser = new Parser(sourceDirs, excludedDirs, options.applyEndpoints, options.lowerCaseEvents);
     let declarations = await parser.extractDeclarations();
     declarations = resolveDeclarations(declarations);
     return declarations;
@@ -38,9 +38,9 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             let typescriptDeclarations = Object.create(null);
             // The parser does not know how to handle multiple source directories due to different TS configs, so we manually have to parse each source dir
             spec.sourceDirs.forEach((dir) => {
-                Object.assign(typescriptDeclarations, new TsParser(dir, spec.excludedDirs, spec.parserOptions.applyEndpoints).parseFiles());
+                Object.assign(typescriptDeclarations, new TsParser(dir, spec.excludedDirs, spec.parserOptions.applyEndpoints, spec.parserOptions.lowerCaseEvents).parseFiles());
             });
-            if (spec.parserOptions.eventPrefix != '') {
+            if (spec.parserOptions.eventPrefix !== '') {
                 declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
                     event.name = spec.parserOptions.eventPrefix + event.name;
                     return event;

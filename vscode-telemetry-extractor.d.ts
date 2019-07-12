@@ -11,6 +11,7 @@ export interface ParserOptions {
     eventPrefix: string;
     applyEndpoints: boolean;
     patchDebugEvents: boolean;
+    lowerCaseEvents: boolean;
 }
 
 /**

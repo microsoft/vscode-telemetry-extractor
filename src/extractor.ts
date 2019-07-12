@@ -14,19 +14,15 @@ export function convertConfigToSourceSpecs(file: PathLike): SourceSpec[] {
         for (const key in config) {
             const spec = config[key];
             // Some defaults
-            if (!spec.excludedDirs) {
-                spec.excludedDirs = [];
-            }
-            if (!spec.workingDir) {
-                spec.workingDir = cwd();
-            }
-            if (!spec.patchDebugEvents) {
-                spec.patchDebugEvents = false;
-            }
+            spec.excludedDirs = spec.excludedDirs ? spec.excludedDirs : [];
+            spec.workingDir = spec.workingDir ? spec.workingDir : cwd();
+            spec.patchDebugEvents = spec.patchDebugEvents ? spec.patchDebugEvents : false;
+            spec.lowerCaseEvents = spec.lowerCaseEvents ? spec.lowerCaseEvents : false;
             const parserOptions: ParserOptions = {
                 eventPrefix: spec.eventPrefix,
                 applyEndpoints: spec.applyEndpoints,
-                patchDebugEvents: spec.patchDebugEvents
+                patchDebugEvents: spec.patchDebugEvents,
+                lowerCaseEvents: spec.lowerCaseEvents
             }
             const sourceSpec: SourceSpec = {
                 sourceDirs: resolveDirectories(spec.sourceDirs, spec.workingDir),
@@ -63,12 +59,13 @@ if (options.config) {
     const parserOptions: ParserOptions = {
         eventPrefix: options.eventPrefix,
         applyEndpoints: options.applyEndpoints,
-        patchDebugEvents: false
+        patchDebugEvents: false,
+        lowerCaseEvents: false
     };
     console.log('....running.');
     const sourceSpec: SourceSpec = {
-        sourceDirs: resolveDirectories(options.sourceDirs),
-        excludedDirs: options.excludedDirs === undefined ? [] : options.excludedDirs,
+        sourceDirs: resolveDirectories(options.sourceDir),
+        excludedDirs: options.excludedDir === undefined ? [] : options.excludedDir,
         parserOptions: parserOptions
     };
     extractAndResolveDeclarations([sourceSpec]).then((declarations) => {
@@ -81,7 +78,7 @@ if (options.config) {
 }
 
 // Resolves an array of paths
-function resolveDirectories(dirs: string[], workingDir?: string): string[]{
+function resolveDirectories(dirs: string[], workingDir?: string): string[] {
     if (workingDir) {
         if (path.isAbsolute(workingDir)) {
             return dirs.map(s => path.resolve(workingDir, s));
