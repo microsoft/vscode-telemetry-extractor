@@ -156,7 +156,14 @@ export class TsParser {
                     return;
                 }
                 // Create an event from the name of the first argument passed in
-                let event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
+                let event_name = pl.getArguments()[0].getType().isStringLiteral() ? pl.getArguments()[0].getType().getText() : '';
+                // If we can't resolve the event_name there is no use continuing
+                if (event_name === '') {
+                    console.error('Unable to resolve event name, skipping....');
+                    return;
+                } else {
+                    event_name = event_name.substring(1, event_name.length - 1);
+                }
                 event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 const created_event = new GDPREvent(event_name);
                 // We want the second one because public log is in the form <Event, Classification> and we care about the classification
@@ -179,7 +186,13 @@ export class TsParser {
                 }
                 // If the publicLog call isn't generic that means we're just sending an event name with no classifications
                 // that are unique to that event (it just has common properties)
-                let event_name = pl.getArguments()[0].getText().substring(1, pl.getArguments()[0].getText().length - 1);
+                let event_name = pl.getArguments()[0].getType().isStringLiteral() ? pl.getArguments()[0].getType().getText() : '';
+                // If we can't resolve the event_name this is most likely because it is not a public log call and therefore we skip it
+                if (event_name === '') {
+                    return;
+                } else {
+                    event_name = event_name.substring(1, event_name.length - 1);
+                }
                 event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 events[event_name] = {};
             }
