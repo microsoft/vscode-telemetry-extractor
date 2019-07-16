@@ -11,17 +11,17 @@ import { ParserOptions } from "../../cli-options";
 import { Property } from "../../lib/common-properties";
 
 const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/source');
-const excludedDirs = ['excluded'];
+const excludedDirs = [path.join(sourceDir, 'excluded')];
 const sourceDir2 = path.join(cwd(), 'src/tests/mocha/resources/source-1')
-const multipleExcludes = ['excluded', 'folder2'];
+const multipleExcludes = [path.join(sourceDir2, 'excluded'), path.join(sourceDir2, 'folder2')];
 
-describe ('Events Tests', () => {
+describe('Events Tests', () => {
     it('find files - no exclusions', () => {
         const parser = new Parser([sourceDir], [], false, false);
         //@ts-ignore
         const filePaths = parser.findFilesWithEvents(sourceDir);
         assertHelper.sameValues(filePaths, [
-            path.join(cwd(),'src/tests/mocha/resources/source/file1.ts'),
+            path.join(cwd(), 'src/tests/mocha/resources/source/file1.ts'),
             path.join(cwd(), 'src/tests/mocha/resources/source/file2.ts'),
             path.join(cwd(), 'src/tests/mocha/resources/source/excluded/excludedFile.ts')]);
     });
@@ -30,14 +30,14 @@ describe ('Events Tests', () => {
         //@ts-ignore
         const filePaths = parser.findFilesWithEvents(sourceDir);
         assertHelper.sameValues(filePaths, [
-            path.join(cwd(),'src/tests/mocha/resources/source/file1.ts'),
+            path.join(cwd(), 'src/tests/mocha/resources/source/file1.ts'),
             path.join(cwd(), 'src/tests/mocha/resources/source/file2.ts')]);
     });
     it('find files - with multiple exclusions', () => {
         const parser = new Parser([sourceDir2], multipleExcludes, false, false);
         //@ts-ignore
         const filePaths = parser.findFilesWithEvents(sourceDir2);
-        assertHelper.sameValues(filePaths, [path.join(cwd(),'src/tests/mocha/resources/source-1/folder1/file1.ts')]);
+        assertHelper.sameValues(filePaths, [path.join(cwd(), 'src/tests/mocha/resources/source-1/folder1/file1.ts')]);
     });
     it('extract event declaration', async () => {
         const parser = new Parser([sourceDir], excludedDirs, false, false);
@@ -58,7 +58,7 @@ describe('Resolve Tests', () => {
         };
         const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
         assert.ok(declarations.events);
-        declarations.events.dataPoints  = nameSort(declarations.events.dataPoints);
+        declarations.events.dataPoints = nameSort(declarations.events.dataPoints);
         assert.strictEqual(declarations.events.dataPoints.length, 3);
         assert.ok(declarations.commonProperties);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);

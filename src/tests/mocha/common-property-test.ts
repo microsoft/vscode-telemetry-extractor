@@ -7,21 +7,21 @@ import * as path from 'path';
 import { cwd } from "process";
 import { Property } from "../../lib/common-properties";
 
-const sourceDir = 'src/tests/mocha/resources/';
-const excludeDirs = ['source', 'source-1'];
+const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/');
+const excludeDirs = [path.join(sourceDir, 'source'), path.join(sourceDir, 'source-1')];
 
 describe('GDPR common property extraction', () => {
   it('find files', function () {
-    const parser = new Parser([path.join(cwd(), sourceDir)], excludeDirs, true, false);
+    const parser = new Parser([sourceDir], excludeDirs, true, false);
     //@ts-ignore
-    const filePaths = parser.findFilesWithCommonProperties(path.join(cwd(), sourceDir));
+    const filePaths = parser.findFilesWithCommonProperties(sourceDir);
     assertHelper.sameValues(filePaths, [path.join(cwd(), '/src/tests/mocha/resources/common-prop.ts')]);
   });
 
   it('extract declarations', function () {
-    const parser = new Parser([path.join(cwd(), sourceDir)], excludeDirs, true, false);
+    const parser = new Parser([sourceDir], excludeDirs, true, false);
     //@ts-ignore
-    const commonProperties = parser.findCommonProperties(path.join(cwd(), sourceDir));
+    const commonProperties = parser.findCommonProperties(sourceDir);
     assert.deepStrictEqual(commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', 'none'));
     assert.deepStrictEqual(commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', 'MacAddressHash'));
   });

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { Parser } from "../../lib/parser";
-import { Property, CommonProperties } from '../../lib/common-properties'; 
+import { Property, CommonProperties } from '../../lib/common-properties';
 import { cwd } from 'process';
 import * as path from 'path';
 import * as assert from 'assert';
@@ -10,8 +10,8 @@ import { Fragment } from "../../lib/fragments";
 import { getResolvedDeclaration } from '../../lib/save-declarations';
 import { ParserOptions } from "../../cli-options";
 
-const sourceDirs = [path.join(cwd(),'src/tests/mocha/resources/source')];
-const excludedDirs = ['excluded'];
+const sourceDirs = [path.join(cwd(), 'src/tests/mocha/resources/source')];
+const excludedDirs = [path.join(sourceDirs[0], 'excluded')];
 
 export function nameSort(arrayToSort: Array<Event | Fragment>) {
     return arrayToSort.sort((a, b) => {
