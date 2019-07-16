@@ -19,18 +19,18 @@ describe('TS Parser Tests', () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'large-event-tests'), [], true, false);
         const declarations = tsParser.parseFiles();
         assert.ok(declarations['LargeEvent']);
-        assert.equal(Object.keys(declarations['LargeEvent']).length, 50);
+        assert.strictEqual(Object.keys(declarations['LargeEvent']).length, 50);
     });
     it('Single Include Tests', () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'single-include-tests'), [], true, false);
         const declarations = tsParser.parseFiles();
         assert.ok(declarations['Event1']);
-        assert.equal(Object.keys(declarations['Event1']).length, 4);
+        assert.strictEqual(Object.keys(declarations['Event1']).length, 4);
     });
     it('Multiple Include Tests', () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'multi-include-tests'), [], true, false);
         const declarations = tsParser.parseFiles();
         assert.ok(declarations['SentEvent']);
-        assert.equal(Object.keys(declarations['SentEvent']).length, 6);
+        assert.strictEqual(Object.keys(declarations['SentEvent']).length, 6);
     });
 });
