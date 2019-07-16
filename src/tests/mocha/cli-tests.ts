@@ -1,7 +1,9 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License.
+ *--------------------------------------------------------------------------------------------*/
 import * as cp from 'child_process';
 import * as assert from 'assert';
-import * as path from 'path';
-import { cwd } from 'process';
 
 describe('CLI Tests', () => {
     it('Help Command Test', () => {
