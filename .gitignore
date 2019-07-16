@@ -8,6 +8,7 @@ merger/*
 yarn.lock
 .vscode/settings.json
 *.json
+coverage
 !package*.json
 !tsconfig.json
 !merger/*.md

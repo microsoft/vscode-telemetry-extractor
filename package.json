@@ -10,9 +10,10 @@
   },
   "scripts": {
     "test": "mocha out/tests/mocha/*.js",
+    "coverage": "nyc mocha out/tests/mocha/*.js",
     "clean": "rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
     "clean-all": "rm -rf ./src/telemetry-sources && rm -f ./declarations-extensions-resolved.json && rm -f ./declarations-resolved.json",
-    "extract-core": "node ./out/extractor.js --sourceDir ./src/telemetry-sources/vscode --excludedDir extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints",
+    "extract-core": "node ./out/extractor.js --sourceDir ../vscode --excludedDir extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints",
     "merge": "rm -f ./merger/merged-telemetry.json && node ./out/merge.js",
     "compile": "tsc"
   },
@@ -31,6 +32,9 @@
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.0.10",
     "mocha": "^6.1.4",
+    "nyc": "^14.1.1",
+    "source-map-support": "^0.5.12",
+    "ts-node": "^8.3.0",
     "typescript": "^3.5.2"
   }
 }
