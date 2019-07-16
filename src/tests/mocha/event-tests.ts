@@ -9,6 +9,7 @@ import { nameSort } from "./declaration-tests";
 import { getResolvedDeclaration } from "../../lib/save-declarations";
 import { ParserOptions } from "../../cli-options";
 import { Property } from "../../lib/common-properties";
+import { patchDebugEvents } from "../../lib/debug-patch";
 
 const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/source');
 const excludedDirs = [path.join(sourceDir, 'excluded')];
@@ -46,6 +47,14 @@ describe('Events Tests', () => {
         assert.strictEqual(events.dataPoints.length, 3);
         events.dataPoints = nameSort(events.dataPoints);
         assert.strictEqual(events.dataPoints[0].name, 'E1');
+    });
+    it('Patch Debug Events', async () => {
+        const parser = new Parser([sourceDir], excludedDirs, false, false);
+        const declarations = await parser.extractDeclarations();
+        patchDebugEvents(declarations.events, '');
+        // Since order is non deterministic we filter down to the event we want
+        const debug = declarations.events.dataPoints.filter(e => e.name === "debugProtocolErrorResponse");
+        assert.strictEqual(debug.length, 1);
     });
 });
 describe('Resolve Tests', () => {

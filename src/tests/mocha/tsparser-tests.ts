@@ -41,4 +41,11 @@ describe('TS Parser Tests', () => {
         assert.ok(declarations['SingleInline']['inline.inlineprop1']);
         assert.ok(declarations['SingleInline']['inline.inlineprop2']);
     });
+    it('Lowercase Event Test', () => {
+        const tsParser = new TsParser(path.resolve(tsParserPath, 'small-event-tests'), [], true, true);
+        const declarations = tsParser.parseFiles();
+        assert.ok(declarations['smallevent1']);
+        assert.ok(declarations['smallevent2']);
+        assert.ok(declarations['smallevent3']);
+    });
 });

@@ -8,6 +8,7 @@
     "exclude": [
         "**/*.d.ts",
         "coverage/**",
+        "*.js",
         "packages/*/test/**",
         "test/**",
         "test{,-*}.ts",

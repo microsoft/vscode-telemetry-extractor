@@ -19,5 +19,5 @@ describe('CLI Tests', () => {
         const parsedResponse = JSON.parse(response.replace('...extracting', ''));
         assert.ok(parsedResponse['events']['LargeEvent']);
         assert.strictEqual(Object.keys(parsedResponse['events']['LargeEvent']).length, 50);
-    });
+    }).timeout(5000);
 });
