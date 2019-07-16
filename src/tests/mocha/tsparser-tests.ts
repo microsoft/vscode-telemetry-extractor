@@ -33,4 +33,12 @@ describe('TS Parser Tests', () => {
         assert.ok(declarations['SentEvent']);
         assert.strictEqual(Object.keys(declarations['SentEvent']).length, 6);
     });
+    it('Single Inline Test', () => {
+        const tsParser = new TsParser(path.resolve(tsParserPath, 'single-inline-tests'), [], true, false);
+        const declarations = tsParser.parseFiles();
+        assert.ok(declarations['SingleInline']);
+        assert.strictEqual(Object.keys(declarations['SingleInline']).length, 3);
+        assert.ok(declarations['SingleInline']['inline.inlineprop1']);
+        assert.ok(declarations['SingleInline']['inline.inlineprop2']);
+    });
 });
