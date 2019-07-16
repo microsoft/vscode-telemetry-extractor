@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { publicLog2 } from "../publicLog";
 
 type InlineClassification = {

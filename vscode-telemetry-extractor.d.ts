@@ -1,7 +1,6 @@
-import { PathLike } from "fs";
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
+import { PathLike } from "fs";
 /**
  * The options which the parser takes in
  * evenetPrefix: The prefix to append to all telemetry event names
@@ -62,7 +61,7 @@ export interface Property {
  * Extracts and resolves all typescript declarations from a series of different sources into a formatted object
  * @param sourceSpecs The various sources and their options which you would like to extract from
  */
-export declare function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: Events, commonProperties: CommonProperties}>;
+export declare function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{ events: Events, commonProperties: CommonProperties }>;
 
 /**
  * Parses a valid extractor config file into an array of sourceSpecs that can be passed into an extract function
