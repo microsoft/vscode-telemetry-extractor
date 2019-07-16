@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as cp from 'child_process';
 import * as path from 'path';
 import { rgPath } from "vscode-ripgrep";
+import { makeExclusionsRelativeToSource } from "./operations";
 
 interface IGDPRProperty {
     propName: string;
@@ -118,6 +119,7 @@ export class TsParser {
         const fileGlobs: string[] = [];
         fileGlobs.push(`'**/*.ts'`);
         // Excluded added lasts because order determines what takes effect
+        this.excludedDirs = makeExclusionsRelativeToSource(this.sourceDir, this.excludedDirs);
         this.excludedDirs.forEach((dir) => {
             fileGlobs.push(`'!${dir}/**'`);
         });

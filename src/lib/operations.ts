@@ -6,7 +6,7 @@ import { Property } from "./common-properties";
 import * as keywords from './keywords';
 
 export function merge(target: Fragments | Events, source: Fragments | Events) {
-    for(const item of source.dataPoints) {
+    for (const item of source.dataPoints) {
         const found = target.dataPoints.find((f) => {
             return f.name == item.name;
         });
@@ -74,4 +74,14 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
             target.properties.push(prop);
         }
     }
+}
+
+export function makeExclusionsRelativeToSource(sourceDir: string, excludedDirs: string[]) {
+    const relativeExclusions = [];
+    for (const excluded of excludedDirs) {
+        if (excluded.includes(sourceDir)) {
+            relativeExclusions.push(excluded.replace(sourceDir, ''));
+        }
+    }
+    return relativeExclusions;
 }

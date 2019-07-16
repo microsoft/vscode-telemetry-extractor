@@ -8,7 +8,7 @@ import { Fragments } from './fragments';
 import { Property, CommonProperties } from './common-properties';
 import { Events } from './events';
 import { Declarations } from './declarations';
-import { merge, findOrCreate, populateProperties } from './operations';
+import { merge, findOrCreate, populateProperties, makeExclusionsRelativeToSource } from './operations';
 
 export class Parser {
 
@@ -145,7 +145,8 @@ export class Parser {
 
     // Utilizes a regex to find the files containing the specific pattern
     private findFiles(ripgrepPattern: string, sourceDir: string) {
-        const exclusions = this.excludedDirs.length === 0 || this.excludedDirs[0] === '' ? '' : this.excludedDirs.map(this.toRipGrepOption).join('');
+        const relativeExclusions = makeExclusionsRelativeToSource(sourceDir, this.excludedDirs);
+        const exclusions = relativeExclusions.length === 0 || relativeExclusions[0] === '' ? '' : relativeExclusions.map(this.toRipGrepOption).join('');
         const cmd = `${rgPath} --files-with-matches --glob "*.ts" ${exclusions} --regexp "${ripgrepPattern}" -- ${sourceDir}`;
         try {
             let filePaths = cp.execSync(cmd, { encoding: 'ascii', cwd: `${sourceDir}` });
