@@ -19,7 +19,7 @@ export function convertConfigToSourceSpecs(file: PathLike): SourceSpec[] {
             spec.patchDebugEvents = spec.patchDebugEvents ? spec.patchDebugEvents : false;
             spec.lowerCaseEvents = spec.lowerCaseEvents ? spec.lowerCaseEvents : false;
             const parserOptions: ParserOptions = {
-                eventPrefix: spec.eventPrefix,
+                eventPrefix: spec.eventPrefix ? spec.eventPrefix : '',
                 applyEndpoints: spec.applyEndpoints,
                 patchDebugEvents: spec.patchDebugEvents,
                 lowerCaseEvents: spec.lowerCaseEvents
