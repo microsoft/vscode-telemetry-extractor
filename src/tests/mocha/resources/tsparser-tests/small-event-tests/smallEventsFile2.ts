@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License.
+ *--------------------------------------------------------------------------------------------*/
 import { publicLog2 } from '../publicLog';
 
 type SmallEvent3Classification = {
