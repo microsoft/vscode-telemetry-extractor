@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 import { writeToFile } from '../../lib/save-declarations';
 import { cwd } from 'process';
 import * as path from 'path';
