@@ -8,7 +8,7 @@ import * as assert from 'assert';
 import { Event } from "../../lib/events";
 import { Fragment } from "../../lib/fragments";
 import { getResolvedDeclaration } from '../../lib/save-declarations';
-import { ParserOptions } from "../../cli-options";
+import { ParserOptions } from "../../lib/source-spec";
 
 const sourceDirs = [path.join(cwd(), 'src/tests/mocha/resources/source')];
 const excludedDirs = [path.join(sourceDirs[0], 'excluded')];

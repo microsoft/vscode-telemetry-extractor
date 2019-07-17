@@ -2,15 +2,14 @@
 // Licensed under the MIT license.
 import * as path from 'path';
 import { Parser } from './parser';
-import { ParserOptions } from '../cli-options';
 import * as fileWriter from './file-writer';
-import { resolveDeclarations, Declarations, OutputtedDeclarations } from './declarations';
+import { resolveDeclarations, OutputtedDeclarations } from './declarations';
 import { transformOutput } from './object-converter';
 import { Events } from './events';
-import { SourceSpec } from '../extractor';
 import { CommonProperties } from './common-properties';
 import { TsParser } from './ts-parser';
 import { patchDebugEvents } from './debug-patch';
+import { ParserOptions, SourceSpec } from './source-spec';
 
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
     const json = JSON.stringify(contents);

@@ -1,48 +1,11 @@
 #!/usr/bin/env node
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { options, ParserOptions } from './cli-options';
-import { PathLike, readFileSync } from 'fs';
+import { options } from './cli-options';
 import * as path from 'path';
 import { cwd } from 'process';
 import { writeToFile, extractAndResolveDeclarations } from './lib/save-declarations';
-
-export function convertConfigToSourceSpecs(file: PathLike): SourceSpec[] {
-    try {
-        const config = JSON.parse(readFileSync(file).toString());
-        const sourceSpecs: SourceSpec[] = [];
-        for (const key in config) {
-            const spec = config[key];
-            // Some defaults
-            spec.excludedDirs = spec.excludedDirs ? spec.excludedDirs : [];
-            spec.workingDir = spec.workingDir ? spec.workingDir : cwd();
-            spec.patchDebugEvents = spec.patchDebugEvents ? spec.patchDebugEvents : false;
-            spec.lowerCaseEvents = spec.lowerCaseEvents ? spec.lowerCaseEvents : false;
-            const parserOptions: ParserOptions = {
-                eventPrefix: spec.eventPrefix ? spec.eventPrefix : '',
-                applyEndpoints: spec.applyEndpoints,
-                patchDebugEvents: spec.patchDebugEvents,
-                lowerCaseEvents: spec.lowerCaseEvents
-            }
-            const sourceSpec: SourceSpec = {
-                sourceDirs: resolveDirectories(spec.sourceDirs, spec.workingDir),
-                excludedDirs: resolveDirectories(spec.excludedDirs, spec.workingDir),
-                parserOptions: parserOptions
-            }
-            sourceSpecs.push(sourceSpec);
-        }
-        return sourceSpecs;
-    } catch (err) {
-        console.error(err);
-        return [];
-    }
-}
-
-export interface SourceSpec {
-    sourceDirs: string[],
-    excludedDirs: string[],
-    parserOptions: ParserOptions
-};
+import { convertConfigToSourceSpecs, ParserOptions, SourceSpec } from './lib/source-spec';
 
 if (options.config) {
     const sourceSpecs = convertConfigToSourceSpecs(options.config);

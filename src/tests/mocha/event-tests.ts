@@ -7,9 +7,9 @@ import * as path from 'path';
 import * as assert from 'assert';
 import { nameSort } from "./declaration-tests";
 import { getResolvedDeclaration } from "../../lib/save-declarations";
-import { ParserOptions } from "../../cli-options";
 import { Property } from "../../lib/common-properties";
 import { patchDebugEvents } from "../../lib/debug-patch";
+import { ParserOptions } from "../../lib/source-spec";
 
 const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/source');
 const excludedDirs = [path.join(sourceDir, 'excluded')];

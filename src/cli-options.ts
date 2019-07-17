@@ -26,11 +26,4 @@ export const optionDefinitions = [
     { name: 'applyEndpoints', alias: 'e', type: Boolean, defaultValue: false }
 ];
 
-export interface ParserOptions {
-    eventPrefix: string;
-    applyEndpoints: boolean;
-    patchDebugEvents: boolean;
-    lowerCaseEvents: boolean;
-}
-
 export const options = resolveDirectories(commandLineArgs(optionDefinitions, { partial: true }));
