@@ -8,7 +8,7 @@ import * as path from 'path';
  * @param {string} contents 
  * @returns {Promise}
  */
-export function writeFile(outputFile: string, contents: string) {
+export async function writeFile(outputFile: string, contents: string) {
     const directory = path.dirname(outputFile);
     return mkdirp(directory).then((dir: string) => {
         return new Promise((resolve, reject) => {
@@ -24,7 +24,7 @@ export function writeFile(outputFile: string, contents: string) {
 }
 
 // copied from https://github.com/Microsoft/vscode/blob/master/src/main.js#L139
-function mkdirp(dir: string): any {
+async function mkdirp(dir: string): Promise<any> {
     return mkdir(dir)
         .then(null, function (err: any) {
             if (err && err.code === 'ENOENT') {
@@ -41,7 +41,7 @@ function mkdirp(dir: string): any {
 }
 
 // copied from https://github.com/Microsoft/vscode/blob/master/src/main.js#L155
-function mkdir(dir: string): any {
+async function mkdir(dir: string): Promise<any> {
     return new Promise(function (resolve, reject) {
         fs.mkdir(dir, function (err: any) {
             if (err && err.code !== 'EEXIST') {

@@ -65,7 +65,7 @@ if (options.config) {
     console.log('....running.');
     const sourceSpec: SourceSpec = {
         sourceDirs: resolveDirectories(options.sourceDir),
-        excludedDirs: options.excludedDirm ? resolveDirectories(options.excludedDir) : [],
+        excludedDirs: options.excludedDir ? resolveDirectories(options.excludedDir) : [],
         parserOptions: parserOptions
     };
     extractAndResolveDeclarations([sourceSpec]).then((declarations) => {
