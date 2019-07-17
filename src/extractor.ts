@@ -53,7 +53,7 @@ if (options.config) {
             console.log(JSON.stringify(declarations));
         }
     });
-} else if (options.help || !(options.sourceDir && options.outputDir)) {
+} else if (options.help || !options.sourceDir) {
     require('./cli-help');
 } else {
     const parserOptions: ParserOptions = {
@@ -65,7 +65,7 @@ if (options.config) {
     console.log('....running.');
     const sourceSpec: SourceSpec = {
         sourceDirs: resolveDirectories(options.sourceDir),
-        excludedDirs: options.excludedDir === undefined ? [] : resolveDirectories(options.excludedDir),
+        excludedDirs: options.excludedDirm ? resolveDirectories(options.excludedDir) : [],
         parserOptions: parserOptions
     };
     extractAndResolveDeclarations([sourceSpec]).then((declarations) => {

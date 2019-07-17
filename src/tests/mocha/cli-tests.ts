@@ -19,5 +19,13 @@ describe('CLI Tests', () => {
         const parsedResponse = JSON.parse(response.replace('...extracting', ''));
         assert.ok(parsedResponse['events']['LargeEvent']);
         assert.strictEqual(Object.keys(parsedResponse['events']['LargeEvent']).length, 50);
-    }).timeout(5000);
+    }).timeout(3000);
+    it('Command Line Arguments Test', () => {
+        // Since this runs a a test we already test for the checks are simplistic to just make sure that everything looks good with CLI parsing
+        const response = cp.execSync('node ./out/extractor.js -s src/tests/mocha/resources/source --excludedDir src/tests/mocha/resources/source/excluded', { encoding: 'utf8' });
+        const parsedResponse = JSON.parse(response.replace('....running.\n...extracting', ''));
+        assert.ok(parsedResponse['events']);
+        assert.ok(parsedResponse['commonProperties']);
+        assert.ok(!parsedResponse['IgnoredEvent']);
+    }).timeout(3000);
 });
