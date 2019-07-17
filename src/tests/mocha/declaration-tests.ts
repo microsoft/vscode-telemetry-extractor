@@ -5,7 +5,7 @@ import { Property, CommonProperties } from '../../lib/common-properties';
 import { cwd } from 'process';
 import * as path from 'path';
 import * as assert from 'assert';
-import { Event } from "../../lib/events";
+import { Event, Wildcard } from "../../lib/events";
 import { Fragment } from "../../lib/fragments";
 import { getResolvedDeclaration } from '../../lib/save-declarations';
 import { ParserOptions } from "../../lib/source-spec";
@@ -60,5 +60,13 @@ describe('GDPR Declaration Tests', () => {
         assert.ok(declarations);
         assert.strictEqual(declarations.events.dataPoints.length, 3);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);
+    });
+    it('Wildcard test', async () => {
+        const parser = new Parser([path.resolve(cwd(), 'src/tests/mocha/resources/source-2')], [], false, false);
+        const declarations = await parser.extractDeclarations();
+        assert.ok(declarations);
+        assert.ok(declarations.events);
+        assert.strictEqual(declarations.events.dataPoints[0].properties.length, 3);
+        assert.ok(declarations.events.dataPoints[0].properties[2] instanceof Wildcard);
     });
 });
