@@ -9,7 +9,7 @@ and takes two types, the event and the classification.
 
 ```typescript
     interface IPropertyData {
-        classification: 'SystemMetaData' | 'CallStackOrException';
+        classification: 'SystemMetaData' | 'CallstackOrException';
         purpose: 'PerformanceAndHealth' | 'FeatureInsight';
         endpoint?: string;
         isMeasurement?: boolean;
@@ -92,7 +92,7 @@ With using typings as annotations an include is effectively the extends keyword 
 
     // The intersect type signifies the include
     type TSServeExitWithCodeClassification  = {
-        code: {classification: 'CallStackOrException', purpose: 'PerformanceAndHealth'};
+        code: {classification: 'CallstackOrException', purpose: 'PerformanceAndHealth'};
     } & TypeScriptCommonPropertiesClassification;
 ```
 

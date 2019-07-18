@@ -10,7 +10,7 @@ import { makeExclusionsRelativeToSource } from "./operations";
 
 interface IGDPRProperty {
     propName: string;
-    classification: 'SystemMetaData' | 'CallStackOrException';
+    classification: 'SystemMetaData' | 'CallstackOrException';
     purpose: 'PerformanceAndHealth' | 'FeatureInsight';
     endpoint?: string;
     isMeasurement?: boolean;
