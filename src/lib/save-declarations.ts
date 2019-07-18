@@ -50,9 +50,9 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
                     modifiedDeclartions[spec.parserOptions.eventPrefix + key] = typescriptDeclarations[key];
                 }
                 typescriptDeclarations = modifiedDeclartions;
-                if (spec.parserOptions.patchDebugEvents) {
-	                patchDebugEvents(declarations.events, spec.parserOptions.eventPrefix);
-	            }
+            }
+            if (spec.parserOptions.patchDebugEvents) {
+                patchDebugEvents(declarations.events, spec.parserOptions.eventPrefix);
             }
             // We concatenate each extensions properties into a central one
             // Throwing out fragments as they have already been used to resolve that extensions declarations
