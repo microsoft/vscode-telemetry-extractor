@@ -18,26 +18,26 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
                 newEvents[event.name][keywords.wildcard] = newEvents[event.name][keywords.wildcard] ? newEvents[event.name][keywords.wildcard] : [];
                 for (const entry of property.entries) {
                     const found = newEvents[event.name][keywords.wildcard].find((e: any) => {
-                        return e[keywords.prefix] === entry.prefix;
+                        return e[keywords.prefix] === entry.prefix.toLowerCase();
                     });
                     if (found) continue;
                     const newEntry = Object.create(null);
-                    newEntry[keywords.prefix] = entry.prefix;
+                    newEntry[keywords.prefix] = entry.prefix.toLowerCase();
                     if (entry.endpoint) {
-                        newEntry[keywords.classification] = {classification: entry.classification.classification, purpose: entry.classification.purpose, endPoint: "none"};
+                        newEntry[keywords.classification] = { classification: entry.classification.classification, purpose: entry.classification.purpose, endPoint: "none" };
                     } else {
                         newEntry[keywords.classification] = entry.classification;
                     }
                     newEvents[event.name][keywords.wildcard].push(newEntry);
                 }
-            }else {
-                // Handles the case where the comments can be incosistent
+            } else {
+                // Handles the case where the comments can be inconsistent
                 // We want to ensure that if isMeasurement is ever flagged it gets propogated
                 if (newEvents[event.name][propetyNameChanger(property.name)]) {
                     if (property.isMeasurement) newEvents[event.name][propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
                     continue;
                 }
-                newEvents[event.name][propetyNameChanger(property.name)] = {classification: property.classification, purpose: property.purpose};
+                newEvents[event.name][propetyNameChanger(property.name)] = { classification: property.classification, purpose: property.purpose };
                 if (property.endPoint) {
                     newEvents[event.name][propetyNameChanger(property.name)]['endPoint'] = property.endPoint;
                 }
@@ -56,7 +56,7 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
             if (property.isMeasurement) newCommonProperties[propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
             continue;
         }
-        newCommonProperties[propetyNameChanger(property.name)] = {classification: property.classification, purpose: property.purpose};
+        newCommonProperties[propetyNameChanger(property.name)] = { classification: property.classification, purpose: property.purpose };
         if (property.endPoint) {
             newCommonProperties[propetyNameChanger(property.name)]['endPoint'] = property.endPoint;
         }
@@ -64,12 +64,12 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
             newCommonProperties[propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
         }
     }
-    return {events: newEvents, commonProperties: newCommonProperties};
+    return { events: newEvents, commonProperties: newCommonProperties };
 }
 
 function propetyNameChanger(name: string) {
     name = name.toLowerCase();
-    if (name.includes('<number>')){
+    if (name.includes('<number>')) {
         name = name.replace('<number>', '<NUMBER>');
     }
     return name;
