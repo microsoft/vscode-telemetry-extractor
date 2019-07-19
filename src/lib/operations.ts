@@ -36,7 +36,7 @@ export function findOrCreate(searchTarget: Events | Fragments, name: string) {
     return found;
 }
 
-export function mergeWildcards(wildcard: any, target: Event | Fragment, applyEndpoints: boolean) {
+export function mergeWildcards(wildcard: any[], target: Event | Fragment, applyEndpoints: boolean) {
     let wildCard = target.properties.find((item) => {
         return item instanceof Wildcard;
     }) as Wildcard;
@@ -45,11 +45,13 @@ export function mergeWildcards(wildcard: any, target: Event | Fragment, applyEnd
         wildCard = new Wildcard();
         target.properties.push(wildCard);
     }
-    if (applyEndpoints) {
-        wildCard.entries.push(new WildcardEntry(wildcard[0][keywords.prefix], wildcard[0][keywords.classification], 'none'));
-    } else {
-        wildCard.entries.push(new WildcardEntry(wildcard[0][keywords.prefix], wildcard[0][keywords.classification]));
-    }
+    wildcard.forEach(w => {
+        if (applyEndpoints) {
+            wildCard.entries.push(new WildcardEntry(w[keywords.prefix], w[keywords.classification], 'none'));
+        } else {
+            wildCard.entries.push(new WildcardEntry(w[keywords.prefix], w[keywords.classification]));
+        }
+    });
 }
 
 export function populateProperties(properties: any, target: Event | Fragment, applyEndpoints = false) {
