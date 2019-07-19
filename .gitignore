@@ -10,3 +10,4 @@ coverage
 !package*.json
 !tsconfig.json
 !merger/*.md
+!src/tests/mocha/resources/test-config.json
