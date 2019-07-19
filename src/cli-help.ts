@@ -4,7 +4,7 @@ import { optionDefinitions } from './cli-options';
 
 function buildHelpMessage() {
     console.log('Allows the extraction of telemetry annotation from code. For more details please read: https://github.com/microsoft/vscode-telemetry-extractor/blob/master/README.md\n');
-    const optionLengths = optionDefinitions.map((opt) =>  {
+    const optionLengths = optionDefinitions.map((opt) => {
         if (opt.description) {
             return opt.name.length
         }
@@ -17,7 +17,9 @@ function buildHelpMessage() {
             if (opt.alias) {
                 outputString += `-${opt.alias} `;
             }
-            outputString += `--${opt.name.padEnd(maxLength)}\t\t\t`;
+            // Extra padding if you don't have an alias
+            const extraPadding = opt.alias ? 0 : 3;
+            outputString += `--${opt.name.padEnd(maxLength + extraPadding)}\t\t\t`;
             outputString += `${opt.description}`;
             console.log(outputString);
         }
