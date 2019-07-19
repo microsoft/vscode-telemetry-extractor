@@ -63,7 +63,8 @@ describe('Resolve Tests', () => {
             eventPrefix: '',
             applyEndpoints: true,
             patchDebugEvents: false,
-            lowerCaseEvents: false
+            lowerCaseEvents: false,
+            silentOutput: true
         };
         const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
         assert.ok(declarations.events);

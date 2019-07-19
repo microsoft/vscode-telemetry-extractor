@@ -54,7 +54,8 @@ describe('GDPR Declaration Tests', () => {
             eventPrefix: '',
             applyEndpoints: true,
             patchDebugEvents: false,
-            lowerCaseEvents: false
+            lowerCaseEvents: false,
+            silentOutput: true
         };
         const declarations = await getResolvedDeclaration(sourceDirs, excludedDirs, parserOptions);
         assert.ok(declarations);

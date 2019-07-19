@@ -6,12 +6,13 @@ import * as path from 'path';
 import { cwd } from 'process';
 import { writeToFile, extractAndResolveDeclarations } from './lib/save-declarations';
 import { convertConfigToSourceSpecs, ParserOptions, SourceSpec } from './lib/source-spec';
+import { logMessage } from './lib/logger';
 
 if (options.config) {
     const sourceSpecs = convertConfigToSourceSpecs(options.config);
     extractAndResolveDeclarations(sourceSpecs).then((declarations) => {
         if (options.outputDir) {
-            writeToFile(options.outputDir, declarations, 'config-resolved', true);
+            writeToFile(options.outputDir, declarations, 'config-resolved', !options.silent);
         } else {
             console.log(JSON.stringify(declarations));
         }
@@ -23,9 +24,10 @@ if (options.config) {
         eventPrefix: options.eventPrefix,
         applyEndpoints: options.applyEndpoints,
         patchDebugEvents: false,
-        lowerCaseEvents: false
+        lowerCaseEvents: false,
+        silentOutput: options.silent
     };
-    console.log('....running.');
+    logMessage('....running.', parserOptions.silentOutput);
     const sourceSpec: SourceSpec = {
         sourceDirs: resolveDirectories(options.sourceDir),
         excludedDirs: options.excludedDir ? resolveDirectories(options.excludedDir) : [],
@@ -33,7 +35,7 @@ if (options.config) {
     };
     extractAndResolveDeclarations([sourceSpec]).then((declarations) => {
         if (options.outputDir) {
-            writeToFile(options.outputDir, declarations, 'declarations-resolved', true);
+            writeToFile(options.outputDir, declarations, 'declarations-resolved', !options.silent);
         } else {
             console.log(JSON.stringify(declarations));
         }

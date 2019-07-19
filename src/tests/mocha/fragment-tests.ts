@@ -23,7 +23,7 @@ describe('GDPR Fragments', () => {
             const filePaths = parser.findFilesWithFragments(sourceDir);
             assert.ok(filePaths);
             assertHelper.sameValues(filePaths, [
-                path.join(cwd(),'src/tests/mocha/resources/source/folderB/fileB1.ts'),
+                path.join(cwd(), 'src/tests/mocha/resources/source/folderB/fileB1.ts'),
                 path.join(cwd(), 'src/tests/mocha/resources/source/folderA/fileA1.ts'),
                 path.join(cwd(), 'src/tests/mocha/resources/source/folderB/fileB2.ts')]);
         });
@@ -44,12 +44,13 @@ describe('GDPR Fragments', () => {
     });
 
     describe('Resolve Declarations', () => {
-        it ('Resolve inlines + includes', async () => {
+        it('Resolve inlines + includes', async () => {
             const parserOptions: ParserOptions = {
                 eventPrefix: '',
                 applyEndpoints: true,
                 patchDebugEvents: false,
-                lowerCaseEvents: false
+                lowerCaseEvents: false,
+                silentOutput: true
             };
             const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
             const resolvedFragments = declarations.fragments;
@@ -78,7 +79,8 @@ describe('GDPR Fragments', () => {
                 eventPrefix: '',
                 applyEndpoints: true,
                 patchDebugEvents: false,
-                lowerCaseEvents: false
+                lowerCaseEvents: false,
+                silentOutput: true
             };
             const declarations = await getResolvedDeclaration([hardSource], [], parserOptions);
             assert.ok(declarations.fragments);

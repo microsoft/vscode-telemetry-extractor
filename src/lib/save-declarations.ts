@@ -10,25 +10,24 @@ import { CommonProperties } from './common-properties';
 import { TsParser } from './ts-parser';
 import { patchDebugEvents } from './debug-patch';
 import { ParserOptions, SourceSpec } from './source-spec';
+import { logMessage } from './logger';
 
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
     const json = JSON.stringify(contents);
     const outputFile = path.resolve(outputDir, `${fileName}.json`);
-    if (emitProgressMessage) console.log(`...writing ${outputFile}`);
+    logMessage(`...writing ${outputFile}`, !emitProgressMessage);
     return fileWriter.writeFile(outputFile, json);
 }
 
-export async function getResolvedDeclaration(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions, emitProgressMessage = true) {
-    if (emitProgressMessage) {
-        console.log('...extracting');
-    }
+export async function getResolvedDeclaration(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions) {
+    logMessage('...extracting', options.silentOutput);
     const parser = new Parser(sourceDirs, excludedDirs, options.applyEndpoints, options.lowerCaseEvents);
     let declarations = await parser.extractDeclarations();
     declarations = resolveDeclarations(declarations);
     return declarations;
 }
 
-export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{events: any, commonProperties: any}> {
+export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{ events: any, commonProperties: any }> {
     try {
         const allDeclarations: OutputtedDeclarations = { events: new Events(), commonProperties: new CommonProperties() };
         const allTypeScriptDeclarations = Object.create(null);
