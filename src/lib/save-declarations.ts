@@ -23,7 +23,7 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
     logMessage('...extracting', options.silentOutput);
     const parser = new Parser(sourceDirs, excludedDirs, options.applyEndpoints, options.lowerCaseEvents);
     let declarations = await parser.extractDeclarations();
-    declarations = resolveDeclarations(declarations);
+    declarations = resolveDeclarations(declarations, options.verbose);
     return declarations;
 }
 

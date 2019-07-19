@@ -12,6 +12,7 @@
     "test": "mocha out/tests/mocha/*.js",
     "coverage": "nyc mocha out/tests/mocha/*.js",
     "extract-core": "node ./out/extractor.js --sourceDir src/telemetry-sources/vscode --excludedDir src/telemetry-sources/vscode/extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints",
+    "extract-core-verbose": "node ./out/extractor.js --sourceDir src/telemetry-sources/vscode --excludedDir src/telemetry-sources/vscode/extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints --silent --verbose",
     "compile": "tsc"
   },
   "bin": {

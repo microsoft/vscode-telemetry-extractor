@@ -25,7 +25,8 @@ if (options.config) {
         applyEndpoints: options.applyEndpoints,
         patchDebugEvents: false,
         lowerCaseEvents: false,
-        silentOutput: options.silent
+        silentOutput: options.silent,
+        verbose: options.verbose
     };
     logMessage('....running.', parserOptions.silentOutput);
     const sourceSpec: SourceSpec = {

@@ -11,6 +11,7 @@ export interface ParserOptions {
     patchDebugEvents: boolean;
     lowerCaseEvents: boolean;
     silentOutput: boolean;
+    verbose: boolean;
 }
 
 export interface SourceSpec {
@@ -35,7 +36,8 @@ export function convertConfigToSourceSpecs(file: PathLike): SourceSpec[] {
                 applyEndpoints: spec.applyEndpoints,
                 patchDebugEvents: spec.patchDebugEvents,
                 lowerCaseEvents: spec.lowerCaseEvents,
-                silentOutput: spec.silentOutput ? spec.silentOutput : false
+                silentOutput: spec.silentOutput,
+                verbose: spec.verbose
             }
             const sourceSpec: SourceSpec = {
                 sourceDirs: resolveDirectories(spec.sourceDirs, spec.workingDir),

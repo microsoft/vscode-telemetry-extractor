@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Fragments, Fragment } from "./fragments";
-import { Events, Include, Inline, Event } from "./events";
+import { Fragments } from "./fragments";
+import { Events, Include, Inline } from "./events";
 import { CommonProperties, Property } from "./common-properties";
 
 export interface Declarations {
@@ -17,6 +17,8 @@ export interface OutputtedDeclarations {
 }
 
 function resolveIncludes(target: Events | Fragments, fragments: Fragments) {
+    const notResolved: Array<String> = [];
+    const usedFragments: Array<String> = [];
     for (const item of target.dataPoints) {
         for (let i = 0; i < item.properties.length; i++) {
             const property = item.properties[i];
@@ -30,18 +32,25 @@ function resolveIncludes(target: Events | Fragments, fragments: Fragments) {
                     const fragment = fragments.dataPoints.find((f) => {
                         return f.name === reference;
                     });
-                    if (fragment) item.properties = item.properties.concat(fragment.properties);
+                    if (fragment) {
+                        item.properties = item.properties.concat(fragment.properties);
+                        usedFragments.push(fragment.name);
+                    } else {
+                        notResolved.push(reference);
+                    }
+                    // This is an inefficient solution, but since adding and removing from the array
+                    // messes up the iteration we just restart it until we can get through the whole loop without any includes
+                    i = 0;
                 }
-                // This is an inefficient solution, but since adding and removing from the array
-                // messes up the iteration we just restart it until we can get through the whole loop without any includes
-                i = 0;
             }
         }
     }
-    return target;
+    return { target, notResolved, usedFragments };
 }
 
 function resolveInlines(target: Events | Fragments, fragments: Fragments) {
+    const notResolved: Array<String> = [];
+    const usedFragments: Array<String> = [];
     for (const item of target.dataPoints) {
         for (let i = 0; i < item.properties.length; i++) {
             const property = item.properties[i];
@@ -57,6 +66,7 @@ function resolveInlines(target: Events | Fragments, fragments: Fragments) {
                         return f.name === reference;
                     });
                     if (fragment) {
+                        usedFragments.push(fragment.name);
                         fragment.properties.forEach((prop) => {
                             if (prop instanceof Property) {
                                 // We create the new property in the format inlineName.propName keeping the rest the same
@@ -70,18 +80,50 @@ function resolveInlines(target: Events | Fragments, fragments: Fragments) {
                                 item.properties.push(currentProp);
                             }
                         });
+                    } else {
+                        notResolved.push(reference);
                     }
                 }
             }
         }
     }
-    return target;
+    return { target, notResolved, usedFragments };
 }
 
-export function resolveDeclarations(declarations: Declarations) {
-    declarations.fragments = resolveInlines(declarations.fragments, declarations.fragments);
-    declarations.events = resolveInlines(declarations.events, declarations.fragments);
-    declarations.fragments = resolveIncludes(declarations.fragments, declarations.fragments);
-    declarations.events = resolveIncludes(declarations.events, declarations.fragments);
-    return {events: declarations.events, commonProperties: declarations.commonProperties, fragments: declarations.fragments};
+export function resolveDeclarations(declarations: Declarations, verbose: boolean) {
+    let notResolved: Array<String> = [];
+    let usedFragments: Array<String> = [];
+    if (verbose) {
+        const fragmentsResolveInlines = resolveInlines(declarations.fragments, declarations.fragments);
+        const eventsResolveInlines = resolveInlines(declarations.events, declarations.fragments);
+        const fragmentsResolveIncludes = resolveIncludes(declarations.fragments, declarations.fragments);
+        const eventsResolveIncludes = resolveIncludes(declarations.events, declarations.fragments);
+        notResolved = notResolved.concat(fragmentsResolveIncludes.notResolved);
+        notResolved = notResolved.concat(fragmentsResolveInlines.notResolved);
+        notResolved = notResolved.concat(eventsResolveIncludes.notResolved);
+        notResolved = notResolved.concat(eventsResolveInlines.notResolved);
+        // Remove duplicates
+        notResolved = [...new Set(notResolved)];
+        usedFragments = usedFragments.concat(fragmentsResolveIncludes.usedFragments);
+        usedFragments = usedFragments.concat(fragmentsResolveInlines.usedFragments);
+        usedFragments = usedFragments.concat(eventsResolveIncludes.usedFragments);
+        usedFragments = usedFragments.concat(eventsResolveInlines.usedFragments);
+        // Remove duplicates
+        const usedFragmentsSet = new Set(usedFragments);
+        const allFragments = declarations.fragments.dataPoints.map(f => f.name);
+        // The Symmetric difference of a set
+        const unusedFragments = new Set(allFragments.filter(x => !usedFragmentsSet.has(x)));
+        console.log(`Unresolved References: ${notResolved}`);
+        console.log(`Unused Fragments: ${[...unusedFragments]}`);
+        declarations.fragments = fragmentsResolveInlines.target;
+        declarations.events = eventsResolveInlines.target;
+        declarations.fragments = fragmentsResolveIncludes.target;
+        declarations.events = eventsResolveIncludes.target;
+    } else {
+        declarations.fragments = resolveInlines(declarations.fragments, declarations.fragments).target;
+        declarations.events = resolveInlines(declarations.events, declarations.fragments).target;
+        declarations.fragments = resolveIncludes(declarations.fragments, declarations.fragments).target;
+        declarations.events = resolveIncludes(declarations.events, declarations.fragments).target;
+    }
+    return { events: declarations.events, commonProperties: declarations.commonProperties, fragments: declarations.fragments };
 }
