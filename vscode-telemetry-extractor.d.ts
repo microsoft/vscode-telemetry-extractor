@@ -11,7 +11,7 @@ export interface ParserOptions {
     applyEndpoints: boolean;
     patchDebugEvents: boolean;
     lowerCaseEvents: boolean;
-    silentOutput: boolean;
+    silenceOutput: boolean;
     verbose: boolean;
 }
 

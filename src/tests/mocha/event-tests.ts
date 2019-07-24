@@ -64,7 +64,7 @@ describe('Resolve Tests', () => {
             applyEndpoints: true,
             patchDebugEvents: false,
             lowerCaseEvents: false,
-            silentOutput: true,
+            silenceOutput: true,
             verbose: false
         };
         const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);

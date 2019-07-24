@@ -112,9 +112,11 @@ export function resolveDeclarations(declarations: Declarations, verbose: boolean
         const usedFragmentsSet = new Set(usedFragments);
         const allFragments = declarations.fragments.dataPoints.map(f => f.name);
         // The Symmetric difference of a set
-        const unusedFragments = new Set(allFragments.filter(x => !usedFragmentsSet.has(x)));
+        let unusedFragments = [...new Set(allFragments.filter(x => !usedFragmentsSet.has(x)))];
+        notResolved = notResolved.length > 0 ? notResolved : ['None'];
+        unusedFragments = unusedFragments.length > 0 ? unusedFragments : ['None'];
         console.log(`Unresolved References: ${notResolved}`);
-        console.log(`Unused Fragments: ${[...unusedFragments]}`);
+        console.log(`Unused Fragments: ${unusedFragments}`);
         declarations.fragments = fragmentsResolveInlines.target;
         declarations.events = eventsResolveInlines.target;
         declarations.fragments = fragmentsResolveIncludes.target;

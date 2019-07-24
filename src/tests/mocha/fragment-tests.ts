@@ -50,7 +50,7 @@ describe('GDPR Fragments', () => {
                 applyEndpoints: true,
                 patchDebugEvents: false,
                 lowerCaseEvents: false,
-                silentOutput: true,
+                silenceOutput: true,
                 verbose: false
             };
             const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
@@ -81,7 +81,7 @@ describe('GDPR Fragments', () => {
                 applyEndpoints: true,
                 patchDebugEvents: false,
                 lowerCaseEvents: false,
-                silentOutput: true,
+                silenceOutput: true,
                 verbose: false
             };
             const declarations = await getResolvedDeclaration([hardSource], [], parserOptions);

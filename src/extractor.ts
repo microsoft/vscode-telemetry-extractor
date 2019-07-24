@@ -25,10 +25,10 @@ if (options.config) {
         applyEndpoints: options.applyEndpoints,
         patchDebugEvents: false,
         lowerCaseEvents: false,
-        silentOutput: options.silent,
+        silenceOutput: options.silenceOutput,
         verbose: options.verbose
     };
-    logMessage('....running.', parserOptions.silentOutput);
+    logMessage('....running.', parserOptions.silenceOutput);
     const sourceSpec: SourceSpec = {
         sourceDirs: resolveDirectories(options.sourceDir),
         excludedDirs: options.excludedDir ? resolveDirectories(options.excludedDir) : [],

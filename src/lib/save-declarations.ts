@@ -20,7 +20,7 @@ export function writeToFile(outputDir: string, contents: object, fileName: strin
 }
 
 export async function getResolvedDeclaration(sourceDirs: Array<string>, excludedDirs: Array<string>, options: ParserOptions) {
-    logMessage('...extracting', options.silentOutput);
+    logMessage('...extracting', options.silenceOutput);
     const parser = new Parser(sourceDirs, excludedDirs, options.applyEndpoints, options.lowerCaseEvents);
     let declarations = await parser.extractDeclarations();
     declarations = resolveDeclarations(declarations, options.verbose);
