@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Project, ScriptTarget, SyntaxKind, Symbol, Node, CallExpression } from "ts-morph";
-import { cwd } from 'process';
+import { Project, SyntaxKind, Symbol, Node, CallExpression } from "ts-morph";
 import * as fs from 'fs';
 import * as cp from 'child_process';
 import * as path from 'path';
@@ -78,7 +77,7 @@ class NodeVisitor {
         }
         const resolved = Object.create(null);
         if (this.applyEndpoints) {
-            this.resolved_property['endpoint'] = 'none';
+            this.resolved_property['endpoint'] = this.resolved_property['endpoint'] ? this.resolved_property['endpoint'] : 'none';
         }
         resolved[this.prop_name] = this.resolved_property;
         this.properties.push(resolved);
