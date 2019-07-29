@@ -59,9 +59,9 @@ class NodeVisitor {
 
             // If it's a string we strip the quotes
             if (type.isStringLiteral()) {
-                this.resolved_property[currentNode.getEscapedName().toLowerCase()] = type.getText().substring(1, type.getText().length - 1);
+                this.resolved_property[currentNode.getEscapedName()] = type.getText().substring(1, type.getText().length - 1);
             } else {
-                this.resolved_property[currentNode.getEscapedName().toLowerCase()] = type.getText() === 'true';
+                this.resolved_property[currentNode.getEscapedName()] = type.getText() === 'true';
             }
             return;
         }
@@ -77,7 +77,7 @@ class NodeVisitor {
         }
         const resolved = Object.create(null);
         if (this.applyEndpoints) {
-            this.resolved_property['endpoint'] = this.resolved_property['endpoint'] ? this.resolved_property['endpoint'] : 'none';
+            this.resolved_property['endPoint'] = this.resolved_property['endPoint'] ? this.resolved_property['endPoint'] : 'none';
         }
         resolved[this.prop_name] = this.resolved_property;
         this.properties.push(resolved);
