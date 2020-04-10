@@ -7,6 +7,7 @@ import { cwd } from 'process';
 
 export interface ParserOptions {
     eventPrefix: string;
+    propertyPrefix: string;
     applyEndpoints: boolean;
     patchDebugEvents: boolean;
     lowerCaseEvents: boolean;
@@ -33,6 +34,7 @@ export function convertConfigToSourceSpecs(file: PathLike): SourceSpec[] {
             spec.lowerCaseEvents = spec.lowerCaseEvents ? spec.lowerCaseEvents : false;
             const parserOptions: ParserOptions = {
                 eventPrefix: spec.eventPrefix ? spec.eventPrefix : '',
+                propertyPrefix: spec.propertyPrefix ? spec.propertyPrefix : '',
                 applyEndpoints: spec.applyEndpoints,
                 patchDebugEvents: spec.patchDebugEvents,
                 lowerCaseEvents: spec.lowerCaseEvents,

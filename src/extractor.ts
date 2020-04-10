@@ -22,6 +22,7 @@ if (options.config) {
 } else {
     const parserOptions: ParserOptions = {
         eventPrefix: options.eventPrefix,
+        propertyPrefix: options.propertyPrefix,
         applyEndpoints: options.applyEndpoints,
         patchDebugEvents: false,
         lowerCaseEvents: false,

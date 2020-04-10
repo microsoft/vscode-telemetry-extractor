@@ -52,6 +52,7 @@ describe('GDPR Declaration Tests', () => {
     it('resolve declarations', async () => {
         const parserOptions: ParserOptions = {
             eventPrefix: '',
+            propertyPrefix: '',
             applyEndpoints: true,
             patchDebugEvents: false,
             lowerCaseEvents: false,

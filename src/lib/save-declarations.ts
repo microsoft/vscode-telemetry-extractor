@@ -6,7 +6,7 @@ import * as fileWriter from './file-writer';
 import { resolveDeclarations, OutputtedDeclarations } from './declarations';
 import { transformOutput } from './object-converter';
 import { Events } from './events';
-import { CommonProperties } from './common-properties';
+import { CommonProperties, Property } from './common-properties';
 import { TsParser } from './ts-parser';
 import { patchDebugEvents } from './debug-patch';
 import { ParserOptions, SourceSpec } from './source-spec';
@@ -38,6 +38,7 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             spec.sourceDirs.forEach((dir) => {
                 Object.assign(typescriptDeclarations, new TsParser(dir, spec.excludedDirs, spec.parserOptions.applyEndpoints, spec.parserOptions.lowerCaseEvents).parseFiles());
             });
+            const hasPropertyPrefix = spec.parserOptions.propertyPrefix !== '';
             if (spec.parserOptions.eventPrefix !== '') {
                 declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
                     event.name = spec.parserOptions.eventPrefix + event.name;
@@ -46,7 +47,7 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
                 const modifiedDeclartions = Object.create(null);
                 // Modify the object keys to be prefixed with the specified prefix
                 for (const key in typescriptDeclarations) {
-                    modifiedDeclartions[spec.parserOptions.eventPrefix + key] = typescriptDeclarations[key];
+                    modifiedDeclartions[spec.parserOptions.eventPrefix + key] = prefixProperties(spec.parserOptions.propertyPrefix, typescriptDeclarations[key]);
                 }
                 typescriptDeclarations = modifiedDeclartions;
             }
@@ -68,4 +69,18 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
         console.error(`Error: ${error}`);
         return Promise.reject(error);
     }
+}
+
+function EscapeProperty(property: string) {
+    return property.replace(/\d/, "<NUMBER>");
+}
+
+type PropertyMetadata = {[name: string]: any};
+type ManyPropertiesMetadata = {[name: string]: PropertyMetadata};
+function prefixProperties(prefix: string, properties: ManyPropertiesMetadata) {
+    const prefixedProperties: ManyPropertiesMetadata = {};
+    for (let propertyName in properties) {
+        prefixedProperties[EscapeProperty(prefix + propertyName)] = properties[propertyName] 
+    }
+    return prefixedProperties;
 }
