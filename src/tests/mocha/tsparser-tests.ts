@@ -6,7 +6,8 @@ import { TsParser } from '../../lib/ts-parser';
 import { cwd } from 'process';
 import * as path from 'path';
 import * as assert from 'assert';
-describe('TS Parser Tests', () => {
+describe('TS Parser Tests', function () {
+    this.timeout
     const tsParserPath = path.resolve(cwd(), 'src/tests/mocha/resources/tsparser-tests/');
     it('Small Event Tests', () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'small-event-tests'), [], true, false);
@@ -47,5 +48,15 @@ describe('TS Parser Tests', () => {
         assert.ok(declarations['smallevent1']);
         assert.ok(declarations['smallevent2']);
         assert.ok(declarations['smallevent3']);
+    });
+    // Few tests to ensure that the ts-parser also sees publicLogError2
+    it('publicLogError2 Tests', () => {
+        const tsParser = new TsParser(path.resolve(tsParserPath, 'public-log-error-tests'), [], true, false);
+        const declarations = tsParser.parseFiles();
+        assert.ok(declarations['LargeEvent']);
+        assert.strictEqual(Object.keys(declarations['LargeEvent']).length, 50);
+        assert.ok(declarations['SmallEvent1']);
+        assert.ok(declarations['SmallEvent2']);
+        assert.ok(declarations['SmallEvent3']);
     });
 });

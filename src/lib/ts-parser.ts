@@ -126,7 +126,7 @@ export class TsParser {
         for (const fg of fileGlobs) {
             rg_glob += ` --glob ${fg}`;
         }
-        const cmd = `${rgPath} --files-with-matches publicLog2 ${rg_glob} --no-ignore`;
+        const cmd = `${rgPath} --files-with-matches 'publicLog2|publicLogError2' ${rg_glob} --no-ignore`;
         try {
             const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii', cwd: this.sourceDir });
             // Split the paths into an array
@@ -143,7 +143,8 @@ export class TsParser {
         let publicLogUse: Array<CallExpression> = [];
         this.project.getSourceFiles().forEach((source) => {
             const descendants = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLog2'));
-            publicLogUse = descendants.concat(publicLogUse);
+            const descendants2 = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLogError2'));
+            publicLogUse = descendants.concat(publicLogUse, descendants2);
         });
 
         const events = Object.create(null);

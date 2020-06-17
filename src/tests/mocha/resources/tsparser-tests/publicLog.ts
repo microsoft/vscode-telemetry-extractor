@@ -25,6 +25,11 @@ type StrictPropertyCheck<T extends IGDPRProperty, E> = StrictPropertyChecker<E, 
 
 type GDPRClassification<T> = { [_ in keyof T]: IPropertyData | IGDPRProperty | undefined };
 
+// The TS parser is looking for two commands, publicLog2 and publicLogError2. They both represent the same thing
 export function publicLog2<E extends ClassifiedEvent<T> = never, T extends GDPRClassification<T> = never>(eventName: string, data?: StrictPropertyCheck<T, E>, anonymizeFilePaths?: boolean): void {
+    return;
+}
+
+export function publicLogError2<E extends ClassifiedEvent<T> = never, T extends GDPRClassification<T> = never>(eventName: string, data?: StrictPropertyCheck<T, E>, anonymizeFilePaths?: boolean): void {
     return;
 }

@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License.
  *--------------------------------------------------------------------------------------------*/
-import { publicLog2, publicLogError2 } from "../publicLog";
+import { publicLogError2 } from "../publicLog";
 
 type LargeEventclassification = {
     prop1: { classification: 'SystemMetaData', purpose: 'FeatureInsight' };
@@ -162,4 +162,4 @@ const largeEvent: LargeEvent = {
     prop49: 'FooBar',
     prop50: 'FooBar'
 };
-publicLog2<LargeEvent, LargeEventclassification>('LargeEvent', largeEvent);
+publicLogError2<LargeEvent, LargeEventclassification>('LargeEvent', largeEvent);
