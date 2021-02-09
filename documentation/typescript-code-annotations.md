@@ -4,28 +4,28 @@ As shown in [GDPR formatted comments](comment-code-annotations.md) telemetry eve
 This form of documentation has its pros and cons, one of the major cons which is human error. Comments do not offer any computer assisted protection agianst things like simple typos while typings do.
 
 ## Declaring your telemetry handler
-We recommend declaring your telemetry handler the same way VS Code does as the parser explicity looks for a function called publicLog which is templated
+We recommend declaring your telemetry handler the same way VS Code does as the parser explicity looks for a function called publicLog2 which is templated
 and takes two types, the event and the classification.
 
 ```typescript
-    interface IPropertyData {
-        classification: 'SystemMetaData' | 'CallstackOrException';
-        purpose: 'PerformanceAndHealth' | 'FeatureInsight';
-        endpoint?: string;
-        isMeasurement?: boolean;
-    }
+interface IPropertyData {
+    classification: 'SystemMetaData' | 'CallstackOrException';
+    purpose: 'PerformanceAndHealth' | 'FeatureInsight';
+    endpoint?: string;
+    isMeasurement?: boolean;
+}
 
-    interface IGDPRProperty {
-        readonly [name: string] : IPropertyData | undefined | IGDPRProperty;
-    }
+interface IGDPRProperty {
+    readonly [name: string] : IPropertyData | undefined | IGDPRProperty;
+}
 
-    type ClassifiedEvent<T extends IGDPRProperty> = {
-        [k in keyof T]: any
-    }
-    
-    type StrictPropertyCheck<TEvent, TClassifiedEvent, TError> = keyof TEvent extends keyof TClassifiedEvent ? keyof TClassifiedEvent extends keyof TEvent ? TEvent : TError : TError;
-    
-    function publicLog<E extends ClassifiedEvent<T> = never, T extends {[_ in keyof T]: IPropertyData | IGDPRProperty | undefined} = never>(name: string, props: StrictPropertyCheck<E, ClassifiedEvent<T>, 'Type of classified event does not match event properties'>) { }
+type ClassifiedEvent<T extends IGDPRProperty> = {
+    [k in keyof T]: any
+}
+
+type StrictPropertyCheck<TEvent, TClassifiedEvent, TError> = keyof TEvent extends keyof TClassifiedEvent ? keyof TClassifiedEvent extends keyof TEvent ? TEvent : TError : TError;
+
+function publicLog2<E extends ClassifiedEvent<T> = never, T extends {[_ in keyof T]: IPropertyData | IGDPRProperty | undefined} = never>(name: string, props: StrictPropertyCheck<E, ClassifiedEvent<T>, 'Type of classified event does not match event properties'>) { }
 ```
 
 ## Simple Events
@@ -49,17 +49,17 @@ type PackageMetricsClassification =  {
 };
 ```
 
-You would then need to declare a type for the event you're sending and send the event 
+You would then need to declare a type for the event you're sending and send the event
 
-```ts 
+```ts
 interface PackageMetrics {
     commit: string;
     size: number;
     count: number;
 };
-publicLog<PackageMetrics, PackageMetricsClassification>('monacoworkbench/packagemetrics', packageMetric);
+publicLog2<PackageMetrics, PackageMetricsClassification>('monacoworkbench/packagemetrics', packageMetric);
 // Inline works too
-publicLog<PackageMetrics, PackageMetricsClassification>('monacoworkbench/packagemetrics', {commit: 'abcdef', size: 10, count: 1});
+publicLog2<PackageMetrics, PackageMetricsClassification>('monacoworkbench/packagemetrics', {commit: 'abcdef', size: 10, count: 1});
 ```
 
 This form of annotation requires that the type of event sent and its classification match in terms of properties and that the classification is a valid classification.
@@ -96,7 +96,7 @@ With using typings as annotations an include is effectively the extends keyword 
     } & TypeScriptCommonPropertiesClassification;
 ```
 
-The event is then given a type and sent just like the event above 
+The event is then given a type and sent just like the event above
 ```ts
     interface TSServerExitCode {
         code: number;
@@ -108,8 +108,8 @@ The event is then given a type and sent just like the event above
         version: 3.5
     };
 
-    publicLog<TSServerExitCode, TSServeExitWithCodeClassification>('tsserver.exitWithCode', tsServerEvent);
-    publicLog<TSServerExitCode, TSServeExitWithCodeClassification>('tsserver.exitWithCode', {code: 0, version: 3.5});
+    publicLog2<TSServerExitCode, TSServeExitWithCodeClassification>('tsserver.exitWithCode', tsServerEvent);
+    publicLog2<TSServerExitCode, TSServeExitWithCodeClassification>('tsserver.exitWithCode', {code: 0, version: 3.5});
 ```
 
 ## Inlines
@@ -122,7 +122,7 @@ Inlines were previously annotated like so:
         }
     */
 
-    /* __GDPR__ 
+    /* __GDPR__
         "disableOtherKeymaps" : {
             "newKeymap": { "${inline}": [ "${ExtensionIdentifier}" ] },
             "oldKeymaps": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -171,7 +171,7 @@ The process of defining and sending the event are the same as the previous two
         confirmed: true
     };
 
-    publicLog<DisableOtherKeymaps, DisableOtherKeymapsClassification>('disableOtherKeymaps', disableKeymapsEvent);
+    publicLog2<DisableOtherKeymaps, DisableOtherKeymapsClassification>('disableOtherKeymaps', disableKeymapsEvent);
 ```
 
 ## Currently Not Supported
