@@ -105,12 +105,12 @@ export class TsParser {
         if (fs.existsSync(path.join(this.sourceDir, 'src/tsconfig.json'))) {
             this.project = new Project({
                 tsConfigFilePath: path.join(this.sourceDir, 'src/tsconfig.json'),
-                addFilesFromTsConfig: false
+                skipAddingFilesFromTsConfig: true
             });
         } else if (fs.existsSync(path.join(this.sourceDir, 'tsconfig.json'))) {
             this.project = new Project({
                 tsConfigFilePath: path.join(this.sourceDir, 'tsconfig.json'),
-                addFilesFromTsConfig: false
+                skipAddingFilesFromTsConfig: true
             });
         } else {
             this.project = new Project({});
@@ -132,7 +132,7 @@ export class TsParser {
             // Split the paths into an array
             retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
                 f = path.join(this.sourceDir, f)
-                this.project.addExistingSourceFileIfExists(f);
+                this.project.addSourceFileAtPathIfExists(f);
                 return f;
             });
             // Empty catch because this fails when there are no typescript annotations which causes weird error messages

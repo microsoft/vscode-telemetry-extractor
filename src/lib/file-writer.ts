@@ -11,7 +11,7 @@ import * as path from 'path';
 export async function writeFile(outputFile: string, contents: string) {
     const directory = path.dirname(outputFile);
     return mkdirp(directory).then((dir: string) => {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             fs.writeFile(outputFile, contents, { encoding: 'utf8' }, (err: any) => {
                 if (err) {
                     reject(err);
