@@ -6,6 +6,9 @@ out/tests
 yarn.lock
 .vscode/settings.json
 *.json
+.vscode
+.nycrc
+.devcontainer
 coverage
 !package*.json
 !tsconfig.json
