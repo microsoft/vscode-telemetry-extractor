@@ -4,7 +4,7 @@
 
 All telemetry events we send need to be described. For each property of each event we need to know what kind of data they contain and for what reason we collect the data.
 
-Let's assume we send the following event and the timer data is dynamic, i.e. the properties of `timer` can not known statically:
+Let's assume we send the following event and the timer data is dynamic, i.e. the properties of `timer` can not be known statically:
 ```ts
 logEvent('E1', {
     E1P1: 'activitybar',
@@ -129,7 +129,7 @@ logEvent('E1', {
 });
 ```
 
-The GDPR comments are processed and result in the following final description of the `E1` event. Every property that starts with `timer.` such as `timer.waited` is classified as system metadata that we collect for gaining insights into how the feature is being used.
+The GDPR comments are processed and result in the following final description of the `E1` event. Every property that starts with `timer.` -- such as `timer.waited` -- is classified as system metadata that we collect for gaining insights into how the feature is being used.
 ```json
    "E1" : {
       "E1P1" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
