@@ -35,8 +35,8 @@ describe('GDPR Fragments', () => {
             assert.ok(fragments.dataPoints);
             fragments.dataPoints = nameSort(fragments.dataPoints);
             assert.strictEqual(fragments.dataPoints.length, 7);
-            assert.deepStrictEqual(fragments.dataPoints[0].properties[0], new Property('property_F0P1', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(fragments.dataPoints[0].properties[1], new Property('property_F0P2', 'SystemMetaData', 'FeatureInsight', 'none'));
+            assert.deepStrictEqual(fragments.dataPoints[0].properties[0], new Property('property_F0P1', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(fragments.dataPoints[0].properties[1], new Property('property_F0P2', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
             assert.strictEqual(fragments.dataPoints[1].properties.length, 2);
             assert.strictEqual(fragments.dataPoints[2].properties.length, 2);
             assert.strictEqual(fragments.dataPoints[3].properties.length, 2);
@@ -62,16 +62,16 @@ describe('GDPR Fragments', () => {
             // Since we know there's no inlines or includes left since it is resolved this is okay
             // They need to be sorted because the order is non deterministic when resolving more than one level deep
             frag6.properties = propertySort(frag6.properties as Array<Property>);
-            assert.deepStrictEqual(frag6.properties[0], new Property('property_F1P1', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[1], new Property('property_F1P2', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[2], new Property('property_F2P1', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[3], new Property('property_F2P2', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[4], new Property('property_F4P1', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[5], new Property('property_F5P1', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[6], new Property('property_F5P2.property_F2P1', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[7], new Property('property_F5P2.property_F2P2', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[8], new Property('property_F5P2.property_F3P1', 'SystemMetaData', 'FeatureInsight', 'none'));
-            assert.deepStrictEqual(frag6.properties[9], new Property('property_F5P2.property_F3P2', 'SystemMetaData', 'FeatureInsight', 'none'));
+            assert.deepStrictEqual(frag6.properties[0], new Property('property_F1P1', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[1], new Property('property_F1P2', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[2], new Property('property_F2P1', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[3], new Property('property_F2P2', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[4], new Property('property_F4P1', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[5], new Property('property_F5P1', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[6], new Property('property_F5P2.property_F2P1', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[7], new Property('property_F5P2.property_F2P2', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[8], new Property('property_F5P2.property_F3P1', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[9], new Property('property_F5P2.property_F3P2', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
         });
 
         it('Difficult Resolves', async () => {

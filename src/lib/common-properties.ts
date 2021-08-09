@@ -15,12 +15,14 @@ export class Property implements IProperty {
     public purpose: string;
     public endPoint?: string;
     public isMeasurement?: boolean;
+    public expiration?: string;
     
-    constructor (name: string, classification: string, purpose: string, endpoint?: string, isMeasurement?: boolean) {
+    constructor (name: string, classification: string, purpose: string, expiration?: string, endpoint?: string, isMeasurement?: boolean) {
         this.name = name;
         this.classification = classification;
         this.purpose = purpose;
         this.endPoint = endpoint;
         this.isMeasurement = isMeasurement;
+        this.expiration = expiration;
     }
 }

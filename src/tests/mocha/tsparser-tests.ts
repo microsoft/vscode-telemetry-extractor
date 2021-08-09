@@ -13,6 +13,7 @@ describe('TS Parser Tests', function () {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'small-event-tests'), [], true, false);
         const declarations = tsParser.parseFiles();
         assert.ok(declarations['SmallEvent1']);
+        assert.strictEqual(declarations['SmallEvent1']['baz']['expiration'], '1.57.0');
         assert.ok(declarations['SmallEvent2']);
         assert.ok(declarations['SmallEvent3']);
     });

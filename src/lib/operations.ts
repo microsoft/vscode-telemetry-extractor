@@ -65,7 +65,7 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
         } else if (propertyName === keywords.wildcard) {
             mergeWildcards(currentProperty, target, applyEndpoints);
         } else {
-            const prop = new Property(propertyName, currentProperty.classification, currentProperty.purpose);
+            const prop = new Property(propertyName, currentProperty.classification, currentProperty.purpose, currentProperty.expiration);
             if (applyEndpoints) {
                 const endpoint = currentProperty.endpoint ? currentProperty.endpoint : 'none';
                 prop.endPoint = endpoint;

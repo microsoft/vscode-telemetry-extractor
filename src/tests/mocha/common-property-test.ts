@@ -22,7 +22,7 @@ describe('GDPR common property extraction', () => {
     const parser = new Parser([sourceDir], excludeDirs, true, false);
     //@ts-ignore
     const commonProperties = parser.findCommonProperties(sourceDir);
-    assert.deepStrictEqual(commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', 'none'));
-    assert.deepStrictEqual(commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', 'MacAddressHash'));
+    assert.deepStrictEqual(commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, 'none'));
+    assert.deepStrictEqual(commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, 'MacAddressHash'));
   });
 });

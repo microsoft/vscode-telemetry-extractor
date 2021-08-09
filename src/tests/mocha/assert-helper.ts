@@ -9,6 +9,6 @@ export function sameValues(array1: string[], array2: string[]) {
     let hash2 = Object.create(null);
     array2.forEach(e => hash2[e] = e);
 
-    assert.deepEqual(hash1, hash2);
+    assert.deepStrictEqual(hash1, hash2);
     assert.ok(true);
 }

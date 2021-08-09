@@ -15,6 +15,7 @@ export interface IProperty {
     name: string;
     purpose: string;
     classification: string;
+    expiration?: string;
 }
 
 export interface IInclude {
