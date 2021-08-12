@@ -9,7 +9,7 @@
             "request": "launch",
             "protocol": "inspector",
             "name": "Extract Core Declarations",
-            "program": "${workspaceRoot}/out/cli-extract.js",
+            "program": "${workspaceRoot}/out/extractor.js",
             "args": [
                 "--sourceDir=${workspaceRoot}/src/telemetry-sources/vscode",
                 "--excludedDirPattern=extensions",
@@ -23,7 +23,7 @@
             "request": "launch",
             "protocol": "inspector",
             "name": "Extract Extensions Declarations",
-            "program": "${workspaceRoot}/out/cli-extract-extensions.js",
+            "program": "${workspaceRoot}/out/extractor.js",
             "args": [
                 "--sourceDir=${workspaceRoot}/src/telemetry-sources/",
                 "--outputDir=${workspaceRoot}",

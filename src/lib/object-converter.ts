@@ -38,6 +38,9 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
                     continue;
                 }
                 newEvents[event.name][propetyNameChanger(property.name)] = { classification: property.classification, purpose: property.purpose };
+                if (property.expiration) {
+                    newEvents[event.name][propetyNameChanger(property.name)]['expiration'] = property.expiration;
+                }
                 if (property.endPoint) {
                     newEvents[event.name][propetyNameChanger(property.name)]['endPoint'] = property.endPoint;
                 }
