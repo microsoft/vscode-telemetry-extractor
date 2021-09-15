@@ -51,7 +51,7 @@ To extract telemetry events from your code you must provide a source directory a
 The source directory is the folder containing the code which you wish to extract the events. The output directory is the location which the resulting JSON report will be placed.
 
 ```bash
-   vscode-telemetry-extract -s PATH_TO_YOUR_CODE -o PATH_TO_PLACE_JSON
+   vscode-telemetry-extractor -s PATH_TO_YOUR_CODE -o PATH_TO_PLACE_JSON
 ```
 This will generate output similar to:
 ```bash
