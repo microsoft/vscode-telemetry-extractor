@@ -157,7 +157,7 @@ Each property is described with an object that looks like this:
 ```ts
 { 
     endPoint?: "none" | "SqmUserId" | "SqmMachineId",
-    classification: "SystemMetaData" | "CustomerContent" | "EndUserPseudonymizedInformation" | "PublicPersonalData" | "PublicNonPersonalData",
+    classification: "SystemMetaData" | "CustomerContent" | "EndUserPseudonymizedInformation" | "PublicPersonalData" | "PublicNonPersonalData" | "CallstackOrException",
     purpose: "FeatureInsight" | "PerformanceAndHealth" | "BusinessInsight" | "SecurityAndAuditing",
     expiration?: string,
     isMeasurement?: Boolean
