@@ -1,0 +1,88 @@
+# Thanks to https://github.com/nextauthjs/next-auth for the inspiration for this issue template format
+
+name: Bug Report
+description: File a bug report
+
+# note: markdown sections will NOT appear as part of the issue as per documentation, rather they provide context to the user
+# https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/syntax-for-githubs-form-schema#markdown
+
+
+body:
+  - type: textarea
+    id: environment
+    attributes: 
+      label: Environment 🖥
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Please provide information about which version of VS Code you're running, the machine you're running it on, and if in the browser which browser you're using.
+        This can be be found by going Help -> About or on macOS by clicking the application name -> About.
+
+  - type: markdown
+    attributes:
+      value: |
+        Bug reports help us improve the stability and quality of the product! Please fill out as much information as possible:
+  - type: textarea
+    id: description
+    attributes: 
+      label: Description 🐛
+      description: Please provide a clear and concise description of the bug.
+      required: true  
+      
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce
+      description: Please provide the minimal steps you took to recreate this bug.
+    validations:
+      required: true 
+  - type: markdown
+    attributes:
+      value: |
+        🚧 – _Bug without reproduction steps are much harder to solve and risk being closed for lack of information._
+  
+    - type: dropdown
+    id: extensions
+    attributes:
+      label: Disabling extensions
+      multiple: false
+      options:
+        - "Yes, I have disabled all extensions and can still reproduce the bug."
+        - "No, I have not tried that / this bug requires an extension to reproduce."
+    validations:
+      required: false
+  - type: markdown
+    attributes: 
+      value: |
+        Bugs caused by non built-in extension should be filed against there respective repositories. Please attempt to reproduce the bug with extensions disabled.
+        If the bug is not reproducible with extensions disabled you can use [extension bisect](https://code.visualstudio.com/blogs/2021/02/16/extension-bisect) to find the problem extension and file in issue against their repository.
+
+  - type: textarea
+    id: logs
+    attributes: 
+      label: Screenshots / Logs 📽
+      description: A screenshot, gif, or any additional logs you can provide will help us track down and resolve your issue quicker.
+  - type: markdown
+    attributes:
+      value: |
+        See [gifcap.dev](https://gifcap.dev) for a browser based gif recording tool.
+    validations:
+      required: false
+ 
+  - type: dropdown
+    id: pr
+    attributes:
+      label: Contributing 🖊
+      multiple: false
+      options:
+        - "Yes,  I am willing to help solve this bug in a PR"
+        - "No, I am afraid I cannot help regarding this"
+    validations:
+      required: false
+  - type: markdown
+    attributes: 
+      value: |
+        If you feel comfortable with contributing to an open source project like VS Code and this issue is not deemed overly complex the team will provide you a code pointer and review your PR. Thank you for considering helping.
+  
