@@ -62,7 +62,7 @@ This will generate output similar to:
 
 ## Using a config file
 The extractor also supports config files which can be passed in via a command line arguments to customize the way the tool parses.
-An example config file can be found below. Note: `sourceDirs` and `excludedDirs` must be made relative to the `workingDirectory`
+An example config file can be found below. Note: `sourceDirs` and `excludedDirs` must be made relative to the `workingDir`
 ```json
 [
     {
