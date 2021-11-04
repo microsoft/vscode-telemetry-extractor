@@ -129,7 +129,7 @@ export class TsParser {
         }
         const cmd = `${rgPath} --files-with-matches 'publicLog2|publicLogError2' ${rg_glob} --no-ignore`;
         try {
-            const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii', cwd: this.sourceDir });
+            const retrieved_paths = cp.execSync(cmd, { encoding: 'utf-8', cwd: this.sourceDir, stdio: ['ignore', 'pipe', 'pipe'] });
             // Split the paths into an array
             retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
                 f = path.join(this.sourceDir, f)
@@ -137,7 +137,7 @@ export class TsParser {
                 return f;
             });
             // Empty catch because this fails when there are no typescript annotations which causes weird error messages
-        } catch { }
+        } catch(err) { console.error(err); }
     }
 
     public parseFiles() {
