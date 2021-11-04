@@ -127,9 +127,9 @@ export class TsParser {
         for (const fg of fileGlobs) {
             rg_glob += ` --glob ${fg}`;
         }
-        const cmd = `${rgPath} --files-with-matches 'publicLog2|publicLogError2' ${rg_glob} --no-ignore`;
+        const cmd = `${rgPath} --files-with-matches ${rg_glob} --no-ignore 'publicLog2|publicLogError2' ${this.sourceDir}`;
         try {
-            const retrieved_paths = cp.execSync(cmd, { encoding: 'utf-8', cwd: this.sourceDir, stdio: ['ignore', 'pipe', 'pipe'] });
+            const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii' });
             // Split the paths into an array
             retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
                 f = path.join(this.sourceDir, f)
