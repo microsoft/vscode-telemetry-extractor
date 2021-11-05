@@ -132,7 +132,6 @@ export class TsParser {
             const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii' });
             // Split the paths into an array
             retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
-                f = path.join(this.sourceDir, f)
                 this.project.addSourceFileAtPathIfExists(f);
                 return f;
             });
