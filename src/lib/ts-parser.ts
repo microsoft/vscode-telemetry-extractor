@@ -136,8 +136,8 @@ export class TsParser {
                 this.project.addSourceFileAtPathIfExists(f);
                 return f;
             });
-            // Empty catch because this fails when there are no typescript annotations which causes weird error messages
-        } catch(err) { console.error(err); }
+        // Empty catch because this fails when there are no typescript annotations which causes weird error messages
+        } catch { }
     }
 
     public parseFiles() {
