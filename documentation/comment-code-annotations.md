@@ -29,7 +29,7 @@ function logEvent(eventName, eventData) {
 let f1 : F1 = { F1P1 : 23 };
 
 let f2 : F2 = { F2P1 : document.getLine(1) };
- 
+
 let f3 : F3 = { F3P1: publisher.displayName };
 
 let f4 : F4 = {
@@ -74,7 +74,7 @@ let f1 : F1 = { F1P1 : 23 };
    }
  */
 let f2 : F2 = { F2P1 : document.getLine(1) };
- 
+
 /* __GDPR__FRAGMENT__
    "F3" : {
       "F3P1" : { "classification": "PublicPersonalData", "purpose": "FeatureInsight" }
@@ -85,11 +85,11 @@ let f3 : F3 = { F3P1: publisher.displayName };
 /* __GDPR__FRAGMENT__
    "F4" : {
       "F4P1" : { "classification": "PublicNonPersonalData", "purpose": "FeatureInsight" },
-      "F4P2": { 
+      "F4P2": {
           "${inline}": [
               "${F2}",
               "${F3}"
-            ] 
+            ]
         }
    }
  */
@@ -104,7 +104,7 @@ let f4 : F4 = {
 /* __GDPR__
    "E1" : {
       "E1P1" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "${include}": [ 
+      "${include}": [
           "${F1}",
           "${F4}"
         ],
@@ -153,9 +153,9 @@ All GDPR comments are tagged with one of the following tags and are otherwise we
 - `__GDPR__FRAGMENT__` - describes the name and the properties of a fragment of the data of an event, fragments are either included or inlined by other fragments or events
 - `__GDPR__COMMON__` - describes a property added to every telemetry event
 
-Each property is described with an object that looks like this: 
+Each property is described with an object that looks like this:
 ```ts
-{ 
+{
     endPoint?: "none" | "SqmUserId" | "SqmMachineId",
     classification: "SystemMetaData" | "CustomerContent" | "EndUserPseudonymizedInformation" | "PublicPersonalData" | "PublicNonPersonalData" | "CallstackOrException",
     purpose: "FeatureInsight" | "PerformanceAndHealth" | "BusinessInsight" | "SecurityAndAuditing",
@@ -173,6 +173,12 @@ The values for `classification` are mostly self-explaining. `EndUserPseudonymize
 `expiration` is used if you would like to dictate the max product version this telemetry event should be sent in. This allows external tools to specify which events should be removed from the codebase.
 
 `isMeasurement` is used if the property is a number. Numbers are handled differently in the telemetry system.
+
+For an event with no properties, define an empty event:
+```json
+"event" : { }
+```
+This will be classified as `SystemMetadata` with a purpose of `FeatureInsight`.
 
 ## Special constructs
 #### ${include}
