@@ -11,6 +11,8 @@ and takes two types, the event and the classification.
 interface IPropertyData {
     classification: 'SystemMetaData' | 'CallstackOrException';
     purpose: 'PerformanceAndHealth' | 'FeatureInsight';
+    owner: string;
+    comment: string;
     expiration?: string;
     endpoint?: string;
     isMeasurement?: boolean;

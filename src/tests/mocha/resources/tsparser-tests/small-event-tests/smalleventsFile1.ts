@@ -7,7 +7,7 @@ import { publicLog2 } from '../publicLog';
 type SmallEvent1Classifcation = {
     foo: { classification: 'SystemMetaData', purpose: 'FeatureInsight' };
     bar: { classification: 'CallstackOrException', purpose: 'PerformanceAndHealth', isMeasurement: true };
-    baz: { classification: 'SystemMetaData', purpose: 'FeatureInsight', expiration: '1.57.0' };
+    baz: { classification: 'SystemMetaData', purpose: 'FeatureInsight', expiration: '1.57.0', owner: "lramos15", comment: "Test event" };
 };
 
 type SmallEvent1Event = {

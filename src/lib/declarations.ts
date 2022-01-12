@@ -70,7 +70,7 @@ function resolveInlines(target: Events | Fragments, fragments: Fragments) {
                         fragment.properties.forEach((prop) => {
                             if (prop instanceof Property) {
                                 // We create the new property in the format inlineName.propName keeping the rest the same
-                                let currentProp = new Property(`${property.inlineName}.${prop.name}`, prop.classification, prop.purpose, prop.expiration);
+                                let currentProp = new Property(`${property.inlineName}.${prop.name}`, prop.classification, prop.purpose, prop.expiration, prop.owner, prop.comment);
                                 if (prop.endPoint) {
                                     currentProp.endPoint = prop.endPoint;
                                 }

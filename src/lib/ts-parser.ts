@@ -12,6 +12,8 @@ interface IGDPRProperty {
     classification: 'SystemMetaData' | 'CallstackOrException';
     purpose: 'PerformanceAndHealth' | 'FeatureInsight';
     expiration?: string;
+    owner?: string;
+    comment?: string;
     endpoint?: string;
     isMeasurement?: boolean;
 }

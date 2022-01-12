@@ -16,6 +16,8 @@ export interface IProperty {
     purpose: string;
     classification: string;
     expiration?: string;
+    owner?: string;
+    comment?: string;
 }
 
 export interface IInclude {

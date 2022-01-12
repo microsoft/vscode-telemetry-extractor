@@ -6,6 +6,8 @@ interface IPropertyData {
     classification: 'SystemMetaData' | 'CallstackOrException' | 'CustomerContent' | 'PublicNonPersonalData';
     purpose: 'PerformanceAndHealth' | 'FeatureInsight' | 'BusinessInsight';
     expiration?: string;
+    owner?: string;
+    comment?: string;
     endpoint?: string;
     isMeasurement?: boolean;
 }

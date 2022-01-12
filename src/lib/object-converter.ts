@@ -41,6 +41,12 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
                 if (property.expiration) {
                     newEvents[event.name][propetyNameChanger(property.name)]['expiration'] = property.expiration;
                 }
+                if (property.owner) {
+                    newEvents[event.name][propetyNameChanger(property.name)]['owner'] = property.owner;
+                }
+                if (property.comment) {
+                    newEvents[event.name][propetyNameChanger(property.name)]['comment'] = property.comment;
+                }
                 if (property.endPoint) {
                     newEvents[event.name][propetyNameChanger(property.name)]['endPoint'] = property.endPoint;
                 }

@@ -7,7 +7,7 @@ import { sendEvent, EventData } from "./lib/telemetry";
    "E1" : {
      "property_E1P1": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
      "property_E1P2": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-     "property_E1P3": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "expiration": "1.57.0" },
+     "property_E1P3": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "expiration": "1.57.0", "owner": "lramos15", "comment": "Test event" },
      "measurement_E1M1": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
      "measurement_E1M<NUMBER>": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
    }
