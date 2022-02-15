@@ -43,6 +43,7 @@ Allows the extraction of telemetry annotation from code. For more details please
 -c --config                             A JSON Configuration file containing extraction details
 -o --outputDir                          The directory which you would like the outputted JSON file to be placed in
 -p --eventPrefix                        The string you wish to prepend to every telemetry event.
+-f --fileName                           The name of the file you want to output.
 -h --help                               Displays the help dialog which provides more information on how to use the tool
 ```
 

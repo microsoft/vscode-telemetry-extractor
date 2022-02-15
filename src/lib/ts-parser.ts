@@ -4,7 +4,7 @@ import { Project, SyntaxKind, Symbol, Node, CallExpression } from "ts-morph";
 import * as fs from 'fs';
 import * as cp from 'child_process';
 import * as path from 'path';
-import { rgPath } from "vscode-ripgrep";
+import { rgPath } from "@vscode/ripgrep";
 import { makeExclusionsRelativeToSource } from "./operations";
 
 interface IGDPRProperty {
@@ -163,7 +163,7 @@ export class TsParser {
                 let event_name = pl.getArguments()[0].getType().isStringLiteral() ? pl.getArguments()[0].getType().getText() : '';
                 // If we can't resolve the event_name there is no use continuing
                 if (event_name === '') {
-                    console.error('Unable to resolve event name, skipping....');
+                    console.error(`Unable to resolve event name ${pl.getFullText().trim()}, skipping....`);
                     return;
                 } else {
                     event_name = event_name.substring(1, event_name.length - 1);

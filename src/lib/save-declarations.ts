@@ -13,6 +13,10 @@ import { ParserOptions, SourceSpec } from './source-spec';
 import { logMessage } from './logger';
 
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
+    if (Object.keys(contents).length === 0) {
+        logMessage(`...no events found, skipping file emmision!`, !emitProgressMessage);
+        return;
+    }
     const json = JSON.stringify(contents);
     const outputFile = path.resolve(outputDir, `${fileName}.json`);
     logMessage(`...writing ${outputFile}`, !emitProgressMessage);

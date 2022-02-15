@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { rgPath } from 'vscode-ripgrep';
+import { rgPath } from '@vscode/ripgrep';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as fs from 'fs';

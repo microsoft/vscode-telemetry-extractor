@@ -8,6 +8,10 @@ import * as keywords from './keywords';
 // Converts the declarations array to an object format for easy readability.
 
 export async function transformOutput(output: OutputtedDeclarations): Promise<OutputtedDeclarations> {
+    // If there's no events or common properties, we emit a null object
+    if (output.events.dataPoints.length === 0 && output.commonProperties.properties.length === 0) {
+        return Object.create(null);
+    }
     const newEvents = Object.create(null);
     const oldEvents = output.events.dataPoints;
     for (const event of oldEvents) {

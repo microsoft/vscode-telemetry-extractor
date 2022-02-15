@@ -12,7 +12,7 @@ if (options.config) {
     const sourceSpecs = convertConfigToSourceSpecs(options.config);
     extractAndResolveDeclarations(sourceSpecs).then((declarations) => {
         if (options.outputDir) {
-            writeToFile(options.outputDir, declarations, 'config-resolved', !options.silent);
+            writeToFile(options.outputDir, declarations, options.fileName || 'config-resolved', !options.silent);
         } else {
             console.log(JSON.stringify(declarations));
         }
@@ -36,7 +36,7 @@ if (options.config) {
     };
     extractAndResolveDeclarations([sourceSpec]).then((declarations) => {
         if (options.outputDir) {
-            writeToFile(options.outputDir, declarations, 'declarations-resolved', !options.silent);
+            writeToFile(options.outputDir, declarations, options.fileName || 'declarations-resolved', !options.silent);
         } else {
             console.log(JSON.stringify(declarations));
         }
