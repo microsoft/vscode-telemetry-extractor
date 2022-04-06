@@ -65,6 +65,11 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
         }
         const formattedDeclarations: any = await transformOutput(allDeclarations);
         for (const dec in allTypeScriptDeclarations) {
+            // If there's typescript declarations but we returned a null object
+            // We must add the event container to the declarations object
+            if (formattedDeclarations.events === undefined) {
+                formattedDeclarations.events = Object.create(null);
+            }
             formattedDeclarations.events[dec] = allTypeScriptDeclarations[dec];
         }
         return Promise.resolve(formattedDeclarations);

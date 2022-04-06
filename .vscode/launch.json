@@ -34,6 +34,16 @@
             "type": "node",
             "request": "launch",
             "protocol": "inspector",
+            "name": "Config Test",
+            "program": "${workspaceRoot}/out/extractor.js",
+            "args": [
+                "--config=${workspaceRoot}/src/tests/mocha/resources/test-config.json"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "protocol": "inspector",
             "name": "Merge Telemetry",
             "program": "${workspaceRoot}/out/merge.js"
         },
