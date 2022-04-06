@@ -65,6 +65,6 @@ describe('Metadata parsing tests', function () {
     assert.strictEqual(declarations.events.dataPoints[2].name, 'testEventNoMetadata');
     assert.strictEqual(declarations.events.dataPoints[2].properties.length, 1);
     currentEventProps = declarations.events.dataPoints[2].properties;
-    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight'));
+    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', undefined, undefined, 'propertyNoMetadata'));
   });
 });
