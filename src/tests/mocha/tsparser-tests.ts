@@ -7,7 +7,6 @@ import { cwd } from 'process';
 import * as path from 'path';
 import * as assert from 'assert';
 describe('TS Parser Tests', function () {
-    this.timeout
     const tsParserPath = path.resolve(cwd(), 'src/tests/mocha/resources/tsparser-tests/');
     it('Small Event Tests', () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'small-event-tests'), [], true, false);
