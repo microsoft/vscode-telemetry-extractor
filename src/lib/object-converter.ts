@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 import { OutputtedDeclarations } from "./declarations";
 import { Property } from "./common-properties";
-import { Wildcard } from "./events";
+import { Metadata, Wildcard } from "./events";
 import * as keywords from './keywords';
 
 // Converts the declarations array to an object format for easy readability.
@@ -17,7 +17,7 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
     for (const event of oldEvents) {
         newEvents[event.name] = Object.create(null);
         //We know there won't be anymore includes or inlines because we have resolved them
-        for (const property of event.properties as Array<Property | Wildcard>) {
+        for (const property of event.properties as Array<Property | Wildcard | Metadata>) {
             if (property instanceof Wildcard) {
                 newEvents[event.name][keywords.wildcard] = newEvents[event.name][keywords.wildcard] ? newEvents[event.name][keywords.wildcard] : [];
                 for (const entry of property.entries) {
@@ -34,7 +34,7 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
                     }
                     newEvents[event.name][keywords.wildcard].push(newEntry);
                 }
-            } else {
+            } else if (property instanceof Property) {
                 // Handles the case where the comments can be inconsistent
                 // We want to ensure that if isMeasurement is ever flagged it gets propogated
                 if (newEvents[event.name][propetyNameChanger(property.name)]) {
@@ -57,6 +57,9 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
                 if (property.isMeasurement) {
                     newEvents[event.name][propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
                 }
+            } else {
+                // Comments, expiration, and owner metadata are handled here
+                newEvents[event.name][propetyNameChanger(property.name)] = property.value;
             }
         }
     }

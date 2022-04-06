@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { IProperty, IInclude, ITelemetryDataPoint, ITelemetryData, IInline, IWildcard, IWildcardEntry } from './telemetry-interfaces';
+import { IInclude, ITelemetryDataPoint, ITelemetryData, IInline, IWildcard, IWildcardEntry, IMetadata } from './telemetry-interfaces';
 import { Property } from './common-properties';
 
 
@@ -14,7 +14,7 @@ export class Events implements ITelemetryData {
 export class Event implements ITelemetryDataPoint {
     public name: string;
     // It gets a little more complicated here as events can have a bunch of different things
-    public properties: Array<Property | Include | Inline | Wildcard>;
+    public properties: Array<Property | Metadata | Include | Inline | Wildcard>;
     constructor (name: string) {
         this.name =  name;
         this.properties = [];
@@ -52,5 +52,20 @@ export class WildcardEntry implements IWildcardEntry {
         this.prefix = prefix;
         this.classification = classification;
         this.endpoint = endPoint;
+    }
+}
+
+export class Metadata implements IMetadata {
+    public name: 'owner' | 'comment' | 'expiration';
+    public value: string;
+    constructor (name: 'owner' | 'comment' | 'expiration', value: string) {
+        this.name = name;
+        this.value = value;
+    }
+
+    simpleObject(): {[key: string]: string} {
+        const simple = Object.create(null);
+        simple[this.name] = this.value;
+        return simple;
     }
 }

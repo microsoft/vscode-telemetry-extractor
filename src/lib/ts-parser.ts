@@ -6,25 +6,8 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import { rgPath } from "@vscode/ripgrep";
 import { makeExclusionsRelativeToSource } from "./operations";
-
-interface IGDPRProperty {
-    propName: string;
-    classification: 'SystemMetaData' | 'CallstackOrException';
-    purpose: 'PerformanceAndHealth' | 'FeatureInsight';
-    expiration?: string;
-    owner?: string;
-    comment?: string;
-    endpoint?: string;
-    isMeasurement?: boolean;
-}
-class GDPREvent {
-    public eventName: string;
-    public properties: Array<IGDPRProperty>;
-    constructor(name: string) {
-        this.eventName = name;
-        this.properties = [];
-    }
-}
+import  { Event, Metadata } from './events';
+import { Property } from "./common-properties";
 
 class NodeVisitor {
 
@@ -60,11 +43,12 @@ class NodeVisitor {
             // If we don't want endpoints skip them
             if (currentNode.getEscapedName().toLowerCase() === "endpoint" && !this.applyEndpoints) return;
 
+            const nodeName = currentNode.getEscapedName();
             // If it's a string we strip the quotes
             if (type.isStringLiteral()) {
-                this.resolved_property[currentNode.getEscapedName()] = type.getText().substring(1, type.getText().length - 1);
+                this.resolved_property[nodeName] = type.getText().substring(1, type.getText().length - 1);
             } else {
-                this.resolved_property[currentNode.getEscapedName()] = type.getText() === 'true';
+                this.resolved_property[nodeName] = type.getText() === 'true';
             }
             return;
         }
@@ -87,7 +71,26 @@ class NodeVisitor {
         this.prop_name = this.original_prop_name;
     }
 
-    public resolveProperties(currentNode: Symbol) {
+    private visitMetadataNode(currentNode: Symbol) {
+        let type = currentNode.getTypeAtLocation(this.pl_node);
+        // If we mark a property as optional then it is nullable, however we want all properties 
+        // So we want its non nullable type tl;dr this chops off the | undefined
+        if (type.isNullable()) {
+            type = type.getNonNullableType();
+        }
+        if (type.isStringLiteral()) {
+            const nodeName = currentNode.getEscapedName();
+            this.resolved_property[nodeName] = type.getText().substring(1, type.getText().length - 1);
+            if (nodeName === 'owner' || nodeName === 'comment' || nodeName === 'expiration') {
+                this.properties.push(new Metadata(nodeName, this.resolved_property[nodeName]).simpleObject());
+            }
+        }
+    }
+
+    public resolveProperties(currentNode: Symbol): Array<Property | Metadata> {
+        // It could be a complex node with nested types or a simple node with a string literal
+        // representing some kind of metadata, so we try both visitors.
+        this.visitMetadataNode(currentNode);
         this.visitNode(currentNode);
         return this.properties;
     }
@@ -169,7 +172,7 @@ export class TsParser {
                     event_name = event_name.substring(1, event_name.length - 1);
                 }
                 event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
-                const created_event = new GDPREvent(event_name);
+                const created_event = new Event(event_name);
                 // We want the second one because public log is in the form <Event, Classification> and we care about the classification
                 const type_properties = typeArgs[1].getType().getProperties();
                 type_properties.forEach((prop) => {

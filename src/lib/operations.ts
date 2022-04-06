@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { Fragments, Fragment } from "./fragments";
-import { Events, Event, Include, Inline, Wildcard, WildcardEntry } from "./events";
+import { Events, Event, Include, Inline, Wildcard, WildcardEntry, Metadata } from "./events";
 import { Property } from "./common-properties";
 import * as keywords from './keywords';
 
@@ -64,6 +64,9 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
             target.properties.push(new Inline(propertyName, currentProperty[keywords.inline]));
         } else if (propertyName === keywords.wildcard) {
             mergeWildcards(currentProperty, target, applyEndpoints);
+        } else if (propertyName === 'owner' || propertyName === 'comment' || propertyName === 'expiration') {
+            // This is the special case when the property name matches one of our metadata properties
+            target.properties.push(new Metadata(propertyName, currentProperty));
         } else {
             const prop = new Property(propertyName, currentProperty.classification, currentProperty.purpose, currentProperty.expiration, currentProperty.owner, currentProperty.comment);
             if (applyEndpoints) {

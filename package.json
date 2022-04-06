@@ -23,7 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "command-line-args": "^5.2.1",
-    "ts-morph": "^13.0.3",
+    "ts-morph": "^14.0.0",
     "@vscode/ripgrep": "^1.14.2"
   },
   "devDependencies": {

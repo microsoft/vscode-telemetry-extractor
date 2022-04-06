@@ -8,7 +8,12 @@ export interface ITelemetryData{
 
 export interface ITelemetryDataPoint {
     name: string;
-    properties: Array<IProperty | IInclude | IInline | Wildcard>;
+    properties: Array<IProperty | IInclude | IInline | IMetadata | Wildcard>;
+}
+
+export interface IMetadata {
+    name: 'owner' | 'comment' | 'expiration';
+    value: string;
 }
 
 export interface IProperty {
