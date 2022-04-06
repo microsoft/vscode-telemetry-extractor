@@ -10,7 +10,7 @@ produces a JSON file containing the telemetry events which are collected.
 
 ## Setup
 ```bash
-    npm i vscode-telemetry-extractor
+    npm i @vscode/telemetry-extractor
 ```
 For the various supported commands please see [**Using the tool**](./documentation/using-the-tool.md)
 
