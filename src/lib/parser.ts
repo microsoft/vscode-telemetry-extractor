@@ -4,6 +4,7 @@ import { rgPath } from '@vscode/ripgrep';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as fs from 'fs';
+import * as process from 'process';
 import { Fragments } from './fragments';
 import { Property, CommonProperties } from './common-properties';
 import { Events } from './events';
@@ -79,6 +80,7 @@ export class Parser {
             } catch (error) {
                 console.error(`Common Property Declaration Error: ${error} in file ${filePath}`);
                 console.error(`Source comment:\n${match[0]}`);
+                process.exitCode = 1;
             }
         });
         return commonPropertyDeclarations;
@@ -90,7 +92,7 @@ export class Parser {
         return this.findFiles(ripgrepPattern, sourceDir);
     }
 
-    /// 
+    ///
     private findFragments(sourceDir: string) {
         const filesWithFragments = this.asAbsoluteFilePaths(this.findFilesWithFragments(sourceDir));
 
@@ -109,6 +111,7 @@ export class Parser {
             } catch (error) {
                 console.error(`Fragment Declaration Error: ${error} in file ${filePath}`);
                 console.error(`Source comment:\n${match[0]}`);
+                process.exitCode = 1;
             }
         });
         return fragmentDeclarations;
@@ -138,6 +141,7 @@ export class Parser {
             } catch (error) {
                 console.error(`Event Declaration Error: ${error} in file ${filePath}`);
                 console.error(`Source comment:\n${match[0]}`);
+                process.exitCode = 1;
             }
         });
         return eventDeclarations;
