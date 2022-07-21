@@ -4,7 +4,6 @@ import { rgPath } from '@vscode/ripgrep';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as fs from 'fs';
-import * as process from 'process';
 import { Fragments } from './fragments';
 import { Property, CommonProperties } from './common-properties';
 import { Events } from './events';
