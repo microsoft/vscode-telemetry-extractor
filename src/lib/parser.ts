@@ -4,6 +4,7 @@ import { rgPath } from '@vscode/ripgrep';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as fs from 'fs';
+// Not importing 'process' as tsc claims `process.exitCode` is read-only when it actually is not.
 import { Fragments } from './fragments';
 import { Property, CommonProperties } from './common-properties';
 import { Events } from './events';
