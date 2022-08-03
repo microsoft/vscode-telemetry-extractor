@@ -6,6 +6,7 @@ src/tests
 out/tests
 yarn.lock
 .vscode/settings.json
+documentation/
 *.json
 .vscode
 .nycrc
