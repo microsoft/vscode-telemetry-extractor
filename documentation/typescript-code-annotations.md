@@ -8,27 +8,36 @@ We recommend declaring your telemetry handler the same way VS Code does as the p
 and takes two types, the event and the classification.
 
 ```typescript
-interface IPropertyData {
-    classification: 'SystemMetaData' | 'CallstackOrException';
-    purpose: 'PerformanceAndHealth' | 'FeatureInsight';
-    owner: string;
-    comment: string;
-    expiration?: string;
-    endpoint?: string;
-    isMeasurement?: boolean;
+export interface IPropertyData {
+	classification: 'SystemMetaData' | 'CallstackOrException' | 'CustomerContent' | 'PublicNonPersonalData' | 'EndUserPseudonymizedInformation';
+	purpose: 'PerformanceAndHealth' | 'FeatureInsight' | 'BusinessInsight';
+	comment: string;
+	expiration?: string;
+	endpoint?: string;
+	isMeasurement?: boolean;
 }
 
-interface IGDPRProperty {
-    readonly [name: string] : IPropertyData | undefined | IGDPRProperty;
+export interface IGDPRProperty {
+	owner: string;
+	comment: string;
+	expiration?: string;
+	readonly [name: string]: IPropertyData | undefined | IGDPRProperty | string;
 }
 
-type ClassifiedEvent<T extends IGDPRProperty> = {
-    [k in keyof T]: any
-}
+type IGDPRPropertyWithoutMetadata = Omit<IGDPRProperty, 'owner' | 'comment' | 'expiration'>;
+export type OmitMetadata<T> = Omit<T, 'owner' | 'comment' | 'expiration'>;
 
-type StrictPropertyCheck<TEvent, TClassifiedEvent, TError> = keyof TEvent extends keyof TClassifiedEvent ? keyof TClassifiedEvent extends keyof TEvent ? TEvent : TError : TError;
+export type ClassifiedEvent<T extends IGDPRPropertyWithoutMetadata> = {
+	[k in keyof T]: any
+};
 
-function publicLog2<E extends ClassifiedEvent<T> = never, T extends {[_ in keyof T]: IPropertyData | IGDPRProperty | undefined} = never>(name: string, props: StrictPropertyCheck<E, ClassifiedEvent<T>, 'Type of classified event does not match event properties'>) { }
+export type StrictPropertyChecker<TEvent, TClassification, TError> = keyof TEvent extends keyof OmitMetadata<TClassification> ? keyof OmitMetadata<TClassification> extends keyof TEvent ? TEvent : TError : TError;
+
+export type StrictPropertyCheckError = { error: 'Type of classified event does not match event properties' };
+
+export type StrictPropertyCheck<T extends IGDPRProperty, E> = StrictPropertyChecker<E, ClassifiedEvent<OmitMetadata<T>>, StrictPropertyCheckError>;
+
+function publicLogError2<E extends ClassifiedEvent<OmitMetadata<T>> = never, T extends IGDPRProperty = never>(eventName: string, data?: StrictPropertyCheck<T, E>): Promise<void> {}
 ```
 
 ## Simple Events
