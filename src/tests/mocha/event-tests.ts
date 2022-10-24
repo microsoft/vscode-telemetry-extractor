@@ -46,7 +46,7 @@ describe('Events Tests', () => {
         const events = parser.findEvents(sourceDir);
         assert.strictEqual(events.dataPoints.length, 3);
         events.dataPoints = nameSort(events.dataPoints);
-        assert.strictEqual(events.dataPoints[0].name, 'E1');
+        assert.strictEqual(events.dataPoints[0].name, 'EOne');
     });
     it('Patch Debug Events', async () => {
         const parser = new Parser([sourceDir], excludedDirs, false, false);
@@ -76,12 +76,12 @@ describe('Resolve Tests', () => {
         assert.deepStrictEqual(declarations.commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
         assert.deepStrictEqual(declarations.commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined, 'MacAddressHash'));
         assert.strictEqual(declarations.events.dataPoints[0].properties.length, 5);
-        assert.strictEqual(declarations.events.dataPoints[2].properties.length, 1);
+        assert.strictEqual(declarations.events.dataPoints[1].properties.length, 1);
         const e1Properties = declarations.events.dataPoints[0].properties;
-        assert.deepStrictEqual(e1Properties[0], new Property('property_E1P1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-        assert.deepStrictEqual(e1Properties[1], new Property('property_E1P2', 'CallstackOrException', 'PerformanceAndHealth', undefined, undefined, undefined, 'none'));
-        assert.deepStrictEqual(e1Properties[2], new Property('property_E1P3', 'SystemMetaData', 'FeatureInsight', '1.57.0', "lramos15", "Test event", 'none'));
-        assert.deepStrictEqual(e1Properties[3], new Property('measurement_E1M1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none', true));
-        assert.deepStrictEqual(e1Properties[4], new Property('measurement_E1M<NUMBER>', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none', true));
+        assert.deepStrictEqual(e1Properties[0], new Property('property_EOneP1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
+        assert.deepStrictEqual(e1Properties[1], new Property('property_EOneP2', 'CallstackOrException', 'PerformanceAndHealth', undefined, undefined, undefined, 'none'));
+        assert.deepStrictEqual(e1Properties[2], new Property('property_EOneP3', 'SystemMetaData', 'FeatureInsight', '1.57.0', "lramos15", "Test event", 'none'));
+        assert.deepStrictEqual(e1Properties[3], new Property('measurement_EOneM1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none', true));
+        assert.deepStrictEqual(e1Properties[4], new Property('measurement_EOneM<NUMBER>', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none', true));
     });
 });

@@ -4,21 +4,21 @@ import { sendEvent, EventData } from "./lib/telemetry";
 
 
 /* __GDPR__
-   "E1" : {
-     "property_E1P1": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-     "property_E1P2": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
-     "property_E1P3": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "expiration": "1.57.0", "owner": "lramos15", "comment": "Test event" },
-     "measurement_E1M1": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
-     "measurement_E1M<NUMBER>": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+   "EOne" : {
+     "property_EOneP1": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+     "property_EOneP2": { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+     "property_EOneP3": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "expiration": "1.57.0", "owner": "lramos15", "comment": "Test event" },
+     "measurement_EOneM1": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+     "measurement_EOneM<NUMBER>": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
    }
  */
-function sendEventE1() {
-  sendEvent('E1', {
-    'property_E1P1': 'property_E1P1_value',
-    'property_E1P2': 'property_E1P2_value',
-    'property_E1P3': 'property_E1P3_value',
-    'measurement_E1M1': 'measurement_E1M1_value',
+function sendEventEOne() {
+  sendEvent('EOne', {
+    'property_EOneP1': 'property_EOneP1_value',
+    'property_EOneP2': 'property_EOneP2_value',
+    'property_EOneP3': 'property_EOneP3_value',
+    'measurement_EOneM1': 'measurement_EOneM1_value',
     // testing the case of convering numbers in property/measure names to '<NUMBER>'
-    'measurement_E1M2': 'measurement_E1M1_value'
+    'measurement_EOneM2': 'measurement_EOneM1_value'
   });
 }

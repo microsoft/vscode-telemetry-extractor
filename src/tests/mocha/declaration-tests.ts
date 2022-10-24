@@ -36,9 +36,9 @@ describe('GDPR Declaration Tests', () => {
         assert.deepStrictEqual(declarations.commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined,  'MacAddressHash'));
         // We don't care what order they're read in but we want to have a consistent order so we sort them
         declarations.events.dataPoints = nameSort(declarations.events.dataPoints);
-        assert.strictEqual(declarations.events.dataPoints[0].name, 'E1');
-        assert.strictEqual(declarations.events.dataPoints[1].name, 'E2');
-        assert.strictEqual(declarations.events.dataPoints[2].name, 'E3');
+        assert.strictEqual(declarations.events.dataPoints[0].name, 'EOne');
+        assert.strictEqual(declarations.events.dataPoints[1].name, 'EThree');
+        assert.strictEqual(declarations.events.dataPoints[2].name, 'ETwo');
         // We don't care what order they're read in but we want to have a consistent order so we sort them
         declarations.fragments.dataPoints = nameSort(declarations.fragments.dataPoints);
         assert.strictEqual(declarations.fragments.dataPoints[0].name, 'F0');
