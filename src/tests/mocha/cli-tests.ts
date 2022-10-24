@@ -25,7 +25,7 @@ describe('CLI Tests', () => {
         const response = cp.execSync('node ./out/extractor.js -s src/tests/mocha/resources/source --excludedDir src/tests/mocha/resources/source/excluded --eventPrefix test/ --silenceOutput', { encoding: 'utf8' });
         const parsedResponse = JSON.parse(response);
         assert.ok(parsedResponse['events']);
-        assert.ok(parsedResponse['events']['test/E1']);
+        assert.ok(parsedResponse['events']['test/EOne']);
         assert.ok(parsedResponse['commonProperties']);
         assert.ok(!parsedResponse['test/IgnoredEvent']);
     }).timeout(3000);
