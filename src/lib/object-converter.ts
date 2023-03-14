@@ -15,7 +15,7 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
     const newEvents = Object.create(null);
     const oldEvents = output.events.dataPoints;
     for (const event of oldEvents) {
-        // Check if event.name ends with a number, if so throw an error because we don't support event names which end with an error
+        // Check if event.name ends with a number, if so throw an error because we don't support event names which end with numbers
         if (/\d$/.test(event.name)) {
             throw new Error(`Event name ${event.name} ends with a number. Event names cannot end with numbers.`);
         }
