@@ -15,9 +15,9 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
     const newEvents = Object.create(null);
     const oldEvents = output.events.dataPoints;
     for (const event of oldEvents) {
-        // Check if event.name contains a number if so throw an error because we don't support numbers in event names
-        if (/\d/.test(event.name)) {
-            throw new Error(`Event name ${event.name} contains a number. Event names cannot contain numbers.`);
+        // Check if event.name ends with a number, if so throw an error because we don't support event names which end with an error
+        if (/\d$/.test(event.name)) {
+            throw new Error(`Event name ${event.name} ends with a number. Event names cannot end with numbers.`);
         }
         newEvents[event.name] = Object.create(null);
         //We know there won't be anymore includes or inlines because we have resolved them
