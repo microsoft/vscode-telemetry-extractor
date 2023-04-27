@@ -122,26 +122,32 @@ export class TsParser {
             this.project = new Project({});
         }
         const fileGlobs: string[] = [];
-        fileGlobs.push(`'**/*.ts'`);
+        fileGlobs.push(`**/*.ts`);
         // Excluded added lasts because order determines what takes effect
         this.excludedDirs = makeExclusionsRelativeToSource(this.sourceDir, this.excludedDirs);
         this.excludedDirs.forEach((dir) => {
-            fileGlobs.push(`'!${dir}/**'`);
+            fileGlobs.push(`!${dir}/**`);
         });
         let rg_glob = '';
+        const rgGlobs = [];
         for (const fg of fileGlobs) {
             rg_glob += ` --glob ${fg}`;
+            rgGlobs.push('--glob');
+            rgGlobs.push(fg);
         }
-        const cmd = `${rgPath} --files-with-matches ${rg_glob} --no-ignore \"publicLog2|publicLogError2\" ${this.sourceDir}`;
+        
+        const ripgrepArgs = ['--files-with-matches', ...rgGlobs, '--no-ignore', 'publicLog2|publicLogError2', this.sourceDir]
         try {
-            const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii' });
+            const retrieved_paths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii' });
             // Split the paths into an array
             retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
                 this.project.addSourceFileAtPathIfExists(f);
                 return f;
             });
         // Empty catch because this fails when there are no typescript annotations which causes weird error messages
-        } catch { }
+        } catch (e) {
+            // No-op
+        }
     }
 
     public parseFiles() {
