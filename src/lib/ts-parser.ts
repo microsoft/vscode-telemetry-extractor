@@ -121,20 +121,18 @@ export class TsParser {
         } else {
             this.project = new Project({});
         }
-        const fileGlobs: string[] = [];
-        fileGlobs.push(`'**/*.ts'`);
+        const fileGlobArgs: string[] = [];
+        fileGlobArgs.push('--glob');
+        fileGlobArgs.push(`**/*.ts`);
         // Excluded added lasts because order determines what takes effect
         this.excludedDirs = makeExclusionsRelativeToSource(this.sourceDir, this.excludedDirs);
         this.excludedDirs.forEach((dir) => {
-            fileGlobs.push(`'!${dir}/**'`);
+            fileGlobArgs.push('--glob');
+            fileGlobArgs.push(`!${dir}/**`);
         });
-        let rg_glob = '';
-        for (const fg of fileGlobs) {
-            rg_glob += ` --glob ${fg}`;
-        }
-        const cmd = `${rgPath} --files-with-matches ${rg_glob} --no-ignore 'publicLog2|publicLogError2' ${this.sourceDir}`;
+        const args = ['--files-with-matches', ...fileGlobArgs, '--no-ignore', 'publicLog2|publicLogError2', this.sourceDir];
         try {
-            const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii' });
+            const retrieved_paths = cp.execFileSync(cmd, args, { encoding: 'ascii' });
             // Split the paths into an array
             retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
                 this.project.addSourceFileAtPathIfExists(f);
