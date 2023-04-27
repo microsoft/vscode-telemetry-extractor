@@ -26,11 +26,11 @@ export class Parser {
         this.lowerCaseEvents = lowerCaseEvents;
     }
 
-    private toRipGrepOption(dir: string) {
+    private toRipGrepOption(dir: string): string[] {
         while (dir.startsWith('/')) {
             dir = dir.substr(1);
         }
-        return `--glob "!${dir}/**" `;
+        return ['--glob', `!${dir}/**`];
     }
 
     private extractComments(absoluteFilePaths: string[], commentMatcher: RegExp, collector: Function) {
@@ -150,10 +150,10 @@ export class Parser {
     // Utilizes a regex to find the files containing the specific pattern
     private findFiles(ripgrepPattern: string, sourceDir: string) {
         const relativeExclusions = makeExclusionsRelativeToSource(sourceDir, this.excludedDirs);
-        const exclusions = relativeExclusions.length === 0 || relativeExclusions[0] === '' ? '' : relativeExclusions.map(this.toRipGrepOption).join('');
-        const cmd = `${rgPath} --files-with-matches --glob "*.ts" ${exclusions} --regexp "${ripgrepPattern}" -- ${sourceDir}`;
+        const exclusions = relativeExclusions.length === 0 || relativeExclusions[0] === '' ? [] : relativeExclusions.map(this.toRipGrepOption).flat();
+        const ripgrepArgs = ['--files-with-matches', '--glob', '*.ts', ...exclusions, '--regexp', ripgrepPattern, '--', sourceDir];
         try {
-            let filePaths = cp.execSync(cmd, { encoding: 'ascii', cwd: `${sourceDir}` });
+            const filePaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii', cwd: `${sourceDir}` }); 
             return filePaths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0);
         } catch (err) {
             // ripgrep's return code != 0 if there are no matches
