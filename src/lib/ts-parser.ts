@@ -132,7 +132,7 @@ export class TsParser {
         for (const fg of fileGlobs) {
             rg_glob += ` --glob ${fg}`;
         }
-        const cmd = `${rgPath} --files-with-matches ${rg_glob} --no-ignore 'publicLog2|publicLogError2' ${this.sourceDir}`;
+        const cmd = `${rgPath} --files-with-matches ${rg_glob} --no-ignore \"publicLog2|publicLogError2\" ${this.sourceDir}`;
         try {
             const retrieved_paths = cp.execSync(cmd, { encoding: 'ascii' });
             // Split the paths into an array
