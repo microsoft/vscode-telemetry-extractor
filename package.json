@@ -23,6 +23,7 @@
   "author": "lramos15",
   "license": "MIT",
   "dependencies": {
+    "@vscode/ripgrep": "^1.15.2",
     "command-line-args": "^5.2.1",
     "ts-morph": "^18.0.0"
   },
