@@ -9,11 +9,12 @@
     "url": "https://github.com/microsoft/vscode-telemetry-extractor"
   },
   "scripts": {
-    "test": "mocha out/tests/mocha/*.js",
+    "compile": "tsc",
     "coverage": "nyc mocha out/tests/mocha/*.js",
     "extract-core": "node ./out/extractor.js --sourceDir src/telemetry-sources/vscode --excludedDir src/telemetry-sources/vscode/extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints -f telemetry",
     "extract-core-verbose": "node ./out/extractor.js --sourceDir src/telemetry-sources/vscode --excludedDir src/telemetry-sources/vscode/extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints --silent --verbose",
-    "compile": "tsc",
+    "lint": "eslint **/*.ts",
+    "test": "mocha out/tests/mocha/*.js",
     "watch": "tsc --watch"
   },
   "bin": {
@@ -22,18 +23,22 @@
   "author": "lramos15",
   "license": "MIT",
   "dependencies": {
+    "@vscode/ripgrep": "^1.15.2",
     "command-line-args": "^5.2.1",
-    "ts-morph": "^18.0.0",
-    "@vscode/ripgrep": "^1.15.2"
+    "ts-morph": "^18.0.0"
   },
   "devDependencies": {
     "@types/command-line-args": "^5.2.0",
     "@types/mocha": "^9.1.1",
     "@types/node": "^15.12.2",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+		"@typescript-eslint/parser": "^5.47.0",
+    "eslint": "^8.44.0",
+    "eslint-plugin-security": "^1.7.1",
     "mocha": "^9.1.3",
     "nyc": "^15.1.0",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.1",
-    "typescript": "^4.7.4"
+    "typescript": "^5.1.6"
   }
 }
