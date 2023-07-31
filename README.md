@@ -6,15 +6,18 @@ This tooling allows for the extraction of [GDPR formatted comments](./documentat
 produces a JSON file containing the telemetry events which are collected.
 
 ## Prerequisites
-* Node LTS (12.x) installed and in your path 
+
+* Node LTS (16.x) installed and in your path
 
 ## Setup
+
 ```bash
     npm i @vscode/telemetry-extractor
 ```
+
 For the various supported commands please see [**Using the tool**](./documentation/using-the-tool.md)
 
-# Contributing
+## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
