@@ -28,15 +28,7 @@ export interface SourceSpec {
 }
 
 export interface CommonProperties {
-    [key: string]: CommonProperty;
-}
-
-export interface CommonProperty {
-    name: string;
-    classification: string;
-    purpose: string;
-    endPoint?: string;
-    isMeasurement?: boolean;
+    [key: string]: Property;
 }
 
 export interface Events {
@@ -44,15 +36,15 @@ export interface Events {
 }
 
 export interface Event {
-    [key: string]: Properties;
-}
-
-export interface Properties {
-    [key: string]: Property;
+    [key: string]: Property | string | undefined;
+    comment?: string;
+    expiration?: string;
 }
 
 export interface Property {
     name: string;
+    comment?: string;
+    expiration?: string;
     classification: string;
     purpose: string;
     endPoint?: string;
