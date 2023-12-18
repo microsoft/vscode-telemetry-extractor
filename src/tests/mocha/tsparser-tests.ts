@@ -15,6 +15,7 @@ describe('TS Parser Tests', function () {
         assert.strictEqual(declarations['SmallEvent1']['baz']['expiration'], '1.57.0');
         assert.ok(declarations['SmallEvent2']);
         assert.ok(declarations['SmallEvent3']);
+        assert.ok(declarations['SmallEvent4']);
     });
     it('Large Event Tests', () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'large-event-tests'), [], true, false);
