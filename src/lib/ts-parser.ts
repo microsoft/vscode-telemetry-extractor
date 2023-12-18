@@ -153,8 +153,8 @@ export class TsParser {
     public parseFiles() {
         let publicLogUse: Array<CallExpression> = [];
         this.project.getSourceFiles().forEach((source) => {
-            const descendants = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLog2'));
-            const descendants2 = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLogError2'));
+            const descendants = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLog2') && c.getArguments().length > 0);
+            const descendants2 = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLogError2') && c.getArguments().length > 0);
             publicLogUse = descendants.concat(publicLogUse, descendants2);
         });
 
