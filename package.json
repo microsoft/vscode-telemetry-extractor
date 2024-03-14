@@ -1,6 +1,6 @@
 {
   "name": "@vscode/telemetry-extractor",
-  "version": "1.10.2",
+  "version": "1.11.0",
   "description": "Extracts telemetry from VS Code",
   "main": "out/index.js",
   "typings": "vscode-telemetry-extractor.d.ts",
@@ -25,7 +25,7 @@
   "dependencies": {
     "@vscode/ripgrep": "^1.15.9",
     "command-line-args": "^5.2.1",
-    "ts-morph": "^21.0.1"
+    "ts-morph": "^22.0.0"
   },
   "devDependencies": {
     "@types/command-line-args": "^5.2.3",
