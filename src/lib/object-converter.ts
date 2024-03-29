@@ -39,6 +39,10 @@ export async function transformOutput(output: OutputtedDeclarations): Promise<Ou
                     newEvents[event.name][keywords.wildcard].push(newEntry);
                 }
             } else if (property instanceof Property) {
+                // Check if property name is 'value' and throw an error if it is
+                if (propetyNameChanger(property.name) === 'value') {
+                    throw new Error(`Property name 'value' is reserved and cannot be used due to conflicts with the SDK. Please rename the property.`);
+                }
                 // Handles the case where the comments can be inconsistent
                 // We want to ensure that if isMeasurement is ever flagged it gets propogated
                 if (newEvents[event.name][propetyNameChanger(property.name)]) {
