@@ -177,6 +177,10 @@ export class TsParser {
                 } else {
                     event_name = event_name.substring(1, event_name.length - 1);
                 }
+                // Ensure there is at least an object available to assign props to
+                if (events[event_name] === undefined) {
+                    events[event_name] = Object.create(null);
+                }
                 event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 const created_event = new Event(event_name);
                 // We want the second one because public log is in the form <Event, Classification> and we care about the classification
@@ -186,13 +190,27 @@ export class TsParser {
                     const node_visitor = new NodeVisitor(pl, propName, this.applyEndpoints);
                     created_event.properties = created_event.properties.concat(node_visitor.resolveProperties(prop));
                 });
-                // We don't want to overwrite an event if we have already defined it, we just want to add to it
-                if (!events[event_name]) {
-                    events[event_name] = Object.create(null);
-                }
                 created_event.properties.forEach((prop) => {
                     Object.assign(events[event_name], prop);
                 });
+                const eventProperties = typeArgs[0].getType().getProperties();
+                // Find all eventProperties that have a number or boolean type
+                eventProperties.forEach((prop) => {
+                    const propName = prop.getEscapedName().toLowerCase();
+                    const valueDeclaration = prop.getValueDeclaration();
+                    if (valueDeclaration === undefined) {
+                        return;
+                    }
+                    const propType = prop.getTypeAtLocation(valueDeclaration);
+                    if (propType.isNumber() || propType.isBoolean()) {
+                        const eventToUpdate = events[event_name][propName];
+                        if (!eventToUpdate) {
+                            return;
+                        }
+                        eventToUpdate.isMeasurement = true;
+                    }
+                });
+
             } catch (err) {
                 if (pl.getArguments()[0].getText() === "eventName") {
                     return;
