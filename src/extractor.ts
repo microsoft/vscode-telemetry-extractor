@@ -24,7 +24,7 @@ if (options.config) {
         eventPrefix: options.eventPrefix,
         applyEndpoints: options.applyEndpoints,
         patchDebugEvents: false,
-        lowerCaseEvents: false,
+        lowerCaseEvents: options.lowerCaseEvents,
         silenceOutput: options.silenceOutput,
         verbose: options.verbose
     };
