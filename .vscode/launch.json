@@ -14,7 +14,8 @@
                 "--sourceDir=${workspaceRoot}/src/telemetry-sources/vscode",
                 "--excludedDirPattern=extensions",
                 "--outputDir=${workspaceRoot}",
-                "--applyEndpoints"
+                "--applyEndpoints",
+                "--lowerCaseEvents"
 
             ]
         },

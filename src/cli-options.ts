@@ -26,6 +26,7 @@ export const optionDefinitions = [
     { name: 'help', alias: 'h', type: Boolean, description: 'Displays the help dialog which provides more information on how to use the tool', defaultValue: false },
     { name: 'applyEndpoints', alias: 'e', type: Boolean, defaultValue: false },
     { name: 'silenceOutput', type: Boolean, description: 'Silences all progress messages.', defaultValue: false },
+    { name: 'lowerCaseEvents', alias: 'l', type: Boolean, defaultValue: false },
     { name: 'verbose', alias: 'v', type: Boolean, defaultValue: false }
 ];
 

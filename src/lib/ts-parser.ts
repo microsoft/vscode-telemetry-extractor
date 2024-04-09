@@ -6,7 +6,7 @@ import * as cp from 'child_process';
 import * as path from 'path';
 import { rgPath } from "@vscode/ripgrep";
 import { makeExclusionsRelativeToSource } from "./operations";
-import  { Event, Metadata } from './events';
+import { Event, Metadata } from './events';
 import { Property } from "./common-properties";
 
 class NodeVisitor {
@@ -135,7 +135,7 @@ export class TsParser {
             rgGlobs.push('--glob');
             rgGlobs.push(fg);
         }
-        
+
         const ripgrepArgs = ['--files-with-matches', ...rgGlobs, '--no-ignore', 'publicLog2|publicLogError2', this.sourceDir]
         try {
             const retrieved_paths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii' });
@@ -144,7 +144,7 @@ export class TsParser {
                 this.project.addSourceFileAtPathIfExists(f);
                 return f;
             });
-        // Empty catch because this fails when there are no typescript annotations which causes weird error messages
+            // Empty catch because this fails when there are no typescript annotations which causes weird error messages
         } catch (e) {
             // No-op
         }
@@ -177,11 +177,11 @@ export class TsParser {
                 } else {
                     event_name = event_name.substring(1, event_name.length - 1);
                 }
+                event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 // Ensure there is at least an object available to assign props to
                 if (events[event_name] === undefined) {
                     events[event_name] = Object.create(null);
                 }
-                event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 const created_event = new Event(event_name);
                 // We want the second one because public log is in the form <Event, Classification> and we care about the classification
                 const type_properties = typeArgs[1].getType().getProperties();
