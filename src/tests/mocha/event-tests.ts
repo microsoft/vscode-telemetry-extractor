@@ -25,6 +25,7 @@ describe('Events Tests', () => {
             path.join(cwd(), 'src/tests/mocha/resources/source/file1.ts'),
             path.join(cwd(), 'src/tests/mocha/resources/source/file2.ts'),
             path.join(cwd(), 'src/tests/mocha/resources/source/file3.tsx'),
+            path.join(cwd(), 'src/tests/mocha/resources/source/file4.cs'),
             path.join(cwd(), 'src/tests/mocha/resources/source/excluded/excludedFile.ts')]);
     });
     it('find files - with exclusions', () => {
@@ -35,6 +36,7 @@ describe('Events Tests', () => {
             path.join(cwd(), 'src/tests/mocha/resources/source/file1.ts'),
             path.join(cwd(), 'src/tests/mocha/resources/source/file2.ts'),
             path.join(cwd(), 'src/tests/mocha/resources/source/file3.tsx'),
+            path.join(cwd(), 'src/tests/mocha/resources/source/file4.cs'),
         ]);
     });
     it('find files - with multiple exclusions', () => {
@@ -47,7 +49,7 @@ describe('Events Tests', () => {
         const parser = new Parser([sourceDir], excludedDirs, false, false);
         //@ts-ignore
         const events = parser.findEvents(sourceDir);
-        assert.strictEqual(events.dataPoints.length, 4);
+        assert.strictEqual(events.dataPoints.length, 5);
         events.dataPoints = nameSort(events.dataPoints);
         assert.strictEqual(events.dataPoints[0].name, 'EFour');
     });
@@ -73,7 +75,7 @@ describe('Resolve Tests', () => {
         const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
         assert.ok(declarations.events);
         declarations.events.dataPoints = nameSort(declarations.events.dataPoints);
-        assert.strictEqual(declarations.events.dataPoints.length,4);
+        assert.strictEqual(declarations.events.dataPoints.length,5);
         assert.ok(declarations.commonProperties);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);
         assert.deepStrictEqual(declarations.commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
