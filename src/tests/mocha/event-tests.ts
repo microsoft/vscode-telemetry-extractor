@@ -10,6 +10,7 @@ import { getResolvedDeclaration } from "../../lib/save-declarations";
 import { Property } from "../../lib/common-properties";
 import { patchDebugEvents } from "../../lib/debug-patch";
 import { ParserOptions } from "../../lib/source-spec";
+import { Metadata } from "../../lib/events";
 
 const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/source');
 const excludedDirs = [path.join(sourceDir, 'excluded')];
@@ -88,5 +89,13 @@ describe('Resolve Tests', () => {
         assert.deepStrictEqual(e1Properties[2], new Property('property_EOneP3', 'SystemMetaData', 'FeatureInsight', '1.57.0', "lramos15", "Test event", 'none'));
         assert.deepStrictEqual(e1Properties[3], new Property('measurement_EOneM1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none', true));
         assert.deepStrictEqual(e1Properties[4], new Property('measurement_EOneM<NUMBER>', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none', true));
-    });
+        const testCSEOneProperties = declarations.events.dataPoints[4].properties;
+        assert.deepStrictEqual(testCSEOneProperties[0], new Metadata('owner', 'jonathanyi'));
+        assert.deepStrictEqual(testCSEOneProperties[1], new Metadata('comment', 'Output to Console log test event.'));
+        assert.deepStrictEqual(testCSEOneProperties[2], new Property('property_ECSharpP1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, "NA"));
+        assert.deepStrictEqual(testCSEOneProperties[3], new Property('property_ECSharpP2', 'CallstackOrException', 'PerformanceAndHealth', undefined, undefined, undefined, "NA"));
+        assert.deepStrictEqual(testCSEOneProperties[4], new Property('property_ECSharpP3', 'SystemMetaData', 'FeatureInsight', "1.57.0", "jonathanjyi", "Test event", "none", undefined));
+        assert.deepStrictEqual(testCSEOneProperties[5], new Property('measurement_ECSharpM1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none', true));
+        assert.deepStrictEqual(testCSEOneProperties[6], new Property('measurement_ECSharpM<NUMBER>', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none', true));
+    })
 });
