@@ -1,6 +1,6 @@
 {
   "name": "@vscode/telemetry-extractor",
-  "version": "1.13.1",
+  "version": "1.14.0",
   "description": "Extracts telemetry from VS Code",
   "main": "out/index.js",
   "typings": "vscode-telemetry-extractor.d.ts",

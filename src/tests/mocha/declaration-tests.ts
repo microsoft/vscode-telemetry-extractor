@@ -9,7 +9,6 @@ import { Event, Wildcard } from "../../lib/events";
 import { Fragment } from "../../lib/fragments";
 import { getResolvedDeclaration } from '../../lib/save-declarations';
 import { ParserOptions } from "../../lib/source-spec";
-
 const sourceDirs = [path.join(cwd(), 'src/tests/mocha/resources/source')];
 const excludedDirs = [path.join(sourceDirs[0], 'excluded')];
 
@@ -29,7 +28,7 @@ describe('GDPR Declaration Tests', () => {
         const parser = new Parser(sourceDirs, excludedDirs, true, false);
         const declarations = await parser.extractDeclarations();
         assert.ok(declarations);
-        assert.strictEqual(declarations.events.dataPoints.length, 4);
+        assert.strictEqual(declarations.events.dataPoints.length, 5);
         assert.strictEqual(declarations.fragments.dataPoints.length, 7);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);
         assert.deepStrictEqual(declarations.commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
@@ -40,6 +39,7 @@ describe('GDPR Declaration Tests', () => {
         assert.strictEqual(declarations.events.dataPoints[1].name, 'EOne');
         assert.strictEqual(declarations.events.dataPoints[2].name, 'EThree');
         assert.strictEqual(declarations.events.dataPoints[3].name, 'ETwo');
+        assert.strictEqual(declarations.events.dataPoints[4].name, 'TestCSEOne');
         // We don't care what order they're read in but we want to have a consistent order so we sort them
         declarations.fragments.dataPoints = nameSort(declarations.fragments.dataPoints);
         assert.strictEqual(declarations.fragments.dataPoints[0].name, 'F0');
@@ -61,7 +61,7 @@ describe('GDPR Declaration Tests', () => {
         };
         const declarations = await getResolvedDeclaration(sourceDirs, excludedDirs, parserOptions);
         assert.ok(declarations);
-        assert.strictEqual(declarations.events.dataPoints.length, 4);
+        assert.strictEqual(declarations.events.dataPoints.length, 5);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);
     });
     it('Wildcard test', async () => {

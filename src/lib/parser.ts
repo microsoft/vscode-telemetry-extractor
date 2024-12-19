@@ -151,7 +151,7 @@ export class Parser {
     private findFiles(ripgrepPattern: string, sourceDir: string) {
         const relativeExclusions = makeExclusionsRelativeToSource(sourceDir, this.excludedDirs);
         const exclusions = relativeExclusions.length === 0 || relativeExclusions[0] === '' ? [] : relativeExclusions.map(this.toRipGrepOption).flat();
-        const ripgrepArgs = ['--files-with-matches', '--glob', '*.ts', '--glob', '*.tsx', ...exclusions, '--regexp', ripgrepPattern, '--', sourceDir];
+        const ripgrepArgs = ['--files-with-matches', '--glob', '*.ts', '--glob', '*.tsx', '--glob', '*.cs', ...exclusions, '--regexp', ripgrepPattern, '--', sourceDir];
         try {
             const filePaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii', cwd: `${sourceDir}` }); 
             return filePaths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0);
