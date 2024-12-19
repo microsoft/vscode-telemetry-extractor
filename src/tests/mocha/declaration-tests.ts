@@ -9,8 +9,6 @@ import { Event, Wildcard } from "../../lib/events";
 import { Fragment } from "../../lib/fragments";
 import { getResolvedDeclaration } from '../../lib/save-declarations';
 import { ParserOptions } from "../../lib/source-spec";
-import { Console } from "console";
-
 const sourceDirs = [path.join(cwd(), 'src/tests/mocha/resources/source')];
 const excludedDirs = [path.join(sourceDirs[0], 'excluded')];
 
