@@ -42,7 +42,6 @@ export interface Event {
 }
 
 export interface Property {
-    name: string;
     comment?: string;
     expiration?: string;
     classification: string;
