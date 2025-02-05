@@ -3,7 +3,7 @@
 import * as path from 'path';
 import { Parser } from './parser';
 import * as fileWriter from './file-writer';
-import { resolveDeclarations, OutputtedDeclarations } from './declarations';
+import { resolveDeclarations, OutputtedDeclarations, Declarations } from './declarations';
 import { transformOutput } from './object-converter';
 import { Events } from './events';
 import { CommonProperties } from './common-properties';
@@ -11,6 +11,7 @@ import { TsParser } from './ts-parser';
 import { patchDebugEvents } from './debug-patch';
 import { ParserOptions, SourceSpec } from './source-spec';
 import { logMessage } from './logger';
+import { Fragments } from './fragments';
 
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
     if (Object.keys(contents).length === 0) {
@@ -31,9 +32,30 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
     return declarations;
 }
 
-export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{ events: any, commonProperties: any }> {
+/**
+ * Validate the outputted declaration. Looks to ensure that an event property isn't overloaded by a common property
+ * @param declarations The declaration output
+ */
+function validateOutputtedDeclarations(declarations: OutputtedDeclarations) {
+    const commonProperties = declarations.commonProperties;
+    const events = declarations.events;
+    let failedValidation = false;
+    for (const event in events) {
+        for (const property in events[event]) {
+            if (commonProperties[property]) {
+                failedValidation = true;
+                console.error(`Property ${property} on event ${event} is overloaded by a common property`);
+            }
+        }
+    }
+    if (failedValidation) {
+        throw new Error('Validation failed, please see logs for more information');
+    }
+}
+
+export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<OutputtedDeclarations> {
     try {
-        const allDeclarations: OutputtedDeclarations = { events: new Events(), commonProperties: new CommonProperties() };
+        const allDeclarations: Declarations = { events: new Events(), commonProperties: new CommonProperties(), fragments: new Fragments() };
         const allTypeScriptDeclarations = Object.create(null);
         for (const spec of sourceSpecs) {
             const declarations = await getResolvedDeclaration(spec.sourceDirs, spec.excludedDirs, spec.parserOptions);
@@ -72,6 +94,7 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             }
             formattedDeclarations.events[dec] = allTypeScriptDeclarations[dec];
         }
+        validateOutputtedDeclarations(formattedDeclarations);
         return Promise.resolve(formattedDeclarations);
     } catch (error) {
         console.error(`Error: ${error}`);

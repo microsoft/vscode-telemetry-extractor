@@ -12,7 +12,7 @@
             "program": "${workspaceRoot}/out/extractor.js",
             "args": [
                 "--sourceDir=${workspaceRoot}/src/telemetry-sources/vscode",
-                "--excludedDirPattern=extensions",
+                "--excludedDir=src/telemetry-sources/vscode/extensions",
                 "--outputDir=${workspaceRoot}",
                 "--applyEndpoints",
                 "--lowerCaseEvents"
