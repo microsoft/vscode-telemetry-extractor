@@ -24,8 +24,8 @@
   "license": "MIT",
   "dependencies": {
     "@vscode/ripgrep": "^1.15.10",
-    "command-line-args": "^5.2.1",
-    "ts-morph": "^22.0.0"
+    "command-line-args": "^6.0.1",
+    "ts-morph": "^25.0.1"
   },
   "devDependencies": {
     "@types/command-line-args": "^5.2.3",
@@ -34,7 +34,6 @@
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "eslint": "^8.57.0",
-    "eslint-plugin-security": "^2.1.1",
     "mocha": "^10.2.0",
     "nyc": "^15.1.0",
     "source-map-support": "^0.5.21",

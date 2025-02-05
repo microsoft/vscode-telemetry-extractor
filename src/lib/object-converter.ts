@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { OutputtedDeclarations } from "./declarations";
+import { Declarations, OutputtedDeclarations } from "./declarations";
 import { Property } from "./common-properties";
 import { Metadata, Wildcard } from "./events";
 import * as keywords from './keywords';
 
 // Converts the declarations array to an object format for easy readability.
 
-export async function transformOutput(output: OutputtedDeclarations): Promise<OutputtedDeclarations> {
+export async function transformOutput(output: Declarations): Promise<OutputtedDeclarations> {
     // If there's no events or common properties, we emit a null object
     if (output.events.dataPoints.length === 0 && output.commonProperties.properties.length === 0) {
         return Object.create(null);
