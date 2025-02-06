@@ -10,7 +10,7 @@ import * as keywords from './keywords';
 export async function transformOutput(output: Declarations): Promise<OutputtedDeclarations> {
     // If there's no events or common properties, we emit a null object
     if (output.events.dataPoints.length === 0 && output.commonProperties.properties.length === 0) {
-        return Object.create(null);
+        return { events: Object.create(null), commonProperties: Object.create(null) };
     }
     const newEvents = Object.create(null);
     const oldEvents = output.events.dataPoints;
