@@ -85,7 +85,7 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             allDeclarations.events.dataPoints = allDeclarations.events.dataPoints.concat(declarations.events.dataPoints);
             Object.assign(allTypeScriptDeclarations, typescriptDeclarations);
         }
-        const formattedDeclarations: any = await transformOutput(allDeclarations);
+        const formattedDeclarations = await transformOutput(allDeclarations);
         for (const dec in allTypeScriptDeclarations) {
             // If there's typescript declarations but we returned a null object
             // We must add the event container to the declarations object
