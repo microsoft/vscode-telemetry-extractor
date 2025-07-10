@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Project, SyntaxKind, Symbol, Node, CallExpression } from "ts-morph";
+import { Project, SyntaxKind, Symbol, Node, CallExpression, Type } from "ts-morph";
 import * as fs from 'fs';
 import * as cp from 'child_process';
 import * as path from 'path';
@@ -8,6 +8,24 @@ import { rgPath } from "@vscode/ripgrep";
 import { makeExclusionsRelativeToSource } from "./operations";
 import { Event, Metadata } from './events';
 import { Property } from "./common-properties";
+
+function isMeasurement(type: Type) {
+    if (type.isNumber()) {
+        return true;
+    }
+    if (type.isBoolean()) {
+        return true;
+    }
+
+    if (type.isUnion()) {
+        const unionTypes = type.getUnionTypes();
+        return unionTypes.length === 2 &&
+            (unionTypes.some(t => t.isNumber()) || unionTypes.some(t => t.isBoolean())) &&
+            unionTypes.some(t => t.isUndefined());
+    }
+    return false;
+}
+
 
 class NodeVisitor {
 
@@ -202,7 +220,7 @@ export class TsParser {
                         return;
                     }
                     const propType = prop.getTypeAtLocation(valueDeclaration);
-                    if (propType.isNumber() || propType.isBoolean()) {
+                    if (isMeasurement(propType)) {
                         const eventToUpdate = events[event_name][propName];
                         if (!eventToUpdate) {
                             return;
