@@ -16,6 +16,10 @@ function isMeasurement(type: Type) {
     if (type.isBoolean()) {
         return true;
     }
+    
+    if (type.isEnum()) {
+        return getEnumType(type) === 'number';
+    }
 
     if (type.isUnion()) {
         const unionTypes = type.getUnionTypes();
@@ -24,6 +28,60 @@ function isMeasurement(type: Type) {
             unionTypes.some(t => t.isUndefined());
     }
     return false;
+}
+
+function getEnumType(type: Type): 'number' | 'string' | 'mixed' | null {
+    if (!type.isEnum()) {
+        return null;
+    }
+    
+    const symbol = type.getSymbol();
+    if (!symbol) {
+        return null;
+    }
+    
+    const declarations = symbol.getDeclarations();
+    if (!declarations || declarations.length === 0) {
+        return null;
+    }
+    
+    let hasNumber = false;
+    let hasString = false;
+    
+    // Get the enum declaration to examine its members
+    for (const declaration of declarations) {
+        if (declaration.getKind() === SyntaxKind.EnumDeclaration) {
+            const enumDeclaration = declaration;
+            const members = enumDeclaration.getChildrenOfKind(SyntaxKind.EnumMember);
+            
+            for (const member of members) {
+                const initializer = member.getInitializer();
+                if (initializer) {
+                    // Has explicit initializer - check its type
+                    const initializerType = initializer.getType();
+                    if (initializerType.isStringLiteral()) {
+                        hasString = true;
+                    } else if (initializerType.isNumber()) {
+                        hasNumber = true;
+                    }
+                } else {
+                    // No initializer means it's a numeric enum (auto-incremented)
+                    hasNumber = true;
+                }
+            }
+            break;
+        }
+    }
+    
+    if (hasNumber && hasString) {
+        return 'mixed';
+    } else if (hasNumber) {
+        return 'number';
+    } else if (hasString) {
+        return 'string';
+    }
+    
+    return null;
 }
 
 

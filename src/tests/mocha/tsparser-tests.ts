@@ -16,6 +16,10 @@ describe('TS Parser Tests', function () {
         assert.ok(declarations['SmallEvent2']);
         assert.ok(declarations['SmallEvent3']);
         assert.ok(declarations['SmallEvent4']);
+        assert.ok(declarations['SmallEvent5']);
+        assert.strictEqual(Object.keys(declarations['SmallEvent5']).length, 2);
+        assert.strictEqual(declarations['SmallEvent5']['prop1'].isMeasurement, true);
+        assert.strictEqual(declarations['SmallEvent5']['prop2'].isMeasurement, undefined);
     });
     it('Large Event Tests', () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'large-event-tests'), [], true, false);
