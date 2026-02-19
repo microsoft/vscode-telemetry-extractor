@@ -18,7 +18,7 @@ if (options.config) {
         }
     });
 } else if (options.help || !options.sourceDir) {
-    require('./cli-help');
+    import('./cli-help');
 } else {
     const parserOptions: ParserOptions = {
         eventPrefix: options.eventPrefix,

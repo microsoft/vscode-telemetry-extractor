@@ -18,8 +18,8 @@ export interface OutputtedDeclarations {
 }
 
 function resolveIncludes(target: Events | Fragments, fragments: Fragments) {
-    const notResolved: Array<String> = [];
-    const usedFragments: Array<String> = [];
+    const notResolved: Array<string> = [];
+    const usedFragments: Array<string> = [];
     for (const item of target.dataPoints) {
         for (let i = 0; i < item.properties.length; i++) {
             const property = item.properties[i];
@@ -50,8 +50,8 @@ function resolveIncludes(target: Events | Fragments, fragments: Fragments) {
 }
 
 function resolveInlines(target: Events | Fragments, fragments: Fragments) {
-    const notResolved: Array<String> = [];
-    const usedFragments: Array<String> = [];
+    const notResolved: Array<string> = [];
+    const usedFragments: Array<string> = [];
     for (const item of target.dataPoints) {
         for (let i = 0; i < item.properties.length; i++) {
             const property = item.properties[i];
@@ -71,7 +71,7 @@ function resolveInlines(target: Events | Fragments, fragments: Fragments) {
                         fragment.properties.forEach((prop) => {
                             if (prop instanceof Property) {
                                 // We create the new property in the format inlineName.propName keeping the rest the same
-                                let currentProp = new Property(`${property.inlineName}.${prop.name}`, prop.classification, prop.purpose, prop.expiration, prop.owner, prop.comment);
+                                const currentProp = new Property(`${property.inlineName}.${prop.name}`, prop.classification, prop.purpose, prop.expiration, prop.owner, prop.comment);
                                 if (prop.endPoint) {
                                     currentProp.endPoint = prop.endPoint;
                                 }
@@ -92,8 +92,8 @@ function resolveInlines(target: Events | Fragments, fragments: Fragments) {
 }
 
 export function resolveDeclarations(declarations: Declarations, verbose: boolean) {
-    let notResolved: Array<String> = [];
-    let usedFragments: Array<String> = [];
+    let notResolved: Array<string> = [];
+    let usedFragments: Array<string> = [];
     if (verbose) {
         const fragmentsResolveInlines = resolveInlines(declarations.fragments, declarations.fragments);
         const eventsResolveInlines = resolveInlines(declarations.events, declarations.fragments);

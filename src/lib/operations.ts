@@ -37,6 +37,7 @@ export function findOrCreate(searchTarget: Events | Fragments, name: string) {
     return found;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mergeWildcards(wildcard: any[], target: Event | Fragment, applyEndpoints: boolean) {
     let wildCard = target.properties.find((item) => {
         return item instanceof Wildcard;
@@ -55,6 +56,7 @@ export function mergeWildcards(wildcard: any[], target: Event | Fragment, applyE
     });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function populateProperties(properties: any, target: Event | Fragment, applyEndpoints = false) {
     for (const propertyName in properties) {
         const currentProperty = properties[propertyName];

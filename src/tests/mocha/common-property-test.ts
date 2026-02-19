@@ -13,14 +13,14 @@ const excludeDirs = [path.join(sourceDir, 'source'), path.join(sourceDir, 'sourc
 describe('GDPR common property extraction', () => {
   it('find files', function () {
     const parser = new Parser([sourceDir], excludeDirs, true, false);
-    //@ts-ignore
+    //@ts-expect-error accessing private method for testing
     const filePaths = parser.findFilesWithCommonProperties(sourceDir);
     assertHelper.sameValues(filePaths, [path.join(cwd(), '/src/tests/mocha/resources/common-prop.ts')]);
   });
 
   it('extract declarations', function () {
     const parser = new Parser([sourceDir], excludeDirs, true, false);
-    //@ts-ignore
+    //@ts-expect-error accessing private method for testing
     const commonProperties = parser.findCommonProperties(sourceDir);
     assert.deepStrictEqual(commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
     assert.deepStrictEqual(commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined, 'MacAddressHash'));

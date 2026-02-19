@@ -33,12 +33,12 @@ export class Parser {
         return ['--glob', `!${dir}/**`];
     }
 
-    private extractComments(absoluteFilePaths: string[], commentMatcher: RegExp, collector: Function) {
+    private extractComments(absoluteFilePaths: string[], commentMatcher: RegExp, collector: (filePath: string, match: RegExpExecArray) => void) {
         absoluteFilePaths.forEach(absoluteFilePath => {
             if (absoluteFilePath) {
                 const fileContents = fs.readFileSync(absoluteFilePath);
                 let match;
-                while (match = commentMatcher.exec(fileContents.toString())) {
+                while ((match = commentMatcher.exec(fileContents.toString()))) {
                     collector(absoluteFilePath, match);
                 }
             }
@@ -88,7 +88,7 @@ export class Parser {
 
     // Finds all files containing event fragments in the given directory
     private findFilesWithFragments(sourceDir: string) {
-        const ripgrepPattern = '/\*\\s*__GDPR__FRAGMENT__';
+        const ripgrepPattern = '/\\*\\s*__GDPR__FRAGMENT__';
         return this.findFiles(ripgrepPattern, sourceDir);
     }
 
@@ -119,7 +119,7 @@ export class Parser {
 
     // Find all files with complete events
     private findFilesWithEvents(sourceDir: string) {
-        const ripgrepPattern = '/\*\\s*__GDPR__\\b';
+        const ripgrepPattern = '/\\*\\s*__GDPR__\\b';
         return this.findFiles(ripgrepPattern, sourceDir);
     }
 
@@ -155,7 +155,7 @@ export class Parser {
         try {
             const filePaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii', cwd: `${sourceDir}` });
             return filePaths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0);
-        } catch (err) {
+        } catch {
             // ripgrep's return code != 0 if there are no matches
             return [];
         }
@@ -169,7 +169,7 @@ export class Parser {
     }
 
     public extractDeclarations(): Promise<Declarations> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             // Find all the properties for all files
             const promises = this.sourceDirs.map(sd => this.parse(sd));
             // Now we must merge them into one superset of all declarations

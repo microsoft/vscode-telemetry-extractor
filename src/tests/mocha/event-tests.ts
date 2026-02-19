@@ -20,7 +20,7 @@ const multipleExcludes = [path.join(sourceDir2, 'excluded'), path.join(sourceDir
 describe('Events Tests', () => {
     it('find files - no exclusions', () => {
         const parser = new Parser([sourceDir], [], false, false);
-        //@ts-ignore
+        //@ts-expect-error accessing private method for testing
         const filePaths = parser.findFilesWithEvents(sourceDir);
         assertHelper.sameValues(filePaths, [
             path.join(cwd(), 'src/tests/mocha/resources/source/file1.ts'),
@@ -31,7 +31,7 @@ describe('Events Tests', () => {
     });
     it('find files - with exclusions', () => {
         const parser = new Parser([sourceDir], excludedDirs, false, false);
-        //@ts-ignore
+        //@ts-expect-error accessing private method for testing
         const filePaths = parser.findFilesWithEvents(sourceDir);
         assertHelper.sameValues(filePaths, [
             path.join(cwd(), 'src/tests/mocha/resources/source/file1.ts'),
@@ -42,13 +42,13 @@ describe('Events Tests', () => {
     });
     it('find files - with multiple exclusions', () => {
         const parser = new Parser([sourceDir2], multipleExcludes, false, false);
-        //@ts-ignore
+        //@ts-expect-error accessing private method for testing
         const filePaths = parser.findFilesWithEvents(sourceDir2);
         assertHelper.sameValues(filePaths, [path.join(cwd(), 'src/tests/mocha/resources/source-1/folder1/file1.ts')]);
     });
     it('extract event declaration', async () => {
         const parser = new Parser([sourceDir], excludedDirs, false, false);
-        //@ts-ignore
+        //@ts-expect-error accessing private method for testing
         const events = parser.findEvents(sourceDir);
         assert.strictEqual(events.dataPoints.length, 5);
         events.dataPoints = nameSort(events.dataPoints);
@@ -76,7 +76,7 @@ describe('Resolve Tests', () => {
         const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
         assert.ok(declarations.events);
         declarations.events.dataPoints = nameSort(declarations.events.dataPoints);
-        assert.strictEqual(declarations.events.dataPoints.length,5);
+        assert.strictEqual(declarations.events.dataPoints.length, 5);
         assert.ok(declarations.commonProperties);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);
         assert.deepStrictEqual(declarations.commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));

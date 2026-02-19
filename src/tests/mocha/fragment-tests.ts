@@ -19,7 +19,7 @@ describe('GDPR Fragments', () => {
     describe('extract declarations', () => {
         it('Find files with fragments', () => {
             const parser = new Parser([sourceDir], excludedDirs, true, false);
-            //@ts-ignore
+            //@ts-expect-error accessing private method for testing
             const filePaths = parser.findFilesWithFragments(sourceDir);
             assert.ok(filePaths);
             assertHelper.sameValues(filePaths, [
@@ -30,7 +30,7 @@ describe('GDPR Fragments', () => {
 
         it('Extract fragment declarations', () => {
             const parser = new Parser([sourceDir], excludedDirs, true, false);
-            //@ts-ignore
+            //@ts-expect-error accessing private method for testing
             const fragments = parser.findFragments(sourceDir);
             assert.ok(fragments.dataPoints);
             fragments.dataPoints = nameSort(fragments.dataPoints);

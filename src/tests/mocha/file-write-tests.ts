@@ -12,6 +12,6 @@ describe('File Write Tests', () => {
         // Delete the file after or else the test will always "succeed" after it succeeds once
         try {
             fs.unlinkSync(path.resolve(cwd(), 'src/tests/mocha/resources', 'fileWriteTest.json'));
-        } catch { }
+        } catch { /* clean up test artifact */ }
     });
 });
