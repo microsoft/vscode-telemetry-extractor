@@ -8,6 +8,9 @@
     "type": "git",
     "url": "https://github.com/microsoft/vscode-telemetry-extractor"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "compile": "tsc",
     "coverage": "nyc mocha out/tests/mocha/*.js",
