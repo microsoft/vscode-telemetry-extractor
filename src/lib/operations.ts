@@ -4,6 +4,7 @@ import { Fragments, Fragment } from "./fragments";
 import { Events, Event, Include, Inline, Wildcard, WildcardEntry, Metadata } from "./events";
 import { Property } from "./common-properties";
 import * as keywords from './keywords';
+import * as path from 'path';
 
 export function merge(target: Fragments | Events, source: Fragments | Events) {
     for (const item of source.dataPoints) {
@@ -84,8 +85,11 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
 export function makeExclusionsRelativeToSource(sourceDir: string, excludedDirs: string[]) {
     const relativeExclusions = [];
     for (const excluded of excludedDirs) {
-        if (excluded.includes(sourceDir)) {
-            relativeExclusions.push(excluded.replace(sourceDir, ''));
+        const rel = path.relative(sourceDir, excluded);
+        // Only include if the excluded dir is actually under sourceDir
+        if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) {
+            // Normalize to forward slashes for ripgrep glob compatibility
+            relativeExclusions.push(rel.split(path.sep).join('/'));
         }
     }
     return relativeExclusions;

@@ -29,4 +29,22 @@ describe('CLI Tests', () => {
         assert.ok(parsedResponse['commonProperties']);
         assert.ok(!parsedResponse['test/IgnoredEvent']);
     }).timeout(3000);
+    it('Output keys are deeply sorted', () => {
+        const response = cp.execSync('node ./out/extractor.js -s src/tests/mocha/resources/source --excludedDir src/tests/mocha/resources/source/excluded --eventPrefix test/ --silenceOutput', { encoding: 'utf8' });
+        const parsedResponse = JSON.parse(response);
+        assertKeysSorted(parsedResponse);
+    }).timeout(3000);
 });
+
+function assertKeysSorted(obj: unknown, path = ''): void {
+    if (obj !== null && typeof obj === 'object' && !Array.isArray(obj)) {
+        const keys = Object.keys(obj as Record<string, unknown>);
+        const sorted = [...keys].sort();
+        assert.deepStrictEqual(keys, sorted, `Keys not sorted at ${path || 'root'}: [${keys.join(', ')}]`);
+        for (const key of keys) {
+            assertKeysSorted((obj as Record<string, unknown>)[key], path ? `${path}.${key}` : key);
+        }
+    } else if (Array.isArray(obj)) {
+        obj.forEach((item, i) => assertKeysSorted(item, `${path}[${i}]`));
+    }
+}

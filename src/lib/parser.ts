@@ -27,7 +27,7 @@ export class Parser {
     }
 
     private toRipGrepOption(dir: string): string[] {
-        while (dir.startsWith('/')) {
+        while (dir.startsWith('/') || dir.startsWith('\\')) {
             dir = dir.substr(1);
         }
         return ['--glob', `!${dir}/**`];
@@ -153,7 +153,7 @@ export class Parser {
         const exclusions = relativeExclusions.length === 0 || relativeExclusions[0] === '' ? [] : relativeExclusions.map(this.toRipGrepOption).flat();
         const ripgrepArgs = ['--files-with-matches', '--glob', '*.ts', '--glob', '*.tsx', '--glob', '*.cs', ...exclusions, '--regexp', ripgrepPattern, '--', sourceDir];
         try {
-            const filePaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii', cwd: `${sourceDir}` }); 
+            const filePaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii', cwd: `${sourceDir}` });
             return filePaths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0);
         } catch (err) {
             // ripgrep's return code != 0 if there are no matches

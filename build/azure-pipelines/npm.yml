@@ -33,6 +33,14 @@ extends:
           - script: npm run compile --if-present
             displayName: Compile npm package
 
+        testPlatforms:
+          - name: Linux
+            nodeVersions: [16.x]
+          - name: MacOS
+            nodeVersions: [16.x]
+          - name: Windows
+            nodeVersions: [16.x]
+
         testSteps:
           - script: npm ci
             displayName: Install dependencies
