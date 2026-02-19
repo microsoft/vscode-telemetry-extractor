@@ -13,6 +13,20 @@ import { ParserOptions, SourceSpec } from './source-spec';
 import { logMessage } from './logger';
 import { Fragments } from './fragments';
 
+function deepSortKeys(obj: unknown): unknown {
+    if (Array.isArray(obj)) {
+        return obj.map(deepSortKeys);
+    }
+    if (obj !== null && typeof obj === 'object') {
+        const sorted: Record<string, unknown> = Object.create(null);
+        for (const key of Object.keys(obj).sort()) {
+            sorted[key] = deepSortKeys((obj as Record<string, unknown>)[key]);
+        }
+        return sorted;
+    }
+    return obj;
+}
+
 export function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
     if (Object.keys(contents).length === 0) {
         logMessage(`...no events found, skipping file emmision!`, !emitProgressMessage);
@@ -95,7 +109,7 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             formattedDeclarations.events[dec] = allTypeScriptDeclarations[dec];
         }
         validateOutputtedDeclarations(formattedDeclarations);
-        return Promise.resolve(formattedDeclarations);
+        return Promise.resolve(deepSortKeys(formattedDeclarations) as OutputtedDeclarations);
     } catch (error) {
         console.error(`Error: ${error}`);
         return Promise.reject(error);

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { Parser } from "../../lib/parser";
-import { Property, CommonProperties } from '../../lib/common-properties';
+import { Property } from '../../lib/common-properties';
 import { cwd } from 'process';
 import * as path from 'path';
 import * as assert from 'assert';
@@ -32,7 +32,7 @@ describe('GDPR Declaration Tests', () => {
         assert.strictEqual(declarations.fragments.dataPoints.length, 7);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);
         assert.deepStrictEqual(declarations.commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-        assert.deepStrictEqual(declarations.commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined,  'MacAddressHash'));
+        assert.deepStrictEqual(declarations.commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined, 'MacAddressHash'));
         // We don't care what order they're read in but we want to have a consistent order so we sort them
         declarations.events.dataPoints = nameSort(declarations.events.dataPoints);
         assert.strictEqual(declarations.events.dataPoints[0].name, 'EFour');

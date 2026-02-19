@@ -1,13 +1,11 @@
 # Telemetry Extractor for VS Code and associated source repositories
 
-**Note**: This tool currently does not work in Windows CMD prompt or Powershell. On Windows you will need to use WSL or some other linux-like shell.
-
 This tooling allows for the extraction of [GDPR formatted comments](./documentation/comment-code-annotations.md) from the VS Code source repository and
 produces a JSON file containing the telemetry events which are collected.
 
 ## Prerequisites
 
-* Node LTS (16.x) installed and in your path
+* Node LTS (18.x) installed and in your path
 
 ## Setup
 

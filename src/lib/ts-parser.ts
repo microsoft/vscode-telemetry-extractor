@@ -16,7 +16,7 @@ function isMeasurement(type: Type) {
     if (type.isBoolean()) {
         return true;
     }
-    
+
     if (type.isEnum()) {
         return getEnumType(type) === 'number';
     }
@@ -34,26 +34,26 @@ function getEnumType(type: Type): 'number' | 'string' | 'mixed' | null {
     if (!type.isEnum()) {
         return null;
     }
-    
+
     const symbol = type.getSymbol();
     if (!symbol) {
         return null;
     }
-    
+
     const declarations = symbol.getDeclarations();
     if (!declarations || declarations.length === 0) {
         return null;
     }
-    
+
     let hasNumber = false;
     let hasString = false;
-    
+
     // Get the enum declaration to examine its members
     for (const declaration of declarations) {
         if (declaration.getKind() === SyntaxKind.EnumDeclaration) {
             const enumDeclaration = declaration;
             const members = enumDeclaration.getChildrenOfKind(SyntaxKind.EnumMember);
-            
+
             for (const member of members) {
                 const initializer = member.getInitializer();
                 if (initializer) {
@@ -72,7 +72,7 @@ function getEnumType(type: Type): 'number' | 'string' | 'mixed' | null {
             break;
         }
     }
-    
+
     if (hasNumber && hasString) {
         return 'mixed';
     } else if (hasNumber) {
@@ -80,7 +80,7 @@ function getEnumType(type: Type): 'number' | 'string' | 'mixed' | null {
     } else if (hasString) {
         return 'string';
     }
-    
+
     return null;
 }
 
@@ -92,7 +92,9 @@ class NodeVisitor {
     private inline: boolean = false;
     private original_prop_name: string;
     private applyEndpoints: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public properties: Array<any> = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private resolved_property: any = Object.create(null);
     constructor(callexpress_node: Node, prop_name: string, applyEndpoints: boolean) {
         this.pl_node = callexpress_node;
@@ -204,10 +206,8 @@ export class TsParser {
         this.excludedDirs.forEach((dir) => {
             fileGlobs.push(`!${dir}/**`);
         });
-        let rg_glob = '';
         const rgGlobs = [];
         for (const fg of fileGlobs) {
-            rg_glob += ` --glob ${fg}`;
             rgGlobs.push('--glob');
             rgGlobs.push(fg);
         }
@@ -221,7 +221,7 @@ export class TsParser {
                 return f;
             });
             // Empty catch because this fails when there are no typescript annotations which causes weird error messages
-        } catch (e) {
+        } catch {
             // No-op
         }
     }
@@ -287,7 +287,7 @@ export class TsParser {
                     }
                 });
 
-            } catch (err) {
+            } catch {
                 if (pl.getArguments()[0].getText() === "eventName") {
                     return;
                 }

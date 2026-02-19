@@ -25,6 +25,7 @@ export async function transformOutput(output: Declarations): Promise<OutputtedDe
             if (property instanceof Wildcard) {
                 newEvents[event.name][keywords.wildcard] = newEvents[event.name][keywords.wildcard] ? newEvents[event.name][keywords.wildcard] : [];
                 for (const entry of property.entries) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const found = newEvents[event.name][keywords.wildcard].find((e: any) => {
                         return e[keywords.prefix] === entry.prefix.toLowerCase();
                     });
