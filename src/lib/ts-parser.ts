@@ -9,6 +9,11 @@ import { makeExclusionsRelativeToSource } from "./operations";
 import { Event, Metadata } from './events';
 import { Property } from "./common-properties";
 
+interface EventDefinition {
+    signature: string;
+    location: string;
+}
+
 function isMeasurement(type: Type) {
     if (type.isNumber()) {
         return true;
@@ -180,11 +185,13 @@ export class TsParser {
     private applyEndpoints: boolean;
     private lowerCaseEvents: boolean;
     private project: Project;
+    private eventDefinitions: Map<string, EventDefinition[]>;
     constructor(sourceDir: string, excludedDirs: string[], applyEndpoints: boolean, lowerCaseEvents: boolean) {
         this.sourceDir = sourceDir;
         this.excludedDirs = excludedDirs;
         this.applyEndpoints = applyEndpoints;
         this.lowerCaseEvents = lowerCaseEvents;
+        this.eventDefinitions = new Map();
         // We search for a TS config as that allows the language service to handle weird imports
         if (fs.existsSync(path.join(this.sourceDir, 'src/tsconfig.json'))) {
             this.project = new Project({
@@ -224,6 +231,35 @@ export class TsParser {
         } catch {
             // No-op
         }
+    }
+
+    public getEventDefinitions() {
+        const definitions = new Map<string, EventDefinition[]>();
+        for (const [eventName, entries] of this.eventDefinitions.entries()) {
+            definitions.set(eventName, [...entries]);
+        }
+        return definitions;
+    }
+
+    private addEventDefinition(eventName: string, signature: string, location: string) {
+        const existing = this.eventDefinitions.get(eventName) ?? [];
+        existing.push({ signature, location });
+        this.eventDefinitions.set(eventName, existing);
+    }
+
+    private stableSerialize(value: unknown): string {
+        if (Array.isArray(value)) {
+            return `[${value.map((entry) => this.stableSerialize(entry)).join(',')}]`;
+        }
+
+        if (value && typeof value === 'object') {
+            const entries = Object.entries(value as Record<string, unknown>)
+                .sort(([left], [right]) => left.localeCompare(right))
+                .map(([key, entryValue]) => `${JSON.stringify(key)}:${this.stableSerialize(entryValue)}`);
+            return `{${entries.join(',')}}`;
+        }
+
+        return JSON.stringify(value);
     }
 
     public parseFiles() {
@@ -269,6 +305,7 @@ export class TsParser {
                 created_event.properties.forEach((prop) => {
                     Object.assign(events[event_name], prop);
                 });
+                this.addEventDefinition(event_name, this.stableSerialize(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
                 const eventProperties = typeArgs[0].getType().getProperties();
                 // Find all eventProperties that have a number or boolean type
                 eventProperties.forEach((prop) => {
@@ -302,6 +339,7 @@ export class TsParser {
                 }
                 event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 events[event_name] = {};
+                this.addEventDefinition(event_name, this.stableSerialize(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
             }
         });
         return events;

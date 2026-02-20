@@ -87,7 +87,7 @@ describe('merge', () => {
     assert.strictEqual(target.dataPoints[1].name, 'event2');
   });
 
-  it('throws for overlapping events with different properties', () => {
+  it('keeps first definition for overlapping events with different properties', () => {
     const target = new Events();
     const e1 = new Event('shared');
     e1.properties.push(new Property('prop1', 'SystemMetaData', 'FeatureInsight'));
@@ -98,7 +98,10 @@ describe('merge', () => {
     e2.properties.push(new Property('prop2', 'SystemMetaData', 'FeatureInsight'));
     source.dataPoints.push(e2);
 
-    assert.throws(() => merge(target, source), /conflicting details/);
+    merge(target, source);
+    assert.strictEqual(target.dataPoints.length, 1);
+    assert.strictEqual(target.dataPoints[0].properties.length, 1);
+    assert.deepStrictEqual(target.dataPoints[0].properties[0], e1.properties[0]);
   });
 
   it('merges non-overlapping fragments', () => {
@@ -134,7 +137,7 @@ describe('merge', () => {
     assert.strictEqual(target.dataPoints[0].properties.length, 1);
   });
 
-  it('throws on overlapping events with conflicting details', () => {
+  it('does not append conflicting overlapping events', () => {
     const target = new Events();
     const event = new Event('shared');
     event.properties.push(new Metadata('owner', 'team-a'));
@@ -145,7 +148,9 @@ describe('merge', () => {
     conflictingEvent.properties.push(new Metadata('owner', 'team-b'));
     source.dataPoints.push(conflictingEvent);
 
-    assert.throws(() => merge(target, source), /conflicting details/);
+    merge(target, source);
+    assert.strictEqual(target.dataPoints.length, 1);
+    assert.strictEqual(target.dataPoints[0].properties.length, 1);
   });
 });
 

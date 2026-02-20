@@ -34,6 +34,24 @@ describe('CLI Tests', () => {
         const parsedResponse = JSON.parse(response);
         assertKeysSorted(parsedResponse);
     }).timeout(3000);
+
+    it('reports all duplicate conflict locations in one run', () => {
+        const result = cp.spawnSync('node', [
+            './out/extractor.js',
+            '-s', 'src/tests/mocha/resources/source-duplicate-events',
+            '-s', 'src/tests/mocha/resources/tsparser-tests/duplicate-conflict-tests',
+            '--silenceOutput'
+        ], { encoding: 'utf8' });
+
+        assert.notStrictEqual(result.status, 0);
+        const stderr = result.stderr;
+        assert.ok(stderr.includes("Duplicate telemetry event declaration 'DuplicateEvent' has conflicting details at:"));
+        assert.ok(stderr.includes("Duplicate telemetry event declaration 'DuplicateTsEvent' has conflicting details at:"));
+        assert.ok(stderr.includes('source-duplicate-events/file1.ts'));
+        assert.ok(stderr.includes('source-duplicate-events/file2.ts'));
+        assert.ok(stderr.includes('duplicate-conflict-tests/file1.ts'));
+        assert.ok(stderr.includes('duplicate-conflict-tests/file2.ts'));
+    }).timeout(3000);
 });
 
 function assertKeysSorted(obj: unknown, path = ''): void {
