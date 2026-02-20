@@ -87,7 +87,7 @@ describe('merge', () => {
     assert.strictEqual(target.dataPoints[1].name, 'event2');
   });
 
-  it('combines properties of overlapping events', () => {
+  it('throws for overlapping events with different properties', () => {
     const target = new Events();
     const e1 = new Event('shared');
     e1.properties.push(new Property('prop1', 'SystemMetaData', 'FeatureInsight'));
@@ -98,9 +98,7 @@ describe('merge', () => {
     e2.properties.push(new Property('prop2', 'SystemMetaData', 'FeatureInsight'));
     source.dataPoints.push(e2);
 
-    merge(target, source);
-    assert.strictEqual(target.dataPoints.length, 1);
-    assert.strictEqual(target.dataPoints[0].properties.length, 2);
+    assert.throws(() => merge(target, source), /conflicting details/);
   });
 
   it('merges non-overlapping fragments', () => {
@@ -118,6 +116,36 @@ describe('merge', () => {
     const source = new Events();
     merge(target, source);
     assert.strictEqual(target.dataPoints.length, 1);
+  });
+
+  it('does not duplicate identical overlapping events', () => {
+    const target = new Events();
+    const event = new Event('shared');
+    event.properties.push(new Metadata('owner', 'team-a'));
+    target.dataPoints.push(event);
+
+    const source = new Events();
+    const sameEvent = new Event('shared');
+    sameEvent.properties.push(new Metadata('owner', 'team-a'));
+    source.dataPoints.push(sameEvent);
+
+    merge(target, source);
+    assert.strictEqual(target.dataPoints.length, 1);
+    assert.strictEqual(target.dataPoints[0].properties.length, 1);
+  });
+
+  it('throws on overlapping events with conflicting details', () => {
+    const target = new Events();
+    const event = new Event('shared');
+    event.properties.push(new Metadata('owner', 'team-a'));
+    target.dataPoints.push(event);
+
+    const source = new Events();
+    const conflictingEvent = new Event('shared');
+    conflictingEvent.properties.push(new Metadata('owner', 'team-b'));
+    source.dataPoints.push(conflictingEvent);
+
+    assert.throws(() => merge(target, source), /conflicting details/);
   });
 });
 

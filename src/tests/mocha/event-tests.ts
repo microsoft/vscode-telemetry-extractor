@@ -16,6 +16,7 @@ const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/source');
 const excludedDirs = [path.join(sourceDir, 'excluded')];
 const sourceDir2 = path.join(cwd(), 'src/tests/mocha/resources/source-1')
 const multipleExcludes = [path.join(sourceDir2, 'excluded'), path.join(sourceDir2, 'folder2')];
+const duplicateEventSourceDir = path.join(cwd(), 'src/tests/mocha/resources/source-duplicate-events');
 
 describe('Events Tests', () => {
     it('find files - no exclusions', () => {
@@ -61,6 +62,26 @@ describe('Events Tests', () => {
         // Since order is non deterministic we filter down to the event we want
         const debug = declarations.events.dataPoints.filter(e => e.name === "debugProtocolErrorResponse");
         assert.strictEqual(debug.length, 1);
+    });
+
+    it('fails when duplicate events have conflicting details', () => {
+        const parser = new Parser([duplicateEventSourceDir], [], false, false);
+        const previousExitCode = process.exitCode;
+        const previousConsoleError = console.error;
+        const consoleErrors: string[] = [];
+        try {
+            process.exitCode = 0;
+            console.error = (...args: unknown[]) => {
+                consoleErrors.push(args.map(arg => String(arg)).join(' '));
+            };
+            //@ts-expect-error accessing private method for testing
+            parser.findEvents(duplicateEventSourceDir);
+            assert.strictEqual(process.exitCode, 1);
+            assert.ok(consoleErrors.some(msg => msg.includes('conflicting details')));
+        } finally {
+            process.exitCode = previousExitCode;
+            console.error = previousConsoleError;
+        }
     });
 });
 describe('Resolve Tests', () => {
