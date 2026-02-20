@@ -13,11 +13,89 @@ export function merge(target: Fragments | Events, source: Fragments | Events) {
         });
         // We combine their properties together if the event already exists
         if (found) {
+            if (target instanceof Events && source instanceof Events && found instanceof Event && item instanceof Event) {
+                if (!sameEventDefinition(found, item)) {
+                    throw new Error(`Duplicate telemetry event declaration '${item.name}' has conflicting details.`);
+                }
+                continue;
+            }
             found.properties = found.properties.concat(item.properties);
         } else {
             target.dataPoints.push(item);
         }
     }
+}
+
+function sameEventDefinition(left: Event, right: Event) {
+    return stableSerialize(eventToComparable(left)) === stableSerialize(eventToComparable(right));
+}
+
+function eventToComparable(event: Event) {
+    const properties = event.properties.map(propertyToComparable);
+    properties.sort((a, b) => stableSerialize(a).localeCompare(stableSerialize(b)));
+    return {
+        name: event.name,
+        properties
+    };
+}
+
+function propertyToComparable(property: Property | Metadata | Include | Inline | Wildcard) {
+    if (property instanceof Property) {
+        return {
+            type: 'property',
+            name: property.name,
+            classification: property.classification,
+            purpose: property.purpose,
+            expiration: property.expiration,
+            owner: property.owner,
+            comment: property.comment,
+            endPoint: property.endPoint,
+            isMeasurement: property.isMeasurement
+        };
+    }
+    if (property instanceof Metadata) {
+        return {
+            type: 'metadata',
+            name: property.name,
+            value: property.value
+        };
+    }
+    if (property instanceof Include) {
+        return {
+            type: 'include',
+            includeNames: [...property.includeNames].sort()
+        };
+    }
+    if (property instanceof Inline) {
+        return {
+            type: 'inline',
+            inlineName: property.inlineName,
+            inlines: [...property.inlines].sort()
+        };
+    }
+    return {
+        type: 'wildcard',
+        entries: property.entries.map(entry => ({
+            prefix: entry.prefix,
+            classification: entry.classification,
+            endpoint: entry.endpoint
+        })).sort((a, b) => stableSerialize(a).localeCompare(stableSerialize(b)))
+    };
+}
+
+function stableSerialize(value: unknown): string {
+    if (Array.isArray(value)) {
+        return `[${value.map(stableSerialize).join(',')}]`;
+    }
+
+    if (value && typeof value === 'object') {
+        const entries = Object.entries(value as Record<string, unknown>)
+            .sort(([left], [right]) => left.localeCompare(right))
+            .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableSerialize(entryValue)}`);
+        return `{${entries.join(',')}}`;
+    }
+
+    return JSON.stringify(value);
 }
 
 // Searches the object for an event or fragment of the specific name 

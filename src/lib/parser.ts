@@ -125,6 +125,7 @@ export class Parser {
 
     private findEvents(sourceDir: string) {
         const filesWithEvents = this.asAbsoluteFilePaths(this.findFilesWithEvents(sourceDir));
+        const eventSignatures = new Map<string, string>();
 
         // Using [\s\S]* instead of .* since the latter does not match when using /m option
         const eventMatcher = /\/\*\s*__GDPR__\b([\s\S]*?)\*\//mg;
@@ -134,9 +135,21 @@ export class Parser {
                 const eventDeclaration = JSON.parse(`{ ${match[1]} }`);
                 let eventName = Object.keys(eventDeclaration)[0];
                 eventName = this.lowerCaseEvents ? eventName.toLowerCase() : eventName;
+                const eventProperties = eventDeclaration[Object.keys(eventDeclaration)[0]];
+                const currentSignature = this.stableSerialize(eventProperties);
+                const existingSignature = eventSignatures.get(eventName);
+
+                if (existingSignature && existingSignature !== currentSignature) {
+                    throw new Error(`Duplicate telemetry event declaration '${eventName}' has conflicting details.`);
+                }
+
+                if (existingSignature) {
+                    return;
+                }
+
+                eventSignatures.set(eventName, currentSignature);
                 const event = findOrCreate(eventDeclarations, eventName);
                 // Get the propeties which the event possesses
-                const eventProperties = eventDeclaration[Object.keys(eventDeclaration)[0]];
                 populateProperties(eventProperties, event, this.applyEndpoints);
             } catch (error) {
                 console.error(`Event Declaration Error: ${error} in file ${filePath}`);
@@ -145,6 +158,21 @@ export class Parser {
             }
         });
         return eventDeclarations;
+    }
+
+    private stableSerialize(value: unknown): string {
+        if (Array.isArray(value)) {
+            return `[${value.map((entry) => this.stableSerialize(entry)).join(',')}]`;
+        }
+
+        if (value && typeof value === 'object') {
+            const entries = Object.entries(value as Record<string, unknown>)
+                .sort(([left], [right]) => left.localeCompare(right))
+                .map(([key, entryValue]) => `${JSON.stringify(key)}:${this.stableSerialize(entryValue)}`);
+            return `{${entries.join(',')}}`;
+        }
+
+        return JSON.stringify(value);
     }
 
     // Utilizes a regex to find the files containing the specific pattern
