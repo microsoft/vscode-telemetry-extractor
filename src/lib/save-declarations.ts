@@ -98,7 +98,7 @@ function reportDuplicateEventConflicts(definitions: Map<string, EventConflictEnt
         }
 
         hasConflicts = true;
-        const uniqueLocations = [...new Set(entries.map(entry => `${entry.location} (${entry.source})`))];
+        const uniqueLocations = [...new Set(entries.map(entry => `${entry.location.replace(/\\/g, '/')} (${entry.source})`))];
         console.error(`Duplicate telemetry event declaration '${eventName}' has conflicting details at:`);
         uniqueLocations.forEach(location => console.error(` - ${location}`));
     }
