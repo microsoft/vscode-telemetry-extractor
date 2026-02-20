@@ -15,7 +15,7 @@ export function merge(target: Fragments | Events, source: Fragments | Events) {
         if (found) {
             if (target instanceof Events && source instanceof Events && found instanceof Event && item instanceof Event) {
                 if (!sameEventDefinition(found, item)) {
-                    throw new Error(`Duplicate telemetry event declaration '${item.name}' has conflicting details.`);
+                    continue;
                 }
                 continue;
             }

@@ -6,7 +6,7 @@ import * as assertHelper from './assert-helper';
 import * as path from 'path';
 import * as assert from 'assert';
 import { nameSort } from "./declaration-tests";
-import { getResolvedDeclaration } from "../../lib/save-declarations";
+import { extractAndResolveDeclarations, getResolvedDeclaration } from "../../lib/save-declarations";
 import { Property } from "../../lib/common-properties";
 import { patchDebugEvents } from "../../lib/debug-patch";
 import { ParserOptions } from "../../lib/source-spec";
@@ -17,6 +17,7 @@ const excludedDirs = [path.join(sourceDir, 'excluded')];
 const sourceDir2 = path.join(cwd(), 'src/tests/mocha/resources/source-1')
 const multipleExcludes = [path.join(sourceDir2, 'excluded'), path.join(sourceDir2, 'folder2')];
 const duplicateEventSourceDir = path.join(cwd(), 'src/tests/mocha/resources/source-duplicate-events');
+const duplicateTsEventSourceDir = path.join(cwd(), 'src/tests/mocha/resources/tsparser-tests/duplicate-conflict-tests');
 
 describe('Events Tests', () => {
     it('find files - no exclusions', () => {
@@ -64,8 +65,7 @@ describe('Events Tests', () => {
         assert.strictEqual(debug.length, 1);
     });
 
-    it('fails when duplicate events have conflicting details', () => {
-        const parser = new Parser([duplicateEventSourceDir], [], false, false);
+    it('fails and reports all locations for duplicate GDPR event conflicts', async () => {
         const previousExitCode = process.exitCode;
         const previousConsoleError = console.error;
         const consoleErrors: string[] = [];
@@ -74,10 +74,59 @@ describe('Events Tests', () => {
             console.error = (...args: unknown[]) => {
                 consoleErrors.push(args.map(arg => String(arg)).join(' '));
             };
-            //@ts-expect-error accessing private method for testing
-            parser.findEvents(duplicateEventSourceDir);
-            assert.strictEqual(process.exitCode, 1);
-            assert.ok(consoleErrors.some(msg => msg.includes('conflicting details')));
+
+            const parserOptions: ParserOptions = {
+                eventPrefix: '',
+                applyEndpoints: false,
+                patchDebugEvents: false,
+                lowerCaseEvents: false,
+                silenceOutput: true,
+                verbose: false
+            };
+
+            await assert.rejects(() => extractAndResolveDeclarations([{
+                sourceDirs: [duplicateEventSourceDir],
+                excludedDirs: [],
+                parserOptions
+            }]));
+
+            assert.ok(consoleErrors.some(msg => msg.includes("Duplicate telemetry event declaration 'DuplicateEvent' has conflicting details at:")));
+            assert.ok(consoleErrors.some(msg => msg.includes('source-duplicate-events/file1.ts')));
+            assert.ok(consoleErrors.some(msg => msg.includes('source-duplicate-events/file2.ts')));
+        } finally {
+            process.exitCode = previousExitCode;
+            console.error = previousConsoleError;
+        }
+    });
+
+    it('fails and reports all locations for duplicate TS event conflicts', async () => {
+        const previousExitCode = process.exitCode;
+        const previousConsoleError = console.error;
+        const consoleErrors: string[] = [];
+        try {
+            process.exitCode = 0;
+            console.error = (...args: unknown[]) => {
+                consoleErrors.push(args.map(arg => String(arg)).join(' '));
+            };
+
+            const parserOptions: ParserOptions = {
+                eventPrefix: '',
+                applyEndpoints: false,
+                patchDebugEvents: false,
+                lowerCaseEvents: false,
+                silenceOutput: true,
+                verbose: false
+            };
+
+            await assert.rejects(() => extractAndResolveDeclarations([{
+                sourceDirs: [duplicateTsEventSourceDir],
+                excludedDirs: [],
+                parserOptions
+            }]));
+
+            assert.ok(consoleErrors.some(msg => msg.includes("Duplicate telemetry event declaration 'DuplicateTsEvent' has conflicting details at:")));
+            assert.ok(consoleErrors.some(msg => msg.includes('duplicate-conflict-tests/file1.ts')));
+            assert.ok(consoleErrors.some(msg => msg.includes('duplicate-conflict-tests/file2.ts')));
         } finally {
             process.exitCode = previousExitCode;
             console.error = previousConsoleError;

@@ -11,6 +11,11 @@ import { Events } from './events';
 import { Declarations } from './declarations';
 import { merge, findOrCreate, populateProperties, makeExclusionsRelativeToSource } from './operations';
 
+export interface EventDefinition {
+    signature: string;
+    location: string;
+}
+
 export class Parser {
 
     private sourceDirs: string[];
@@ -18,12 +23,14 @@ export class Parser {
     private applyEndpoints: boolean;
 
     private lowerCaseEvents: boolean;
+    private eventDefinitions: Map<string, EventDefinition[]>;
 
     constructor(sourceDirs: string[], excludedDirs: string[], applyEndpoints: boolean, lowerCaseEvents: boolean) {
         this.sourceDirs = sourceDirs;
         this.excludedDirs = excludedDirs;
         this.applyEndpoints = applyEndpoints;
         this.lowerCaseEvents = lowerCaseEvents;
+        this.eventDefinitions = new Map();
     }
 
     private toRipGrepOption(dir: string): string[] {
@@ -33,13 +40,13 @@ export class Parser {
         return ['--glob', `!${dir}/**`];
     }
 
-    private extractComments(absoluteFilePaths: string[], commentMatcher: RegExp, collector: (filePath: string, match: RegExpExecArray) => void) {
+    private extractComments(absoluteFilePaths: string[], commentMatcher: RegExp, collector: (filePath: string, match: RegExpExecArray, fileContents: string) => void) {
         absoluteFilePaths.forEach(absoluteFilePath => {
             if (absoluteFilePath) {
-                const fileContents = fs.readFileSync(absoluteFilePath);
+                const fileContents = fs.readFileSync(absoluteFilePath).toString();
                 let match;
-                while ((match = commentMatcher.exec(fileContents.toString()))) {
-                    collector(absoluteFilePath, match);
+                while ((match = commentMatcher.exec(fileContents))) {
+                    collector(absoluteFilePath, match, fileContents);
                 }
             }
         });
@@ -62,7 +69,7 @@ export class Parser {
 
         const commonPropertyMatcher = /\/\/\s*__GDPR__COMMON__(.*)$/mg;
         const commonPropertyDeclarations = new CommonProperties();
-        this.extractComments(filesWithCommonProperties, commonPropertyMatcher, (filePath: string, match: Array<string>) => {
+        this.extractComments(filesWithCommonProperties, commonPropertyMatcher, (filePath: string, match: RegExpExecArray) => {
             try {
                 const commonPropertyDeclaration = JSON.parse(`{ ${match[1]} }`);
                 const propertyName = Object.keys(commonPropertyDeclaration)[0];
@@ -99,7 +106,7 @@ export class Parser {
         // Using [\s\S]* instead of .* since the latter does not match when using /m option
         const fragmentMatcher = /\/\*\s*__GDPR__FRAGMENT__([\s\S]*?)\*\//mg;
         const fragmentDeclarations = new Fragments();
-        this.extractComments(filesWithFragments, fragmentMatcher, (filePath: string, match: Array<string>) => {
+        this.extractComments(filesWithFragments, fragmentMatcher, (filePath: string, match: RegExpExecArray) => {
             try {
                 const fragmentDeclaration = JSON.parse(`{ ${match[1]} }`);
                 // There's only ever one key per match
@@ -130,18 +137,16 @@ export class Parser {
         // Using [\s\S]* instead of .* since the latter does not match when using /m option
         const eventMatcher = /\/\*\s*__GDPR__\b([\s\S]*?)\*\//mg;
         const eventDeclarations = new Events();
-        this.extractComments(filesWithEvents, eventMatcher, (filePath: string, match: Array<string>) => {
+        this.extractComments(filesWithEvents, eventMatcher, (filePath: string, match: RegExpExecArray, fileContents: string) => {
             try {
                 const eventDeclaration = JSON.parse(`{ ${match[1]} }`);
                 let eventName = Object.keys(eventDeclaration)[0];
                 eventName = this.lowerCaseEvents ? eventName.toLowerCase() : eventName;
                 const eventProperties = eventDeclaration[Object.keys(eventDeclaration)[0]];
                 const currentSignature = this.stableSerialize(eventProperties);
+                const lineNumber = this.getLineNumber(fileContents, match.index);
+                this.addEventDefinition(eventName, currentSignature, `${filePath}:${lineNumber}`);
                 const existingSignature = eventSignatures.get(eventName);
-
-                if (existingSignature && existingSignature !== currentSignature) {
-                    throw new Error(`Duplicate telemetry event declaration '${eventName}' has conflicting details.`);
-                }
 
                 if (existingSignature) {
                     return;
@@ -158,6 +163,27 @@ export class Parser {
             }
         });
         return eventDeclarations;
+    }
+
+    public getEventDefinitions() {
+        const definitions = new Map<string, EventDefinition[]>();
+        for (const [eventName, entries] of this.eventDefinitions.entries()) {
+            definitions.set(eventName, [...entries]);
+        }
+        return definitions;
+    }
+
+    private addEventDefinition(eventName: string, signature: string, location: string) {
+        const existing = this.eventDefinitions.get(eventName) ?? [];
+        existing.push({ signature, location });
+        this.eventDefinitions.set(eventName, existing);
+    }
+
+    private getLineNumber(fileContents: string, index: number | undefined) {
+        if (index === undefined) {
+            return 1;
+        }
+        return fileContents.slice(0, index).split(/\r\n|\r|\n/).length;
     }
 
     private stableSerialize(value: unknown): string {

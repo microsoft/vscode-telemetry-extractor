@@ -12,6 +12,13 @@ import { patchDebugEvents } from './debug-patch';
 import { ParserOptions, SourceSpec } from './source-spec';
 import { logMessage } from './logger';
 import { Fragments } from './fragments';
+import { EventDefinition } from './parser';
+
+interface EventConflictEntry {
+    signature: string;
+    location: string;
+    source: 'GDPR' | 'TS';
+}
 
 function deepSortKeys(obj: unknown): unknown {
     if (Array.isArray(obj)) {
@@ -63,20 +70,57 @@ function validateOutputtedDeclarations(declarations: OutputtedDeclarations) {
         }
     }
     if (failedValidation) {
-        throw new Error('Validation failed, please see logs for more information');
+        return true;
     }
+    return false;
+}
+
+function mergeEventDefinitions(
+    target: Map<string, EventConflictEntry[]>,
+    definitions: Map<string, EventDefinition[]>,
+    source: 'GDPR' | 'TS',
+    prefix = ''
+) {
+    for (const [eventName, entries] of definitions.entries()) {
+        const prefixedName = `${prefix}${eventName}`;
+        const existing = target.get(prefixedName) ?? [];
+        existing.push(...entries.map((entry) => ({ ...entry, source })));
+        target.set(prefixedName, existing);
+    }
+}
+
+function reportDuplicateEventConflicts(definitions: Map<string, EventConflictEntry[]>) {
+    let hasConflicts = false;
+    for (const [eventName, entries] of definitions.entries()) {
+        const signatures = new Set(entries.map(entry => entry.signature));
+        if (signatures.size <= 1) {
+            continue;
+        }
+
+        hasConflicts = true;
+        const uniqueLocations = [...new Set(entries.map(entry => `${entry.location} (${entry.source})`))];
+        console.error(`Duplicate telemetry event declaration '${eventName}' has conflicting details at:`);
+        uniqueLocations.forEach(location => console.error(` - ${location}`));
+    }
+    return hasConflicts;
 }
 
 export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<OutputtedDeclarations> {
     try {
         const allDeclarations: Declarations = { events: new Events(), commonProperties: new CommonProperties(), fragments: new Fragments() };
         const allTypeScriptDeclarations = Object.create(null);
+        const allEventDefinitions = new Map<string, EventConflictEntry[]>();
         for (const spec of sourceSpecs) {
-            const declarations = await getResolvedDeclaration(spec.sourceDirs, spec.excludedDirs, spec.parserOptions);
+            logMessage('...extracting', spec.parserOptions.silenceOutput);
+            const parser = new Parser(spec.sourceDirs, spec.excludedDirs, spec.parserOptions.applyEndpoints, spec.parserOptions.lowerCaseEvents);
+            let declarations = await parser.extractDeclarations();
+            declarations = resolveDeclarations(declarations, spec.parserOptions.verbose);
             let typescriptDeclarations = Object.create(null);
             // The parser does not know how to handle multiple source directories due to different TS configs, so we manually have to parse each source dir
             spec.sourceDirs.forEach((dir) => {
-                Object.assign(typescriptDeclarations, new TsParser(dir, spec.excludedDirs, spec.parserOptions.applyEndpoints, spec.parserOptions.lowerCaseEvents).parseFiles());
+                const tsParser = new TsParser(dir, spec.excludedDirs, spec.parserOptions.applyEndpoints, spec.parserOptions.lowerCaseEvents);
+                Object.assign(typescriptDeclarations, tsParser.parseFiles());
+                mergeEventDefinitions(allEventDefinitions, tsParser.getEventDefinitions(), 'TS', spec.parserOptions.eventPrefix);
             });
             if (spec.parserOptions.eventPrefix !== '') {
                 declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
@@ -98,7 +142,9 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             allDeclarations.commonProperties.properties = allDeclarations.commonProperties.properties.concat(declarations.commonProperties.properties);
             allDeclarations.events.dataPoints = allDeclarations.events.dataPoints.concat(declarations.events.dataPoints);
             Object.assign(allTypeScriptDeclarations, typescriptDeclarations);
+            mergeEventDefinitions(allEventDefinitions, parser.getEventDefinitions(), 'GDPR', spec.parserOptions.eventPrefix);
         }
+        const hasDuplicateEventConflicts = reportDuplicateEventConflicts(allEventDefinitions);
         const formattedDeclarations = await transformOutput(allDeclarations);
         for (const dec in allTypeScriptDeclarations) {
             // If there's typescript declarations but we returned a null object
@@ -108,7 +154,10 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             }
             formattedDeclarations.events[dec] = allTypeScriptDeclarations[dec];
         }
-        validateOutputtedDeclarations(formattedDeclarations);
+        const hasPropertyValidationErrors = validateOutputtedDeclarations(formattedDeclarations);
+        if (hasDuplicateEventConflicts || hasPropertyValidationErrors || process.exitCode === 1) {
+            throw new Error('Validation failed, please see logs for more information');
+        }
         return Promise.resolve(deepSortKeys(formattedDeclarations) as OutputtedDeclarations);
     } catch (error) {
         console.error(`Error: ${error}`);
