@@ -11,6 +11,7 @@ module.exports = tseslint.config(
     files: ['eslint.config.js'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
+      "@typescript-eslint/no-namespace": "off",
       'no-undef': 'off',
     },
   },
