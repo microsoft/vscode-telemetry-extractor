@@ -62,7 +62,7 @@ export type ColumnInfo = {
 }
 
 export namespace ColumnInfo {
-    export function is(obj: any): obj is ColumnInfo {
+    export function is(obj: unknown): obj is ColumnInfo {
         const candidate = obj as ColumnInfo;
         return !!candidate &&
             (candidate.name === undefined || typeof candidate.name === 'string') &&

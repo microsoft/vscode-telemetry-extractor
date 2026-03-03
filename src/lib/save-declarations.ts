@@ -4,7 +4,7 @@ import * as path from 'path';
 import { Parser } from './parser';
 import * as fileWriter from './file-writer';
 import { resolveDeclarations, OutputtedDeclarations, Declarations } from './declarations';
-import { transformOutput } from './object-converter';
+import { transformOutput, transformTypeScriptDeclaration } from './object-converter';
 import { Events } from './events';
 import { CommonProperties } from './common-properties';
 import { TsParser } from './ts-parser';
@@ -152,7 +152,11 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             if (formattedDeclarations.events === undefined) {
                 formattedDeclarations.events = Object.create(null);
             }
-            formattedDeclarations.events[dec] = allTypeScriptDeclarations[dec];
+            const transformed = transformTypeScriptDeclaration(allTypeScriptDeclarations[dec]);
+            formattedDeclarations.events[dec] = transformed.declaration as OutputtedDeclarations['events'][number];
+            if (transformed.tableInfo) {
+                formattedDeclarations.tableInfos.push(transformed.tableInfo);
+            }
         }
         const hasPropertyValidationErrors = validateOutputtedDeclarations(formattedDeclarations);
         if (hasDuplicateEventConflicts || hasPropertyValidationErrors || process.exitCode === 1) {
@@ -164,3 +168,5 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
         return Promise.reject(error);
     }
 }
+
+

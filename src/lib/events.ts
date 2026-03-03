@@ -29,6 +29,7 @@ export namespace TableInfo {
             name: candidate.name,
             commonProperties: 'standard',
             backfill: false
+
         };
         if (candidate.commonProperties === 'standard') {
             result.commonProperties = 'standard';

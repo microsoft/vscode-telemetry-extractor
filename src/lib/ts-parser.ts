@@ -110,7 +110,7 @@ class NodeVisitor {
 
     private visitNode(currentNode: Symbol, previousNode?: Symbol) {
         let type = currentNode.getTypeAtLocation(this.pl_node);
-        // If we mark a property as optional then it is nullable, however we want all properties 
+        // If we mark a property as optional then it is nullable, however we want all properties
         // So we want its non nullable type tl;dr this chops off the | undefined
         if (type.isNullable()) {
             type = type.getNonNullableType();
@@ -156,7 +156,7 @@ class NodeVisitor {
 
     private visitMetadataNode(currentNode: Symbol) {
         let type = currentNode.getTypeAtLocation(this.pl_node);
-        // If we mark a property as optional then it is nullable, however we want all properties 
+        // If we mark a property as optional then it is nullable, however we want all properties
         // So we want its non nullable type tl;dr this chops off the | undefined
         if (type.isNullable()) {
             type = type.getNonNullableType();

@@ -137,8 +137,8 @@ export function mergeWildcards(wildcard: any[], target: Event | Fragment, applyE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function populateProperties(properties: any, target: Event | Fragment, applyEndpoints = false) {
     for (const propertyName in properties) {
-        // Skip the `$table` property since it is an artificial property for the flat table support.
-        if (propertyName === '$table') {
+        // Skip the `$tableInfo` property since it is an artificial property for the flat table support.
+        if (propertyName === '$tableInfo') {
             continue;
         }
         const currentProperty = properties[propertyName];

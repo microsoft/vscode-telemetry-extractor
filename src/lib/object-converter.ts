@@ -1,25 +1,30 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import { Declarations, OutputtedDeclarations } from "./declarations";
-import { Property } from "./common-properties";
-import { Metadata, Wildcard } from "./events";
+import { ColumnType, Property, ColumnInfo } from "./common-properties";
+import { Metadata, Wildcard, TableInfo as JsonTableInfo } from "./events";
 import * as keywords from './keywords';
 
 // Converts the declarations array to an object format for easy readability.
 
+type TableInfo = OutputtedDeclarations['tableInfos'][number];
+type BagInfo = TableInfo['columns'][number]['bag'];
+
 export async function transformOutput(output: Declarations): Promise<OutputtedDeclarations> {
     // If there's no events or common properties, we emit a null object
     if (output.events.dataPoints.length === 0 && output.commonProperties.properties.length === 0) {
-        return { events: Object.create(null), commonProperties: Object.create(null) };
+        return { events: Object.create(null), commonProperties: Object.create(null), tableInfos: [] };
     }
     const newEvents = Object.create(null);
     const oldEvents = output.events.dataPoints;
+    const tableInfos: TableInfo[] = [];
     for (const event of oldEvents) {
         // Check if event.name ends with a number, if so throw an error because we don't support event names which end with numbers
         if (/\d$/.test(event.name)) {
             throw new Error(`Event name ${event.name} ends with a number. Event names cannot end with numbers.`);
         }
         newEvents[event.name] = Object.create(null);
+        const tableInfo: TableInfo | undefined = event.tableInfo ? { ...event.tableInfo, columns: [] } : undefined;
         //We know there won't be anymore includes or inlines because we have resolved them
         for (const property of event.properties as Array<Property | Wildcard | Metadata>) {
             if (property instanceof Wildcard) {
@@ -66,10 +71,17 @@ export async function transformOutput(output: Declarations): Promise<OutputtedDe
                 if (property.isMeasurement) {
                     newEvents[event.name][propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
                 }
+                if (tableInfo !== undefined && property.column) {
+                    const name = property.column.name ?? property.name;
+                    tableInfo.columns.push({ name, type: property.column.type, bag: { name: property.name, store: property.isMeasurement === true ? 'Measures' : 'Properties' } });
+                }
             } else {
                 // Comments, expiration, and owner metadata are handled here
                 newEvents[event.name][propetyNameChanger(property.name)] = property.value;
             }
+        }
+        if (tableInfo !== undefined) {
+            tableInfos.push(tableInfo);
         }
     }
     const newCommonProperties = Object.create(null);
@@ -89,8 +101,59 @@ export async function transformOutput(output: Declarations): Promise<OutputtedDe
             newCommonProperties[propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
         }
     }
-    return { events: newEvents, commonProperties: newCommonProperties };
+    return { events: newEvents, commonProperties: newCommonProperties, tableInfos };
 }
+
+type TypeScriptPropertyDeclaration = {
+    name?: string;
+    isMeasurement?: boolean;
+    type?: string;
+    column?: { name?: string; type?: string }
+}
+type TypeScriptEventDeclaration = {
+    $tableInfo?: unknown;
+    [name: string]: TypeScriptPropertyDeclaration | unknown;
+};
+
+export function transformTypeScriptDeclaration(declaration: TypeScriptEventDeclaration): { declaration: object, tableInfo: TableInfo | undefined} {
+    // The property names in the TS events are already all lowercased.
+    const tableInfoProperty = declaration['$tableinfo'];
+    let tableInfo: TableInfo | undefined = undefined;
+    if (tableInfoProperty !== undefined) {
+        delete declaration['$tableinfo'];
+        const json = JsonTableInfo.fromObject(tableInfoProperty);
+        if (json !== undefined) {
+            tableInfo = { name: json.name, commonProperties: json.commonProperties, backfill: json.backfill, columns: [] };
+        }
+    }
+    for (const name of Object.keys(declaration)) {
+        if (name === '$tableinfo') {
+            continue;
+        }
+        const property = declaration[name] as TypeScriptPropertyDeclaration;
+        if (!property || typeof property !== 'object') {
+            continue;
+        }
+        if (tableInfo !== undefined) {
+            if (property.column !== undefined) {
+                if (ColumnInfo.is(property.column)) {
+                    const bag: BagInfo = { store: property.isMeasurement === true ? 'Measures' : 'Properties', name: name };
+                    tableInfo.columns.push({ name: property.column.name ?? name, type: property.column.type, bag });
+                }
+            } else if (typeof property.type === 'string') {
+                const columnType = ColumnType.fromString(property.type);
+                if (columnType) {
+                    const bag: BagInfo = { store: property.isMeasurement === true ? 'Measures' : 'Properties', name: name };
+                    tableInfo.columns.push({ name: name, type: columnType, bag });
+                }
+            }
+        }
+        delete property.type;
+        delete property.column;
+    }
+    return { declaration, tableInfo };
+}
+
 
 function propetyNameChanger(name: string) {
     name = name.toLowerCase();

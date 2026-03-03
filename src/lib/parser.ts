@@ -154,8 +154,8 @@ export class Parser {
 
                 eventSignatures.set(eventName, currentSignature);
                 const event = findOrCreate(eventDeclarations, eventName);
-                if (event instanceof Event && eventProperties['$table'] !== undefined) {
-                    const tableInfo: TableInfo | undefined = TableInfo.fromObject(eventProperties['$table']);
+                if (event instanceof Event && eventProperties['$tableInfo'] !== undefined) {
+                    const tableInfo: TableInfo | undefined = TableInfo.fromObject(eventProperties['$tableInfo']);
                     if (tableInfo) {
                         event.tableInfo = tableInfo;
                     }
