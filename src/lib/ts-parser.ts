@@ -171,6 +171,9 @@ class NodeVisitor {
     }
 
     public resolveProperties(currentNode: Symbol): Array<Property | Metadata> {
+        // @lramos15 Actually this.properties is of type any[] and the property data pushing into
+        // the array is not an instance of Property.
+
         // It could be a complex node with nested types or a simple node with a string literal
         // representing some kind of metadata, so we try both visitors.
         this.visitMetadataNode(currentNode);
@@ -300,7 +303,18 @@ export class TsParser {
                 type_properties.forEach((prop) => {
                     const propName = prop.getEscapedName().toLowerCase();
                     const node_visitor = new NodeVisitor(pl, propName, this.applyEndpoints);
-                    created_event.properties = created_event.properties.concat(node_visitor.resolveProperties(prop));
+                    const resolved_properties = node_visitor.resolveProperties(prop);
+                    for (const rp of resolved_properties) {
+                        if (!(rp instanceof Metadata)) {
+                            // This cast is necessary since rp is not of type Property although
+                            // the resolveProperties claims it to be.
+                            const propInfo = (rp as unknown as { [key: string]: object })[propName];
+                            if (propInfo !== undefined) {
+                                this.captureOriginalPropNameForColumnInformation(prop.getEscapedName(), propInfo);
+                            }
+                        }
+                    }
+                    created_event.properties = created_event.properties.concat(resolved_properties);
                 });
                 created_event.properties.forEach((prop) => {
                     Object.assign(events[event_name], prop);
@@ -308,7 +322,7 @@ export class TsParser {
                 this.addEventDefinition(event_name, this.stableSerialize(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
                 const eventProperties = typeArgs[0].getType().getProperties();
                 // Find all eventProperties that have a number or boolean type
-                eventProperties.forEach((prop) => {
+                eventProperties.clsforEach((prop) => {
                     const propName = prop.getEscapedName().toLowerCase();
                     const valueDeclaration = prop.getValueDeclaration();
                     if (valueDeclaration === undefined) {
@@ -343,5 +357,14 @@ export class TsParser {
             }
         });
         return events;
+    }
+
+    private captureOriginalPropNameForColumnInformation(propName: string, property: { type?: string; column?: { name?: string; type: string } }) {
+        if (property.column && property.column.name === undefined) {
+            property.column.name = propName;
+        } else if (typeof property.type === 'string') {
+            property.column = { name: propName, type: property.type };
+            delete property.type;
+        }
     }
 }
