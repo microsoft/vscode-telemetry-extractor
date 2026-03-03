@@ -35,8 +35,15 @@ export interface Events {
     [key: string]: Event;
 }
 
+export type TableInfo = {
+    name: string;
+    commonProperties: 'standard';
+    backfill: boolean | string;
+}
+
 export interface Event {
-    [key: string]: Property | string | undefined;
+    [key: string]: Property | TableInfo | string | undefined;
+    tableInfo?: TableInfo;
     comment?: string;
     expiration?: string;
 }
@@ -48,6 +55,7 @@ export interface Property {
     purpose: string;
     endPoint?: string;
     isMeasurement?: boolean;
+    column?: { name?: string; type: string };
 }
 
 /**

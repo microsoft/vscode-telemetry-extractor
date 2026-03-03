@@ -3,7 +3,7 @@ const tseslint = require('typescript-eslint');
 
 module.exports = tseslint.config(
   {
-    ignores: ['out/**', 'src/tests/mocha/resources/**'],
+    ignores: ['out/**', 'src/tests/mocha/resources/**', 'src/tests/mocha/tableResources/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -11,8 +11,12 @@ module.exports = tseslint.config(
     files: ['eslint.config.js'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
-      "@typescript-eslint/no-namespace": "off",
       'no-undef': 'off',
     },
   },
+  {
+    rules: {
+      '@typescript-eslint/no-namespace': 'off',
+    },
+  }
 );
