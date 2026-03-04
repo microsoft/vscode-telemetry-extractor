@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { sendEvent, EventData } from "./lib/telemetry";
+import { sendEvent, EventData } from "../lib/telemetry";
 
 
 /* __GDPR__

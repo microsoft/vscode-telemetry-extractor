@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import { Property, ColumnType, ColumnInfo } from "../../lib/common-properties";
 import { cwd } from 'process';
 import * as path from 'path';
+import { TsParser } from '../../lib/ts-parser';
 
 const sourceDir = path.join(cwd(), 'src/tests/mocha/tableResources/source');
 
@@ -101,9 +102,9 @@ describe('Property with column info', () => {
 	});
 });
 
-describe('Flat table', () => {
+describe('Flat table - GDPR Comment', () => {
 	it('Parse table instructions', async () => {
-		const parser = new Parser([sourceDir], [], false, false);
+		const parser = new Parser([path.join(sourceDir, 'comment')], [], false, false);
 		const declarations = await parser.extractDeclarations();
 		assert.strictEqual(declarations.events.dataPoints.length, 1);
 		const event = declarations.events.dataPoints[0];
@@ -121,6 +122,16 @@ describe('Flat table', () => {
 			assert.ok(prop instanceof Property);
 			const expectedType = types.get(prop.name);
 			assert.strictEqual(expectedType, prop.column?.type);
+		}
+	});
+});
+
+describe('Flat table - TS definition', () => {
+	it('Parse table instructions', () => {
+		const tsParser = new TsParser(path.resolve(sourceDir, 'ts-declaration'), [], true, false);
+		const declarations = tsParser.parseFiles();
+		for (const declaration of declarations) {
+			console.log(`Event: ${declaration.name}`);
 		}
 	});
 });

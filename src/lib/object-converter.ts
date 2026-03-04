@@ -73,7 +73,7 @@ export async function transformOutput(output: Declarations): Promise<OutputtedDe
                 }
                 if (tableInfo !== undefined && property.column) {
                     const name = property.column.name ?? property.name;
-                    tableInfo.columns.push({ name, type: property.column.type, bag: { name: property.name, store: property.isMeasurement === true ? 'Measures' : 'Properties' } });
+                    tableInfo.columns.push({ name, type: property.column.type, bag: { name: property.name.toLowerCase(), store: property.isMeasurement === true ? 'Measures' : 'Properties' } });
                 }
             } else {
                 // Comments, expiration, and owner metadata are handled here
