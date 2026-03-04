@@ -135,10 +135,23 @@ class NodeVisitor {
             }
             return;
         }
-        const properties = type.getProperties();
-        properties.forEach((prop) => {
-            this.visitNode(prop, currentNode);
-        });
+        const nodeName = currentNode.getEscapedName();
+        if (nodeName !== 'column') {
+            const properties = type.getProperties();
+            properties.forEach((prop) => {
+                this.visitNode(prop, currentNode);
+            });
+        } else {
+            const properties = type.getProperties();
+            const value = Object.create(null);
+            properties.forEach((prop) => {
+                const propType = prop.getTypeAtLocation(this.pl_node);
+                if (propType.isStringLiteral()) {
+                    value[prop.getEscapedName()] = propType.getText().substring(1, propType.getText().length - 1);
+                }
+            });
+            this.resolved_property['column'] = value;
+        }
         // 95% of the time there is only one property in this array but inlines allow
         // for the number of properties found to be unpredictable so we must return an array
         if (this.inline && this.prop_name === this.original_prop_name) {
