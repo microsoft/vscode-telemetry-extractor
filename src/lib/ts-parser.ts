@@ -322,7 +322,7 @@ export class TsParser {
                 this.addEventDefinition(event_name, this.stableSerialize(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
                 const eventProperties = typeArgs[0].getType().getProperties();
                 // Find all eventProperties that have a number or boolean type
-                eventProperties.clsforEach((prop) => {
+                eventProperties.forEach((prop) => {
                     const propName = prop.getEscapedName().toLowerCase();
                     const valueDeclaration = prop.getValueDeclaration();
                     if (valueDeclaration === undefined) {
