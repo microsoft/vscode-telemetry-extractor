@@ -6,6 +6,8 @@ import { Property, ColumnType, ColumnInfo } from "../../lib/common-properties";
 import { cwd } from 'process';
 import * as path from 'path';
 import { TsParser } from '../../lib/ts-parser';
+import { extractAndResolveDeclarations } from '../../lib/save-declarations';
+import type { SourceSpec } from '../..';
 
 const sourceDir = path.join(cwd(), 'src/tests/mocha/tableResources/source');
 
@@ -124,6 +126,43 @@ describe('Flat table - GDPR Comment', () => {
 			assert.strictEqual(expectedType, prop.column?.type);
 		}
 	});
+	it('Generate table info JSON', async () => {
+		const sourceSpec: SourceSpec = {
+			sourceDirs: [path.join(sourceDir, 'comment')],
+			excludedDirs: [],
+			parserOptions: {
+				eventPrefix: '',
+    			applyEndpoints: false,
+    			patchDebugEvents: false,
+    			lowerCaseEvents: false,
+    			silenceOutput: true,
+    			verbose: false
+			}
+		};
+		const declarations = await extractAndResolveDeclarations([sourceSpec]);
+		const tableInfos = declarations.tableInfos;
+		assert.strictEqual(tableInfos.length, 1);
+
+		const table = tableInfos[0];
+		assert.strictEqual(table.name, 'EOneTable');
+		assert.strictEqual(table.backfill, false);
+		assert.strictEqual(table.commonProperties, 'standard');
+		assert.strictEqual(table.columns.length, 3);
+
+		const expectedColumns = new Map([
+			['count', { type: 'int', bag: { name: 'count', store: 'Properties' } }],
+			['date', { type: 'datetime', bag: { name: 'date', store: 'Properties' } }],
+			['isValid', { type: 'bool', bag: { name: 'isvalid', store: 'Properties' } }],
+		]);
+		const actualColumns = new Map(table.columns.map(c => [c.name, c]));
+		for (const [name, expected] of expectedColumns) {
+			const col = actualColumns.get(name);
+			assert.ok(col, `Column '${name}' not found`);
+			assert.strictEqual(col.type, expected.type);
+			assert.strictEqual(col.bag.name, expected.bag.name);
+			assert.strictEqual(col.bag.store, expected.bag.store);
+		}
+	});
 });
 
 describe('Flat table - TS definition', () => {
@@ -131,12 +170,69 @@ describe('Flat table - TS definition', () => {
 		const tsParser = new TsParser(path.resolve(sourceDir, 'ts-declaration'), [], true, false);
 		const declarations = tsParser.parseFiles();
 		const event = declarations['Event1'];
-		assert.strictEqual(event.tableInfo?.name, 'monacoworkbench_inlinecompletion.endoflife');
-		assert.strictEqual(event.tableInfo?.commonProperties, 'standard');
-		assert.strictEqual(event.tableInfo?.backfill, false);
+		assert.strictEqual(event.$tableinfo?.name, 'monacoworkbench_inlinecompletion.endoflife');
+		assert.strictEqual(event.$tableinfo?.commonProperties, 'standard');
+		assert.strictEqual(event.$tableinfo?.backfill, false);
 		const columns = new Map([
-			['extennsionid', { name: 'extennsionId', type: 'string' }],
+			['extensionid', { name: 'extensionId', type: 'string' }],
 			['groupid', { name: 'groupId', type: 'string' }],
+			['shown', { name: 'isShown', type: 'bool' }],
+			['timeuntilshown', { name: 'timeUntilShown', type: 'int' }],
+			['timeuntilproviderrequest', { name: 'timeUntilProviderRequest', type: 'int' }],
+			['timeuntilproviderresponse', { name: 'timeUntilProviderResponse', type: 'int' }],
+			['reason', { name: 'reason', type: 'string' }],
+			['preceeded', { name: 'isPreceded', type: 'bool' }],
+			['languageid', { name: 'languageId', type: 'string' }],
 		]);
+		for (const prop of columns.keys()) {
+			const columnInfo = columns.get(prop);
+			const property = event[prop];
+			assert.strictEqual(property.column?.name, columnInfo?.name);
+			assert.strictEqual(property.column?.type, columnInfo?.type);
+		}
+	});
+
+	it('Generate table info JSON', async () => {
+		const sourceSpec: SourceSpec = {
+			sourceDirs: [path.join(sourceDir, 'ts-declaration')],
+			excludedDirs: [],
+			parserOptions: {
+				eventPrefix: '',
+    			applyEndpoints: false,
+    			patchDebugEvents: false,
+    			lowerCaseEvents: false,
+    			silenceOutput: true,
+    			verbose: false
+			}
+		};
+		const declarations = await extractAndResolveDeclarations([sourceSpec]);
+		const tableInfos = declarations.tableInfos;
+		assert.strictEqual(tableInfos.length, 1);
+
+		const table = tableInfos[0];
+		assert.strictEqual(table.name, 'monacoworkbench_inlinecompletion.endoflife');
+		assert.strictEqual(table.backfill, false);
+		assert.strictEqual(table.commonProperties, 'standard');
+		assert.strictEqual(table.columns.length, 9);
+		const expectedColumns = new Map([
+			['extensionId', { type: 'string', bag: { name: 'extensionid', store: 'Properties' } }],
+			['groupId', { type: 'string', bag: { name: 'groupid', store: 'Properties' } }],
+			['isShown', { type: 'bool', bag: { name: 'shown', store: 'Measures' } }],
+			['timeUntilShown', { type: 'int', bag: { name: 'timeuntilshown', store: 'Measures' } }],
+			['timeUntilProviderRequest', { type: 'int', bag: { name: 'timeuntilproviderrequest', store: 'Measures' } }],
+			['timeUntilProviderResponse', { type: 'int', bag: { name: 'timeuntilproviderresponse', store: 'Measures' } }],
+			['reason', { type: 'string', bag: { name: 'reason', store: 'Properties' } }],
+			['isPreceded', { type: 'bool', bag: { name: 'preceeded', store: 'Measures' } }],
+			['languageId', { type: 'string', bag: { name: 'languageid', store: 'Properties' } }],
+		]);
+		const actualColumns = new Map(table.columns.map(c => [c.name, c]));
+		for (const [name, expected] of expectedColumns) {
+			const col = actualColumns.get(name);
+			assert.ok(col, `Column '${name}' not found`);
+			assert.strictEqual(col.type, expected.type);
+			assert.strictEqual(col.bag.name, expected.bag.name);
+			assert.strictEqual(col.bag.store, expected.bag.store);
+		}
+
 	});
 });
