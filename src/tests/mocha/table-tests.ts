@@ -130,8 +130,13 @@ describe('Flat table - TS definition', () => {
 	it('Parse table instructions', () => {
 		const tsParser = new TsParser(path.resolve(sourceDir, 'ts-declaration'), [], true, false);
 		const declarations = tsParser.parseFiles();
-		for (const declaration of declarations) {
-			console.log(`Event: ${declaration.name}`);
-		}
+		const event = declarations['Event1'];
+		assert.strictEqual(event.tableInfo?.name, 'monacoworkbench_inlinecompletion.endoflife');
+		assert.strictEqual(event.tableInfo?.commonProperties, 'standard');
+		assert.strictEqual(event.tableInfo?.backfill, false);
+		const columns = new Map([
+			['extennsionid', { name: 'extennsionId', type: 'string' }],
+			['groupid', { name: 'groupId', type: 'string' }],
+		]);
 	});
 });
