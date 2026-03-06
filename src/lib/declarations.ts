@@ -15,7 +15,7 @@ export interface Declarations {
 export interface OutputtedDeclarations {
     events: OutputEvents;
     commonProperties: OutputCommonProperties;
-    tableInfos: OutputTableInfo[];
+    tableInfos: { [key: string]: OutputTableInfo };
 }
 
 function resolveIncludes(target: Events | Fragments, fragments: Fragments) {

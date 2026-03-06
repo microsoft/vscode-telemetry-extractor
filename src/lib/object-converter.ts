@@ -7,17 +7,17 @@ import * as keywords from './keywords';
 
 // Converts the declarations array to an object format for easy readability.
 
-type TableInfo = OutputtedDeclarations['tableInfos'][number];
+type TableInfo = OutputtedDeclarations['tableInfos'][string];
 type BagInfo = TableInfo['columns'][number]['bag'];
 
 export async function transformOutput(output: Declarations): Promise<OutputtedDeclarations> {
     // If there's no events or common properties, we emit a null object
     if (output.events.dataPoints.length === 0 && output.commonProperties.properties.length === 0) {
-        return { events: Object.create(null), commonProperties: Object.create(null), tableInfos: [] };
+        return { events: Object.create(null), commonProperties: Object.create(null), tableInfos: {} };
     }
     const newEvents = Object.create(null);
     const oldEvents = output.events.dataPoints;
-    const tableInfos: TableInfo[] = [];
+    const tableInfos: { [key: string]: TableInfo } = {};
     for (const event of oldEvents) {
         // Check if event.name ends with a number, if so throw an error because we don't support event names which end with numbers
         if (/\d$/.test(event.name)) {
@@ -25,6 +25,9 @@ export async function transformOutput(output: Declarations): Promise<OutputtedDe
         }
         newEvents[event.name] = Object.create(null);
         const tableInfo: TableInfo | undefined = event.tableInfo ? { ...event.tableInfo, columns: [] } : undefined;
+        if (tableInfo) {
+            tableInfos[tableInfo.name] = tableInfo;
+        }
         //We know there won't be anymore includes or inlines because we have resolved them
         for (const property of event.properties as Array<Property | Wildcard | Metadata>) {
             if (property instanceof Wildcard) {
@@ -81,7 +84,7 @@ export async function transformOutput(output: Declarations): Promise<OutputtedDe
             }
         }
         if (tableInfo !== undefined) {
-            tableInfos.push(tableInfo);
+            tableInfos[tableInfo.name] = tableInfo;
         }
     }
     const newCommonProperties = Object.create(null);

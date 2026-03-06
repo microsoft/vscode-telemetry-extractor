@@ -141,9 +141,9 @@ describe('Flat table - GDPR Comment', () => {
 		};
 		const declarations = await extractAndResolveDeclarations([sourceSpec]);
 		const tableInfos = declarations.tableInfos;
-		assert.strictEqual(tableInfos.length, 1);
+		assert.strictEqual(Object.keys(tableInfos).length, 1);
 
-		const table = tableInfos[0];
+		const table = tableInfos['EOneTable'];
 		assert.strictEqual(table.name, 'EOneTable');
 		assert.strictEqual(table.backfill, false);
 		assert.strictEqual(table.commonProperties, 'standard');
@@ -207,9 +207,9 @@ describe('Flat table - TS definition', () => {
 		};
 		const declarations = await extractAndResolveDeclarations([sourceSpec]);
 		const tableInfos = declarations.tableInfos;
-		assert.strictEqual(tableInfos.length, 1);
+		assert.strictEqual(Object.keys(tableInfos).length, 1);
 
-		const table = tableInfos[0];
+		const table = tableInfos['monacoworkbench_inlinecompletion.endoflife'];
 		assert.strictEqual(table.name, 'monacoworkbench_inlinecompletion.endoflife');
 		assert.strictEqual(table.backfill, false);
 		assert.strictEqual(table.commonProperties, 'standard');

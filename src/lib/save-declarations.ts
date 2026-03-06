@@ -153,9 +153,10 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
                 formattedDeclarations.events = Object.create(null);
             }
             const transformed = transformTypeScriptDeclaration(allTypeScriptDeclarations[dec]);
-            formattedDeclarations.events[dec] = transformed.declaration as OutputtedDeclarations['events'][number];
+            formattedDeclarations.events[dec] = transformed.declaration as OutputtedDeclarations['events'][string];
             if (transformed.tableInfo) {
-                formattedDeclarations.tableInfos.push(transformed.tableInfo);
+                const tableInfo = transformed.tableInfo;
+                formattedDeclarations.tableInfos[tableInfo.name] = tableInfo;
             }
         }
         const hasPropertyValidationErrors = validateOutputtedDeclarations(formattedDeclarations);
