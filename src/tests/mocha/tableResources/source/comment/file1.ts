@@ -5,7 +5,7 @@ import { sendEvent, EventData } from "../lib/telemetry";
 
 /* __GDPR__
    "EOne" : {
-     "$tableInfo": { "name": "EOneTable", "defaultProperties": "standard", "backfill": false },
+     "$tableInfo": { "name": "EOneTable", "commonProperties": "standard", "backfill": false },
      "count": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "type": "int" },
      "date": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "type": "datetime" },
      "isValid": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "type": "bool" }

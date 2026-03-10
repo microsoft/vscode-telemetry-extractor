@@ -140,8 +140,11 @@ export function transformTypeScriptDeclaration(declaration: TypeScriptEventDecla
         if (tableInfo !== undefined) {
             if (property.column !== undefined) {
                 if (ColumnInfo.is(property.column)) {
-                    const bag: BagInfo = { store: property.isMeasurement === true ? 'Measures' : 'Properties', name: name };
-                    tableInfo.columns.push({ name: property.column.name ?? name, type: property.column.type, bag });
+                    const type = ColumnType.fromString(property.column.type);
+                    if (type !== undefined) {
+                        const bag: BagInfo = { store: property.isMeasurement === true ? 'Measures' : 'Properties', name: name };
+                        tableInfo.columns.push({ name: property.column.name ?? name, type: type, bag });
+                    }
                 }
             } else if (typeof property.type === 'string') {
                 const columnType = ColumnType.fromString(property.type);

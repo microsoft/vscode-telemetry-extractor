@@ -28,7 +28,7 @@ export const optionDefinitions = [
     { name: 'silenceOutput', type: Boolean, description: 'Silences all progress messages.', defaultValue: false },
     { name: 'lowerCaseEvents', alias: 'l', type: Boolean, defaultValue: false },
     { name: 'verbose', alias: 'v', type: Boolean, defaultValue: false },
-    { name: 'tableInfo', alias: 't', type: Boolean, description: 'Outputs Kusto table information. Only valid together with the file name option.', defaultValue: false }
+    { name: 'tableInfo', alias: 't', type: Boolean, description: 'Outputs Kusto table information. If no filename is specified the default file name with -tableInfo is used.', defaultValue: false }
 ];
 
 export const options = resolveDirectories(commandLineArgs(optionDefinitions, { partial: true }));

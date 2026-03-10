@@ -167,7 +167,10 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
                     prop.column = { type: columnType };
                 }
             } else if (ColumnInfo.is(currentProperty.column)) {
-                prop.column = { ...currentProperty.column };
+                const columnType = ColumnType.fromString(currentProperty.column.type);
+                if (columnType) {
+                    prop.column = { name: currentProperty.column.name, type: columnType };
+                }
             }
             target.properties.push(prop);
         }
