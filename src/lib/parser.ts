@@ -7,7 +7,7 @@ import * as fs from 'fs';
 // Not importing 'process' as tsc claims `process.exitCode` is read-only when it actually is not.
 import { Fragments } from './fragments';
 import { Property, CommonProperties } from './common-properties';
-import { Events } from './events';
+import { Events, Event, TableInfo } from './events';
 import { Declarations } from './declarations';
 import { merge, findOrCreate, populateProperties, makeExclusionsRelativeToSource } from './operations';
 
@@ -154,6 +154,12 @@ export class Parser {
 
                 eventSignatures.set(eventName, currentSignature);
                 const event = findOrCreate(eventDeclarations, eventName);
+                if (event instanceof Event && eventProperties['$tableInfo'] !== undefined) {
+                    const tableInfo: TableInfo | undefined = TableInfo.fromObject(eventProperties['$tableInfo']);
+                    if (tableInfo) {
+                        event.tableInfo = tableInfo;
+                    }
+                }
                 // Get the propeties which the event possesses
                 populateProperties(eventProperties, event, this.applyEndpoints);
             } catch (error) {

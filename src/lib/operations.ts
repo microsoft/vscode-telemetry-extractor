@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 import { Fragments, Fragment } from "./fragments";
 import { Events, Event, Include, Inline, Wildcard, WildcardEntry, Metadata } from "./events";
-import { Property } from "./common-properties";
+import { ColumnType, ColumnInfo, Property } from "./common-properties";
 import * as keywords from './keywords';
 import * as path from 'path';
 
@@ -98,7 +98,7 @@ function stableSerialize(value: unknown): string {
     return JSON.stringify(value);
 }
 
-// Searches the object for an event or fragment of the specific name 
+// Searches the object for an event or fragment of the specific name
 // If found returns, if not found creates it, places it in the array, and then returns
 export function findOrCreate(searchTarget: Events | Fragments, name: string) {
     let found = searchTarget.dataPoints.find((item) => {
@@ -137,6 +137,10 @@ export function mergeWildcards(wildcard: any[], target: Event | Fragment, applyE
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function populateProperties(properties: any, target: Event | Fragment, applyEndpoints = false) {
     for (const propertyName in properties) {
+        // Skip the `$tableInfo` property since it is an artificial property for the flat table support.
+        if (propertyName === '$tableInfo') {
+            continue;
+        }
         const currentProperty = properties[propertyName];
         if (propertyName === keywords.include) {
             target.properties.push(new Include(currentProperty));
@@ -156,6 +160,17 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
             }
             if (currentProperty.isMeasurement) {
                 prop.isMeasurement = currentProperty.isMeasurement;
+            }
+            if (typeof currentProperty.type === 'string') {
+                const columnType = ColumnType.fromString(currentProperty.type);
+                if (columnType) {
+                    prop.column = { type: columnType };
+                }
+            } else if (ColumnInfo.is(currentProperty.column)) {
+                const columnType = ColumnType.fromString(currentProperty.column.type);
+                if (columnType) {
+                    prop.column = { name: currentProperty.column.name, type: columnType };
+                }
             }
             target.properties.push(prop);
         }

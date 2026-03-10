@@ -11,14 +11,46 @@ export class Events implements ITelemetryData {
     }
 }
 
+export type TableInfo = {
+    name: string;
+    commonProperties: 'standard';
+    backfill: boolean | string;
+}
+export namespace TableInfo {
+    export function fromObject(obj: unknown): TableInfo | undefined {
+        if (typeof obj !== 'object' || obj === null) {
+            return undefined;
+        }
+        const candidate: Partial<TableInfo> = obj as TableInfo;
+        if (typeof candidate.name !== 'string') {
+            return undefined;
+        }
+        const result: TableInfo = {
+            name: candidate.name,
+            commonProperties: 'standard',
+            backfill: false
+
+        };
+        if (candidate.commonProperties === 'standard') {
+            result.commonProperties = 'standard';
+        }
+        if (typeof candidate.backfill === 'boolean' || typeof candidate.backfill === 'string') {
+            result.backfill = candidate.backfill;
+        }
+        return result;
+    }
+}
+
 export class Event implements ITelemetryDataPoint {
     public name: string;
     // It gets a little more complicated here as events can have a bunch of different things
     public properties: Array<Property | Metadata | Include | Inline | Wildcard>;
+    public tableInfo?: TableInfo;
     constructor (name: string) {
         this.name =  name;
         this.properties = [];
-    } 
+        this.tableInfo = undefined;
+    }
 }
 
 export class Include implements IInclude {

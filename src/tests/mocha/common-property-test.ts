@@ -11,18 +11,18 @@ const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/');
 const excludeDirs = [path.join(sourceDir, 'source'), path.join(sourceDir, 'source-1')];
 
 describe('GDPR common property extraction', () => {
-  it('find files', function () {
-    const parser = new Parser([sourceDir], excludeDirs, true, false);
-    //@ts-expect-error accessing private method for testing
-    const filePaths = parser.findFilesWithCommonProperties(sourceDir);
-    assertHelper.sameValues(filePaths, [path.join(cwd(), '/src/tests/mocha/resources/common-prop.ts')]);
-  });
+	it('find files', function () {
+		const parser = new Parser([sourceDir], excludeDirs, true, false);
+		//@ts-expect-error accessing private method for testing
+		const filePaths = parser.findFilesWithCommonProperties(sourceDir);
+		assertHelper.sameValues(filePaths, [path.join(cwd(), '/src/tests/mocha/resources/common-prop.ts')]);
+	});
 
-  it('extract declarations', function () {
-    const parser = new Parser([sourceDir], excludeDirs, true, false);
-    //@ts-expect-error accessing private method for testing
-    const commonProperties = parser.findCommonProperties(sourceDir);
-    assert.deepStrictEqual(commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-    assert.deepStrictEqual(commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined, 'MacAddressHash'));
-  });
+	it('extract declarations', function () {
+		const parser = new Parser([sourceDir], excludeDirs, true, false);
+		//@ts-expect-error accessing private method for testing
+		const commonProperties = parser.findCommonProperties(sourceDir);
+		assert.deepStrictEqual(commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
+		assert.deepStrictEqual(commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined, 'MacAddressHash'));
+	});
 });
