@@ -29,6 +29,34 @@ export function merge(target: Fragments | Events, source: Fragments | Events) {
                         if (!exists) {
                             found.properties.push(prop);
                         }
+                    } else if (prop instanceof Include) {
+                        const existingInclude = found.properties.find(p => p instanceof Include) as Include | undefined;
+                        if (existingInclude) {
+                            for (const name of prop.includeNames) {
+                                if (!existingInclude.includeNames.includes(name)) {
+                                    existingInclude.includeNames.push(name);
+                                }
+                            }
+                        } else {
+                            found.properties.push(new Include([...prop.includeNames]));
+                        }
+                    } else if (prop instanceof Inline) {
+                        const exists = found.properties.some(p => p instanceof Inline && p.inlineName === prop.inlineName);
+                        if (!exists) {
+                            found.properties.push(prop);
+                        }
+                    } else if (prop instanceof Wildcard) {
+                        let existingWildcard = found.properties.find(p => p instanceof Wildcard) as Wildcard | undefined;
+                        if (existingWildcard) {
+                            for (const entry of prop.entries) {
+                                const entryExists = existingWildcard.entries.some(e => e.prefix === entry.prefix);
+                                if (!entryExists) {
+                                    existingWildcard.entries.push(entry);
+                                }
+                            }
+                        } else {
+                            found.properties.push(prop);
+                        }
                     }
                 }
                 continue;
