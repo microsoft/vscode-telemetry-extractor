@@ -203,21 +203,6 @@ export class Parser {
         return fileContents.slice(0, index).split(/\r\n|\r|\n/).length;
     }
 
-    private stableSerialize(value: unknown): string {
-        if (Array.isArray(value)) {
-            return `[${value.map((entry) => this.stableSerialize(entry)).join(',')}]`;
-        }
-
-        if (value && typeof value === 'object') {
-            const entries = Object.entries(value as Record<string, unknown>)
-                .sort(([left], [right]) => left.localeCompare(right))
-                .map(([key, entryValue]) => `${JSON.stringify(key)}:${this.stableSerialize(entryValue)}`);
-            return `{${entries.join(',')}}`;
-        }
-
-        return JSON.stringify(value);
-    }
-
     // Utilizes a regex to find the files containing the specific pattern
     private findFiles(ripgrepPattern: string, sourceDir: string) {
         const relativeExclusions = makeExclusionsRelativeToSource(sourceDir, this.excludedDirs);
