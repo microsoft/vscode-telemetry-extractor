@@ -1,7 +1,7 @@
 import { publicLog2 } from '../publicLog';
 
 type DuplicateTsEventClassification2 = {
-  sample: { classification: 'SystemMetaData', purpose: 'FeatureInsight', owner: 'team-b' };
+  sample: { classification: 'CustomerContent', purpose: 'BusinessInsight', owner: 'team-b' };
 };
 
 type DuplicateTsEventPayload2 = {

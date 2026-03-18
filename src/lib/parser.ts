@@ -11,8 +11,13 @@ import { Events } from './events';
 import { Declarations } from './declarations';
 import { merge, findOrCreate, populateProperties, makeExclusionsRelativeToSource } from './operations';
 
+export interface EventPropertySignature {
+    classification: string;
+    purpose: string;
+}
+
 export interface EventDefinition {
-    signature: string;
+    properties: Record<string, EventPropertySignature>;
     location: string;
 }
 
@@ -132,7 +137,7 @@ export class Parser {
 
     private findEvents(sourceDir: string) {
         const filesWithEvents = this.asAbsoluteFilePaths(this.findFilesWithEvents(sourceDir));
-        const eventSignatures = new Map<string, string>();
+        const seenEvents = new Set<string>();
 
         // Using [\s\S]* instead of .* since the latter does not match when using /m option
         const eventMatcher = /\/\*\s*__GDPR__\b([\s\S]*?)\*\//mg;
@@ -143,16 +148,15 @@ export class Parser {
                 let eventName = Object.keys(eventDeclaration)[0];
                 eventName = this.lowerCaseEvents ? eventName.toLowerCase() : eventName;
                 const eventProperties = eventDeclaration[Object.keys(eventDeclaration)[0]];
-                const currentSignature = this.stableSerialize(eventProperties);
+                const conflictProperties = this.extractConflictProperties(eventProperties);
                 const lineNumber = this.getLineNumber(fileContents, match.index);
-                this.addEventDefinition(eventName, currentSignature, `${filePath}:${lineNumber}`);
-                const existingSignature = eventSignatures.get(eventName);
+                this.addEventDefinition(eventName, conflictProperties, `${filePath}:${lineNumber}`);
 
-                if (existingSignature) {
+                if (seenEvents.has(eventName)) {
                     return;
                 }
 
-                eventSignatures.set(eventName, currentSignature);
+                seenEvents.add(eventName);
                 const event = findOrCreate(eventDeclarations, eventName);
                 // Get the propeties which the event possesses
                 populateProperties(eventProperties, event, this.applyEndpoints);
@@ -173,10 +177,23 @@ export class Parser {
         return definitions;
     }
 
-    private addEventDefinition(eventName: string, signature: string, location: string) {
+    private addEventDefinition(eventName: string, properties: Record<string, EventPropertySignature>, location: string) {
         const existing = this.eventDefinitions.get(eventName) ?? [];
-        existing.push({ signature, location });
+        existing.push({ properties, location });
         this.eventDefinitions.set(eventName, existing);
+    }
+
+    private extractConflictProperties(eventProperties: Record<string, unknown>): Record<string, EventPropertySignature> {
+        const result: Record<string, EventPropertySignature> = {};
+        for (const [key, value] of Object.entries(eventProperties)) {
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                const obj = value as Record<string, unknown>;
+                if (typeof obj.classification === 'string' && typeof obj.purpose === 'string') {
+                    result[key] = { classification: obj.classification, purpose: obj.purpose };
+                }
+            }
+        }
+        return result;
     }
 
     private getLineNumber(fileContents: string, index: number | undefined) {
@@ -184,21 +201,6 @@ export class Parser {
             return 1;
         }
         return fileContents.slice(0, index).split(/\r\n|\r|\n/).length;
-    }
-
-    private stableSerialize(value: unknown): string {
-        if (Array.isArray(value)) {
-            return `[${value.map((entry) => this.stableSerialize(entry)).join(',')}]`;
-        }
-
-        if (value && typeof value === 'object') {
-            const entries = Object.entries(value as Record<string, unknown>)
-                .sort(([left], [right]) => left.localeCompare(right))
-                .map(([key, entryValue]) => `${JSON.stringify(key)}:${this.stableSerialize(entryValue)}`);
-            return `{${entries.join(',')}}`;
-        }
-
-        return JSON.stringify(value);
     }
 
     // Utilizes a regex to find the files containing the specific pattern
