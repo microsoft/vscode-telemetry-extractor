@@ -46,7 +46,7 @@ export function merge(target: Fragments | Events, source: Fragments | Events) {
                             found.properties.push(prop);
                         }
                     } else if (prop instanceof Wildcard) {
-                        let existingWildcard = found.properties.find(p => p instanceof Wildcard) as Wildcard | undefined;
+                        const existingWildcard = found.properties.find(p => p instanceof Wildcard) as Wildcard | undefined;
                         if (existingWildcard) {
                             for (const entry of prop.entries) {
                                 const entryExists = existingWildcard.entries.some(e => e.prefix === entry.prefix);
