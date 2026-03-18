@@ -9,8 +9,13 @@ import { makeExclusionsRelativeToSource } from "./operations";
 import { Event, Metadata } from './events';
 import { Property } from "./common-properties";
 
+interface EventPropertySignature {
+    classification: string;
+    purpose: string;
+}
+
 interface EventDefinition {
-    signature: string;
+    properties: Record<string, EventPropertySignature>;
     location: string;
 }
 
@@ -241,10 +246,23 @@ export class TsParser {
         return definitions;
     }
 
-    private addEventDefinition(eventName: string, signature: string, location: string) {
+    private addEventDefinition(eventName: string, properties: Record<string, EventPropertySignature>, location: string) {
         const existing = this.eventDefinitions.get(eventName) ?? [];
-        existing.push({ signature, location });
+        existing.push({ properties, location });
         this.eventDefinitions.set(eventName, existing);
+    }
+
+    private extractConflictProperties(eventProperties: Record<string, unknown>): Record<string, EventPropertySignature> {
+        const result: Record<string, EventPropertySignature> = {};
+        for (const [key, value] of Object.entries(eventProperties)) {
+            if (value && typeof value === 'object' && !Array.isArray(value)) {
+                const obj = value as Record<string, unknown>;
+                if (typeof obj.classification === 'string' && typeof obj.purpose === 'string') {
+                    result[key] = { classification: obj.classification, purpose: obj.purpose };
+                }
+            }
+        }
+        return result;
     }
 
     private stableSerialize(value: unknown): string {
@@ -305,7 +323,7 @@ export class TsParser {
                 created_event.properties.forEach((prop) => {
                     Object.assign(events[event_name], prop);
                 });
-                this.addEventDefinition(event_name, this.stableSerialize(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
+                this.addEventDefinition(event_name, this.extractConflictProperties(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
                 const eventProperties = typeArgs[0].getType().getProperties();
                 // Find all eventProperties that have a number or boolean type
                 eventProperties.forEach((prop) => {
@@ -339,7 +357,7 @@ export class TsParser {
                 }
                 event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
                 events[event_name] = {};
-                this.addEventDefinition(event_name, this.stableSerialize(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
+                this.addEventDefinition(event_name, this.extractConflictProperties(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
             }
         });
         return events;

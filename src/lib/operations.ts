@@ -14,8 +14,22 @@ export function merge(target: Fragments | Events, source: Fragments | Events) {
         // We combine their properties together if the event already exists
         if (found) {
             if (target instanceof Events && source instanceof Events && found instanceof Event && item instanceof Event) {
-                if (!sameEventDefinition(found, item)) {
+                if (!eventsAreCompatible(found, item)) {
                     continue;
+                }
+                // Merge unique properties from source into target
+                for (const prop of item.properties) {
+                    if (prop instanceof Property) {
+                        const exists = found.properties.some(p => p instanceof Property && p.name === prop.name);
+                        if (!exists) {
+                            found.properties.push(prop);
+                        }
+                    } else if (prop instanceof Metadata) {
+                        const exists = found.properties.some(p => p instanceof Metadata && p.name === prop.name);
+                        if (!exists) {
+                            found.properties.push(prop);
+                        }
+                    }
                 }
                 continue;
             }
@@ -26,76 +40,19 @@ export function merge(target: Fragments | Events, source: Fragments | Events) {
     }
 }
 
-function sameEventDefinition(left: Event, right: Event) {
-    return stableSerialize(eventToComparable(left)) === stableSerialize(eventToComparable(right));
-}
-
-function eventToComparable(event: Event) {
-    const properties = event.properties.map(propertyToComparable);
-    properties.sort((a, b) => stableSerialize(a).localeCompare(stableSerialize(b)));
-    return {
-        name: event.name,
-        properties
-    };
-}
-
-function propertyToComparable(property: Property | Metadata | Include | Inline | Wildcard) {
-    if (property instanceof Property) {
-        return {
-            type: 'property',
-            name: property.name,
-            classification: property.classification,
-            purpose: property.purpose,
-            expiration: property.expiration,
-            owner: property.owner,
-            comment: property.comment,
-            endPoint: property.endPoint,
-            isMeasurement: property.isMeasurement
-        };
+function eventsAreCompatible(left: Event, right: Event): boolean {
+    for (const leftProp of left.properties) {
+        if (!(leftProp instanceof Property)) continue;
+        for (const rightProp of right.properties) {
+            if (!(rightProp instanceof Property)) continue;
+            if (leftProp.name === rightProp.name) {
+                if (leftProp.classification !== rightProp.classification || leftProp.purpose !== rightProp.purpose) {
+                    return false;
+                }
+            }
+        }
     }
-    if (property instanceof Metadata) {
-        return {
-            type: 'metadata',
-            name: property.name,
-            value: property.value
-        };
-    }
-    if (property instanceof Include) {
-        return {
-            type: 'include',
-            includeNames: [...property.includeNames].sort()
-        };
-    }
-    if (property instanceof Inline) {
-        return {
-            type: 'inline',
-            inlineName: property.inlineName,
-            inlines: [...property.inlines].sort()
-        };
-    }
-    return {
-        type: 'wildcard',
-        entries: property.entries.map(entry => ({
-            prefix: entry.prefix,
-            classification: entry.classification,
-            endpoint: entry.endpoint
-        })).sort((a, b) => stableSerialize(a).localeCompare(stableSerialize(b)))
-    };
-}
-
-function stableSerialize(value: unknown): string {
-    if (Array.isArray(value)) {
-        return `[${value.map(stableSerialize).join(',')}]`;
-    }
-
-    if (value && typeof value === 'object') {
-        const entries = Object.entries(value as Record<string, unknown>)
-            .sort(([left], [right]) => left.localeCompare(right))
-            .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableSerialize(entryValue)}`);
-        return `{${entries.join(',')}}`;
-    }
-
-    return JSON.stringify(value);
+    return true;
 }
 
 // Searches the object for an event or fragment of the specific name 

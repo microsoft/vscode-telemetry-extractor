@@ -87,7 +87,7 @@ describe('merge', () => {
     assert.strictEqual(target.dataPoints[1].name, 'event2');
   });
 
-  it('keeps first definition for overlapping events with different properties', () => {
+  it('merges overlapping events with non-overlapping properties', () => {
     const target = new Events();
     const e1 = new Event('shared');
     e1.properties.push(new Property('prop1', 'SystemMetaData', 'FeatureInsight'));
@@ -100,8 +100,7 @@ describe('merge', () => {
 
     merge(target, source);
     assert.strictEqual(target.dataPoints.length, 1);
-    assert.strictEqual(target.dataPoints[0].properties.length, 1);
-    assert.deepStrictEqual(target.dataPoints[0].properties[0], e1.properties[0]);
+    assert.strictEqual(target.dataPoints[0].properties.length, 2);
   });
 
   it('merges non-overlapping fragments', () => {
@@ -137,7 +136,7 @@ describe('merge', () => {
     assert.strictEqual(target.dataPoints[0].properties.length, 1);
   });
 
-  it('does not append conflicting overlapping events', () => {
+  it('keeps first metadata when overlapping events have different owners', () => {
     const target = new Events();
     const event = new Event('shared');
     event.properties.push(new Metadata('owner', 'team-a'));
@@ -151,6 +150,41 @@ describe('merge', () => {
     merge(target, source);
     assert.strictEqual(target.dataPoints.length, 1);
     assert.strictEqual(target.dataPoints[0].properties.length, 1);
+    assert.deepStrictEqual((target.dataPoints[0].properties[0] as Metadata).value, 'team-a');
+  });
+
+  it('does not merge events with conflicting classification', () => {
+    const target = new Events();
+    const event = new Event('shared');
+    event.properties.push(new Property('prop1', 'SystemMetaData', 'FeatureInsight'));
+    target.dataPoints.push(event);
+
+    const source = new Events();
+    const conflictingEvent = new Event('shared');
+    conflictingEvent.properties.push(new Property('prop1', 'CustomerContent', 'FeatureInsight'));
+    source.dataPoints.push(conflictingEvent);
+
+    merge(target, source);
+    assert.strictEqual(target.dataPoints.length, 1);
+    assert.strictEqual(target.dataPoints[0].properties.length, 1);
+    assert.strictEqual((target.dataPoints[0].properties[0] as Property).classification, 'SystemMetaData');
+  });
+
+  it('does not merge events with conflicting purpose', () => {
+    const target = new Events();
+    const event = new Event('shared');
+    event.properties.push(new Property('prop1', 'SystemMetaData', 'FeatureInsight'));
+    target.dataPoints.push(event);
+
+    const source = new Events();
+    const conflictingEvent = new Event('shared');
+    conflictingEvent.properties.push(new Property('prop1', 'SystemMetaData', 'PerformanceAndHealth'));
+    source.dataPoints.push(conflictingEvent);
+
+    merge(target, source);
+    assert.strictEqual(target.dataPoints.length, 1);
+    assert.strictEqual(target.dataPoints[0].properties.length, 1);
+    assert.strictEqual((target.dataPoints[0].properties[0] as Property).purpose, 'FeatureInsight');
   });
 });
 
