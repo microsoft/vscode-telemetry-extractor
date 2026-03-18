@@ -102,7 +102,7 @@ describe('merge', () => {
     assert.strictEqual(target.dataPoints.length, 1);
     const mergedProperties = target.dataPoints[0].properties;
     assert.strictEqual(mergedProperties.length, 2);
-    const propertyNames = mergedProperties.map(p => p.name).sort();
+    const propertyNames = mergedProperties.map(p => (p as Property).name).sort();
     assert.deepStrictEqual(propertyNames, ['prop1', 'prop2']);
     assert.strictEqual(new Set(propertyNames).size, propertyNames.length);
   });
