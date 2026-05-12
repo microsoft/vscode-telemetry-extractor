@@ -12,10 +12,10 @@ import { patchDebugEvents } from './debug-patch';
 import { ParserOptions, SourceSpec } from './source-spec';
 import { logMessage } from './logger';
 import { Fragments } from './fragments';
-import { EventDefinition } from './parser';
+import { EventDefinition, EventPropertySignature } from './parser';
 
 interface EventConflictEntry {
-    signature: string;
+    properties: Record<string, EventPropertySignature>;
     location: string;
     source: 'GDPR' | 'TS';
 }
@@ -92,15 +92,33 @@ function mergeEventDefinitions(
 function reportDuplicateEventConflicts(definitions: Map<string, EventConflictEntry[]>) {
     let hasConflicts = false;
     for (const [eventName, entries] of definitions.entries()) {
-        const signatures = new Set(entries.map(entry => entry.signature));
-        if (signatures.size <= 1) {
+        if (entries.length <= 1) {
             continue;
         }
 
-        hasConflicts = true;
-        const uniqueLocations = [...new Set(entries.map(entry => `${entry.location.replace(/\\/g, '/')} (${entry.source})`))];
-        console.error(`Duplicate telemetry event declaration '${eventName}' has conflicting details at:`);
-        uniqueLocations.forEach(location => console.error(` - ${location}`));
+        // Check if any overlapping properties have different classification/purpose
+        let eventHasConflict = false;
+        for (let i = 0; i < entries.length && !eventHasConflict; i++) {
+            for (let j = i + 1; j < entries.length && !eventHasConflict; j++) {
+                for (const propName of Object.keys(entries[i].properties)) {
+                    if (propName in entries[j].properties) {
+                        const a = entries[i].properties[propName];
+                        const b = entries[j].properties[propName];
+                        if (a.classification !== b.classification || a.purpose !== b.purpose) {
+                            eventHasConflict = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (eventHasConflict) {
+            hasConflicts = true;
+            const uniqueLocations = [...new Set(entries.map(entry => `${entry.location.replace(/\\/g, '/')} (${entry.source})`))];
+            console.error(`Duplicate telemetry event declaration '${eventName}' has conflicting details at:`);
+            uniqueLocations.forEach(location => console.error(` - ${location}`));
+        }
     }
     return hasConflicts;
 }

@@ -3,7 +3,7 @@ const tseslint = require('typescript-eslint');
 
 module.exports = tseslint.config(
   {
-    ignores: ['out/**', 'src/tests/mocha/resources/**', 'src/tests/mocha/tableResources/**'],
+    ignores: ['out/**', 'src/tests/mocha/resources/**', 'src/tests/mocha/tableResources/**', 'src/telemetry-sources/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
