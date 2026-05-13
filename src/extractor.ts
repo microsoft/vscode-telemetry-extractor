@@ -7,6 +7,7 @@ import { cwd } from 'process';
 import { writeToFile, extractAndResolveDeclarations } from './lib/save-declarations';
 import { convertConfigToSourceSpecs, ParserOptions, SourceSpec } from './lib/source-spec';
 import { logMessage } from './lib/logger';
+import type { OutputtedDeclarations } from './lib/declarations';
 
 if (options.config) {
     const sourceSpecs = convertConfigToSourceSpecs(options.config);
@@ -36,7 +37,13 @@ if (options.config) {
     };
     extractAndResolveDeclarations([sourceSpec]).then((declarations) => {
         if (options.outputDir) {
-            writeToFile(options.outputDir, declarations, options.fileName || 'declarations-resolved', !options.silent);
+            const tableInfos = declarations.tableInfos;
+            const gdprDeclarations: Partial<OutputtedDeclarations> = { ...declarations };
+            delete gdprDeclarations.tableInfos;
+            writeToFile(options.outputDir, gdprDeclarations, options.fileName || 'declarations-resolved', !options.silent);
+            if (options.tableInfo) {
+                writeToFile(options.outputDir, tableInfos, options.fileName ? options.fileName + '-tableInfo' : 'tableInfo', !options.silent);
+            }
         } else {
             console.log(JSON.stringify(declarations));
         }

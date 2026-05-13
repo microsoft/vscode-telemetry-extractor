@@ -3,7 +3,7 @@
 import { Fragments } from "./fragments";
 import { Events, Include, Inline } from "./events";
 import { CommonProperties, Property } from "./common-properties";
-import type { Events as OutputEvents, CommonProperties as OutputCommonProperties } from "../../vscode-telemetry-extractor";
+import type { Events as OutputEvents, CommonProperties as OutputCommonProperties , TableInfo as OutputTableInfo } from "../../vscode-telemetry-extractor";
 
 export interface Declarations {
     fragments: Fragments;
@@ -15,6 +15,7 @@ export interface Declarations {
 export interface OutputtedDeclarations {
     events: OutputEvents;
     commonProperties: OutputCommonProperties;
+    tableInfos: { [key: string]: OutputTableInfo };
 }
 
 function resolveIncludes(target: Events | Fragments, fragments: Fragments) {

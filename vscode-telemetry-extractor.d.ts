@@ -48,13 +48,33 @@ export interface Property {
     purpose: string;
     endPoint?: string;
     isMeasurement?: boolean;
+    column?: { name?: string; type: string };
+}
+
+export type ColumnType =
+    'bool' |
+    'int' |
+    'long' |
+    'real' |
+    'decimal' |
+    'dynamic' |
+    'guid' |
+    'string' |
+    'datetime' |
+    'timespan';
+
+export interface TableInfo {
+    name: string;
+    commonProperties: 'standard';
+    backfill: boolean | string;
+    columns: { name: string; type: ColumnType; bag: { store: 'Measures' | 'Properties'; name: string }}[];
 }
 
 /**
  * Extracts and resolves all typescript declarations from a series of different sources into a formatted object
  * @param sourceSpecs The various sources and their options which you would like to extract from
  */
-export declare function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{ events: Events, commonProperties: CommonProperties }>;
+export declare function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{ events: Events, commonProperties: CommonProperties, tableInfos: TableInfo[] }>;
 
 /**
  * Parses a valid extractor config file into an array of sourceSpecs that can be passed into an extract function
