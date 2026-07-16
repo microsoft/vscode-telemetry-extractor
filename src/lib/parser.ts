@@ -10,16 +10,8 @@ import { Property, CommonProperties } from './common-properties';
 import { Events, Event, TableInfo } from './events';
 import { Declarations } from './declarations';
 import { merge, findOrCreate, populateProperties, makeExclusionsRelativeToSource } from './operations';
-
-export interface EventPropertySignature {
-    classification: string;
-    purpose: string;
-}
-
-export interface EventDefinition {
-    properties: Record<string, EventPropertySignature>;
-    location: string;
-}
+import { parseRipgrepFilePaths } from './ripgrep';
+import { EventDefinition } from './event-definition';
 
 export class Parser {
 
@@ -137,7 +129,6 @@ export class Parser {
 
     private findEvents(sourceDir: string) {
         const filesWithEvents = this.asAbsoluteFilePaths(this.findFilesWithEvents(sourceDir));
-        const seenEvents = new Set<string>();
 
         // Using [\s\S]* instead of .* since the latter does not match when using /m option
         const eventMatcher = /\/\*\s*__GDPR__\b([\s\S]*?)\*\//mg;
@@ -152,12 +143,7 @@ export class Parser {
                 const lineNumber = this.getLineNumber(fileContents, match.index);
                 this.addEventDefinition(eventName, conflictProperties, `${filePath}:${lineNumber}`);
 
-                if (seenEvents.has(eventName)) {
-                    return;
-                }
-
-                seenEvents.add(eventName);
-                const event = findOrCreate(eventDeclarations, eventName);
+                const event = new Event(eventName);
                 if (event instanceof Event && eventProperties['$tableInfo'] !== undefined) {
                     const tableInfo: TableInfo | undefined = TableInfo.fromObject(eventProperties['$tableInfo']);
                     if (tableInfo) {
@@ -166,6 +152,9 @@ export class Parser {
                 }
                 // Get the propeties which the event possesses
                 populateProperties(eventProperties, event, this.applyEndpoints);
+                const currentDeclaration = new Events();
+                currentDeclaration.dataPoints.push(event);
+                merge(eventDeclarations, currentDeclaration);
             } catch (error) {
                 console.error(`Event Declaration Error: ${error} in file ${filePath}`);
                 console.error(`Source comment:\n${match[0]}`);
@@ -183,23 +172,14 @@ export class Parser {
         return definitions;
     }
 
-    private addEventDefinition(eventName: string, properties: Record<string, EventPropertySignature>, location: string) {
+    private addEventDefinition(eventName: string, properties: Record<string, unknown>, location: string) {
         const existing = this.eventDefinitions.get(eventName) ?? [];
         existing.push({ properties, location });
         this.eventDefinitions.set(eventName, existing);
     }
 
-    private extractConflictProperties(eventProperties: Record<string, unknown>): Record<string, EventPropertySignature> {
-        const result: Record<string, EventPropertySignature> = {};
-        for (const [key, value] of Object.entries(eventProperties)) {
-            if (value && typeof value === 'object' && !Array.isArray(value)) {
-                const obj = value as Record<string, unknown>;
-                if (typeof obj.classification === 'string' && typeof obj.purpose === 'string') {
-                    result[key] = { classification: obj.classification, purpose: obj.purpose };
-                }
-            }
-        }
-        return result;
+    private extractConflictProperties(eventProperties: Record<string, unknown>): Record<string, unknown> {
+        return { ...eventProperties };
     }
 
     private getLineNumber(fileContents: string, index: number | undefined) {
@@ -216,7 +196,7 @@ export class Parser {
         const ripgrepArgs = ['--files-with-matches', '--glob', '*.ts', '--glob', '*.tsx', '--glob', '*.cs', ...exclusions, '--regexp', ripgrepPattern, '--', sourceDir];
         try {
             const filePaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii', cwd: `${sourceDir}` });
-            return filePaths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0);
+            return parseRipgrepFilePaths(filePaths);
         } catch {
             // ripgrep's return code != 0 if there are no matches
             return [];

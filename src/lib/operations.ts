@@ -17,6 +17,9 @@ export function merge(target: Fragments | Events, source: Fragments | Events) {
                 if (!eventsAreCompatible(found, item)) {
                     continue;
                 }
+                if (found.tableInfo === undefined) {
+                    found.tableInfo = item.tableInfo;
+                }
                 // Merge unique properties from source into target
                 for (const prop of item.properties) {
                     if (prop instanceof Property) {

@@ -107,6 +107,23 @@ describe('merge', () => {
     assert.strictEqual(new Set(propertyNames).size, propertyNames.length);
   });
 
+  it('merges table info from overlapping events', () => {
+    const target = new Events();
+    target.dataPoints.push(new Event('shared'));
+
+    const source = new Events();
+    const eventWithTableInfo = new Event('shared');
+    eventWithTableInfo.tableInfo = {
+      name: 'SharedEvents',
+      commonProperties: 'standard',
+      backfill: false
+    };
+    source.dataPoints.push(eventWithTableInfo);
+
+    merge(target, source);
+    assert.deepStrictEqual(target.dataPoints[0].tableInfo, eventWithTableInfo.tableInfo);
+  });
+
   it('merges non-overlapping fragments', () => {
     const target = new Fragments();
     target.dataPoints.push(new Fragment('frag1'));

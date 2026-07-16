@@ -11,15 +11,26 @@ import { Property } from "../../lib/common-properties";
 import { patchDebugEvents } from "../../lib/debug-patch";
 import { ParserOptions } from "../../lib/source-spec";
 import { Metadata } from "../../lib/events";
+import { parseRipgrepFilePaths } from "../../lib/ripgrep";
 
 const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/source');
 const excludedDirs = [path.join(sourceDir, 'excluded')];
 const sourceDir2 = path.join(cwd(), 'src/tests/mocha/resources/source-1')
 const multipleExcludes = [path.join(sourceDir2, 'excluded'), path.join(sourceDir2, 'folder2')];
 const duplicateEventSourceDir = path.join(cwd(), 'src/tests/mocha/resources/source-duplicate-events');
+const duplicateEventSchemaSourceDir = path.join(cwd(), 'src/tests/mocha/resources/source-duplicate-event-schemas');
+const compatibleDuplicateEventSourceDir = path.join(cwd(), 'src/tests/mocha/resources/source-compatible-duplicate-events');
 const duplicateTsEventSourceDir = path.join(cwd(), 'src/tests/mocha/resources/tsparser-tests/duplicate-conflict-tests');
 
 describe('Events Tests', () => {
+    it('sorts ripgrep file results deterministically', () => {
+        assert.deepStrictEqual(parseRipgrepFilePaths('z/file.ts\r\na/file.ts\nc/file.ts\r'), [
+            'a/file.ts',
+            'c/file.ts',
+            'z/file.ts'
+        ]);
+    });
+
     it('find files - no exclusions', () => {
         const parser = new Parser([sourceDir], [], false, false);
         //@ts-expect-error accessing private method for testing
@@ -97,6 +108,64 @@ describe('Events Tests', () => {
             process.exitCode = previousExitCode;
             console.error = previousConsoleError;
         }
+    });
+
+    it('fails when duplicate GDPR events produce different schemas', async () => {
+        const previousExitCode = process.exitCode;
+        const previousConsoleError = console.error;
+        const consoleErrors: string[] = [];
+        try {
+            process.exitCode = 0;
+            console.error = (...args: unknown[]) => {
+                consoleErrors.push(args.map(arg => String(arg)).join(' '));
+            };
+
+            const parserOptions: ParserOptions = {
+                eventPrefix: '',
+                applyEndpoints: false,
+                patchDebugEvents: false,
+                lowerCaseEvents: false,
+                silenceOutput: true,
+                verbose: false
+            };
+
+            await assert.rejects(() => extractAndResolveDeclarations([{
+                sourceDirs: [duplicateEventSchemaSourceDir],
+                excludedDirs: [],
+                parserOptions
+            }]));
+
+            assert.ok(consoleErrors.some(msg => msg.includes("Duplicate telemetry event declaration 'DuplicateSchemaEvent' has conflicting details at:")));
+            assert.ok(consoleErrors.some(msg => msg.includes('source-duplicate-event-schemas/file1.ts')));
+            assert.ok(consoleErrors.some(msg => msg.includes('source-duplicate-event-schemas/file2.ts')));
+        } finally {
+            process.exitCode = previousExitCode;
+            console.error = previousConsoleError;
+        }
+    });
+
+    it('merges compatible duplicate GDPR event schemas', async () => {
+        const parserOptions: ParserOptions = {
+            eventPrefix: '',
+            applyEndpoints: false,
+            patchDebugEvents: false,
+            lowerCaseEvents: false,
+            silenceOutput: true,
+            verbose: false
+        };
+
+        const declarations = await extractAndResolveDeclarations([{
+            sourceDirs: [compatibleDuplicateEventSourceDir],
+            excludedDirs: [],
+            parserOptions
+        }]);
+
+        assert.deepStrictEqual(Object.keys(declarations.events.CompatibleDuplicateEvent).sort(), [
+            'comment',
+            'firstproperty',
+            'owner',
+            'secondproperty'
+        ]);
     });
 
     it('fails and reports all locations for duplicate TS event conflicts', async () => {

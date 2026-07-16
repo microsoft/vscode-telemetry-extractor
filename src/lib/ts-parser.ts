@@ -8,16 +8,8 @@ import { rgPath } from "@vscode/ripgrep";
 import { makeExclusionsRelativeToSource } from "./operations";
 import { Event, Metadata } from './events';
 import { Property } from "./common-properties";
-
-interface EventPropertySignature {
-    classification: string;
-    purpose: string;
-}
-
-interface EventDefinition {
-    properties: Record<string, EventPropertySignature>;
-    location: string;
-}
+import { parseRipgrepFilePaths } from './ripgrep';
+import { EventDefinition } from './event-definition';
 
 function isMeasurement(type: Type) {
     if (type.isNumber()) {
@@ -242,11 +234,9 @@ export class TsParser {
 
         const ripgrepArgs = ['--files-with-matches', ...rgGlobs, '--no-ignore', 'publicLog2|publicLogError2', this.sourceDir]
         try {
-            const retrieved_paths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii' });
-            // Split the paths into an array
-            retrieved_paths.split(/(?:\r\n|\r|\n)/g).filter(path => path && path.length > 0).map((f) => {
-                this.project.addSourceFileAtPathIfExists(f);
-                return f;
+            const retrievedPaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii' });
+            parseRipgrepFilePaths(retrievedPaths).forEach((filePath) => {
+                this.project.addSourceFileAtPathIfExists(filePath);
             });
             // Empty catch because this fails when there are no typescript annotations which causes weird error messages
         } catch {
@@ -262,23 +252,14 @@ export class TsParser {
         return definitions;
     }
 
-    private addEventDefinition(eventName: string, properties: Record<string, EventPropertySignature>, location: string) {
+    private addEventDefinition(eventName: string, properties: Record<string, unknown>, location: string) {
         const existing = this.eventDefinitions.get(eventName) ?? [];
         existing.push({ properties, location });
         this.eventDefinitions.set(eventName, existing);
     }
 
-    private extractConflictProperties(eventProperties: Record<string, unknown>): Record<string, EventPropertySignature> {
-        const result: Record<string, EventPropertySignature> = {};
-        for (const [key, value] of Object.entries(eventProperties)) {
-            if (value && typeof value === 'object' && !Array.isArray(value)) {
-                const obj = value as Record<string, unknown>;
-                if (typeof obj.classification === 'string' && typeof obj.purpose === 'string') {
-                    result[key] = { classification: obj.classification, purpose: obj.purpose };
-                }
-            }
-        }
-        return result;
+    private extractConflictProperties(eventProperties: Record<string, unknown>): Record<string, unknown> {
+        return { ...eventProperties };
     }
 
     public parseFiles() {

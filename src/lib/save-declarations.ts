@@ -12,10 +12,10 @@ import { patchDebugEvents } from './debug-patch';
 import { ParserOptions, SourceSpec } from './source-spec';
 import { logMessage } from './logger';
 import { Fragments } from './fragments';
-import { EventDefinition, EventPropertySignature } from './parser';
+import { EventDefinition } from './event-definition';
 
 interface EventConflictEntry {
-    properties: Record<string, EventPropertySignature>;
+    properties: Record<string, unknown>;
     location: string;
     source: 'GDPR' | 'TS';
 }
@@ -96,7 +96,7 @@ function reportDuplicateEventConflicts(definitions: Map<string, EventConflictEnt
             continue;
         }
 
-        // Check if any overlapping properties have different classification/purpose
+        // Compatible declarations may add properties, but must agree on every overlapping output field.
         let eventHasConflict = false;
         for (let i = 0; i < entries.length && !eventHasConflict; i++) {
             for (let j = i + 1; j < entries.length && !eventHasConflict; j++) {
@@ -104,7 +104,7 @@ function reportDuplicateEventConflicts(definitions: Map<string, EventConflictEnt
                     if (propName in entries[j].properties) {
                         const a = entries[i].properties[propName];
                         const b = entries[j].properties[propName];
-                        if (a.classification !== b.classification || a.purpose !== b.purpose) {
+                        if (JSON.stringify(deepSortKeys(a)) !== JSON.stringify(deepSortKeys(b))) {
                             eventHasConflict = true;
                             break;
                         }
