@@ -95,6 +95,30 @@ Some defaults:
 2. `excludedDirs` defaults to an empty array
 3. If the working directory provided is relative it must be relative to the current working directory
 
+## Memory use in large TypeScript scans
+
+TypeScript annotations require resolving imported types, not just reading the files
+that contain telemetry calls. Large scans use sequential workers: one discovers the
+calls and shared declarations, then each worker resolves at most 64 groups of calls
+from source files. Each worker exits before the next starts, releasing its compiler
+heap. Small scans run in the calling process.
+
+Batching does not exclude additional source files or imported dependencies. Global
+declarations, module augmentations, call ordering and duplicate-event validation are
+preserved across batches. Shared dependencies may be parsed more than once, trading
+additional extraction time for a lower peak memory requirement. This is not a hard
+memory cap: a single dependency graph can still be large.
+
+For an out-of-memory report, capture the Node version and these measurements **on the
+affected agent**, not just on a development machine:
+
+```bash
+node -e "console.log({node:process.version,total:require('os').totalmem(),constrained:process.constrainedMemory?.(),available:process.availableMemory?.(),heapLimit:require('v8').getHeapStatistics().heap_size_limit})"
+```
+
+Memory values are in bytes. A zero constrained-memory value means Node does not know
+a constraint; it does not establish that the agent has unlimited memory.
+
 # Other Functionalities
 
 ## Running Tests

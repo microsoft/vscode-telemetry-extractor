@@ -135,11 +135,11 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
             declarations = resolveDeclarations(declarations, spec.parserOptions.verbose);
             let typescriptDeclarations = Object.create(null);
             // The parser does not know how to handle multiple source directories due to different TS configs, so we manually have to parse each source dir
-            spec.sourceDirs.forEach((dir) => {
+            for (const dir of spec.sourceDirs) {
                 const tsParser = new TsParser(dir, spec.excludedDirs, spec.parserOptions.applyEndpoints, spec.parserOptions.lowerCaseEvents);
-                Object.assign(typescriptDeclarations, tsParser.parseFiles());
+                Object.assign(typescriptDeclarations, await tsParser.parseFiles());
                 mergeEventDefinitions(allEventDefinitions, tsParser.getEventDefinitions(), 'TS', spec.parserOptions.eventPrefix);
-            });
+            }
             if (spec.parserOptions.eventPrefix !== '') {
                 declarations.events.dataPoints = declarations.events.dataPoints.map((event) => {
                     event.name = spec.parserOptions.eventPrefix + event.name;
@@ -187,5 +187,4 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
         return Promise.reject(error);
     }
 }
-
 

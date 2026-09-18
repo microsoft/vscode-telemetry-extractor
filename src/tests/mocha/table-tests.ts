@@ -166,9 +166,9 @@ describe('Flat table - GDPR Comment', () => {
 });
 
 describe('Flat table - TS definition', () => {
-	it('Parse table instructions', () => {
+	it('Parse table instructions', async () => {
 		const tsParser = new TsParser(path.resolve(sourceDir, 'ts-declaration'), [], true, false);
-		const declarations = tsParser.parseFiles();
+		const declarations = await tsParser.parseFiles();
 		const event = declarations['Event1'];
 		assert.strictEqual(event.$tableinfo?.name, 'monacoworkbench_inlinecompletion.endoflife');
 		assert.strictEqual(event.$tableinfo?.commonProperties, 'standard');

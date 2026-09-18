@@ -1,15 +1,80 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Project, SyntaxKind, Symbol, Node, CallExpression, Type } from "ts-morph";
+import { Project, SyntaxKind, Symbol, Node, CallExpression, Type, ts, CompilerOptions } from "ts-morph";
 import * as fs from 'fs';
 import * as cp from 'child_process';
 import * as path from 'path';
+import { Worker } from 'worker_threads';
 import { rgPath } from "@vscode/ripgrep";
 import { makeExclusionsRelativeToSource } from "./operations";
 import { Event, Metadata } from './events';
 import { Property } from "./common-properties";
 import { parseRipgrepFilePaths } from './ripgrep';
 import { EventDefinition } from './event-definition';
+
+const sourceFilesPerBatch = 64;
+type ParsedEvents = Record<string, Record<string, unknown>>;
+
+interface TelemetryCall {
+    start: number;
+    width: number;
+}
+
+interface TelemetryCalls {
+    filePath: string;
+    calls: TelemetryCall[];
+}
+
+export type ParserWorkerRequest = {
+    kind: 'prepare';
+    sourceFiles: string[];
+    compilerOptions: CompilerOptions;
+} | {
+    kind: 'parse';
+    calls: TelemetryCalls[];
+    sharedSourceFiles: string[];
+    compilerOptions: CompilerOptions;
+    applyEndpoints: boolean;
+    lowerCaseEvents: boolean;
+    events: ParsedEvents;
+    definitions: [string, EventDefinition[]][];
+};
+
+export type ParserWorkerResult = {
+    kind: 'prepared';
+    calls: TelemetryCalls[];
+    sharedSourceFiles: string[];
+} | {
+    kind: 'parsed';
+    events: ParsedEvents;
+    definitions: [string, EventDefinition[]][];
+};
+
+export function runParserWorker(request: ParserWorkerRequest): Promise<ParserWorkerResult> {
+    return new Promise((resolve, reject) => {
+        const worker = new Worker(path.join(__dirname, 'ts-parser-worker.js'), { workerData: request });
+        let result: ParserWorkerResult | undefined;
+        let error: Error | undefined;
+        worker.once('message', (message: ParserWorkerResult) => {
+            result = message;
+        });
+        worker.once('error', workerError => {
+            error = workerError;
+        });
+        // Do not start another compiler until this worker has released its heap.
+        worker.once('exit', code => {
+            if (error) {
+                reject(error);
+            } else if (code !== 0) {
+                reject(new Error(`Telemetry parser worker exited with code ${code}`));
+            } else if (!result) {
+                reject(new Error('Telemetry parser worker exited without a result'));
+            } else {
+                resolve(result);
+            }
+        });
+    });
+}
 
 function isMeasurement(type: Type) {
     if (type.isNumber()) {
@@ -198,6 +263,7 @@ export class TsParser {
     private applyEndpoints: boolean;
     private lowerCaseEvents: boolean;
     private project: Project;
+    private sourceFiles: string[] = [];
     private eventDefinitions: Map<string, EventDefinition[]>;
     constructor(sourceDir: string, excludedDirs: string[], applyEndpoints: boolean, lowerCaseEvents: boolean) {
         this.sourceDir = sourceDir;
@@ -235,13 +301,66 @@ export class TsParser {
         const ripgrepArgs = ['--files-with-matches', ...rgGlobs, '--no-ignore', 'publicLog2|publicLogError2', this.sourceDir]
         try {
             const retrievedPaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii' });
-            parseRipgrepFilePaths(retrievedPaths).forEach((filePath) => {
-                this.project.addSourceFileAtPathIfExists(filePath);
-            });
+            this.sourceFiles = parseRipgrepFilePaths(retrievedPaths);
             // Empty catch because this fails when there are no typescript annotations which causes weird error messages
         } catch {
             // No-op
         }
+    }
+
+    public async parseFiles() {
+        if (this.sourceFiles.length <= sourceFilesPerBatch) {
+            for (const file of this.sourceFiles) {
+                this.project.addSourceFileAtPathIfExists(file);
+            }
+            const parser = new TsProjectParser(this.project, this.applyEndpoints, this.lowerCaseEvents, [...this.eventDefinitions]);
+            const events = parser.parseFiles();
+            this.eventDefinitions = parser.getEventDefinitions();
+            return events;
+        }
+
+        const compilerOptions = this.project.getCompilerOptions();
+        const prepared = await runParserWorker({ kind: 'prepare', sourceFiles: this.sourceFiles, compilerOptions });
+        if (prepared.kind !== 'prepared') {
+            throw new Error('Telemetry parser worker did not return call locations');
+        }
+
+        let events: ParsedEvents = Object.create(null);
+        for (let index = 0; index < prepared.calls.length; index += sourceFilesPerBatch) {
+            const parsed = await runParserWorker({
+                kind: 'parse',
+                calls: prepared.calls.slice(index, index + sourceFilesPerBatch),
+                sharedSourceFiles: prepared.sharedSourceFiles,
+                compilerOptions,
+                applyEndpoints: this.applyEndpoints,
+                lowerCaseEvents: this.lowerCaseEvents,
+                events,
+                definitions: [...this.eventDefinitions]
+            });
+            if (parsed.kind !== 'parsed') {
+                throw new Error('Telemetry parser worker did not return declarations');
+            }
+            events = Object.assign(Object.create(null), parsed.events);
+            this.eventDefinitions = new Map(parsed.definitions);
+        }
+        return events;
+    }
+
+    public getEventDefinitions() {
+        return new Map([...this.eventDefinitions].map(([event, entries]) => [event, [...entries]]));
+    }
+}
+
+export class TsProjectParser {
+    private eventDefinitions: Map<string, EventDefinition[]>;
+
+    constructor(
+        private readonly project: Project,
+        private readonly applyEndpoints: boolean,
+        private readonly lowerCaseEvents: boolean,
+        definitions: [string, EventDefinition[]][] = []
+    ) {
+        this.eventDefinitions = new Map(definitions);
     }
 
     public getEventDefinitions() {
@@ -262,16 +381,81 @@ export class TsParser {
         return { ...eventProperties };
     }
 
-    public parseFiles() {
-        let publicLogUse: Array<CallExpression> = [];
+    private collectCalls(): TelemetryCalls[] {
+        const publicLogCalls: TelemetryCalls[] = [];
+        const publicLogErrorCalls: TelemetryCalls[] = [];
         this.project.getSourceFiles().forEach((source) => {
-            const descendants = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLog2') && c.getArguments().length > 0);
-            const descendants2 = source.getDescendantsOfKind(SyntaxKind.CallExpression).filter((c) => c.getExpression().getText().includes('publicLogError2') && c.getArguments().length > 0);
-            publicLogUse = descendants.concat(publicLogUse, descendants2);
+            const calls: TelemetryCall[] = [];
+            const errorCalls: TelemetryCall[] = [];
+            const sourceFile = source.compilerNode;
+            const visit = (node: ts.Node): void => {
+                if (ts.isCallExpression(node) && node.arguments.length > 0) {
+                    const expression = node.expression.getText(sourceFile);
+                    const isPublicLog = expression.includes('publicLog2');
+                    const isPublicLogError = expression.includes('publicLogError2');
+                    if ((isPublicLog || isPublicLogError) && node.arguments[0].getText(sourceFile) !== 'eventName') {
+                        const call = { start: node.getStart(sourceFile), width: node.getWidth(sourceFile) };
+                        if (isPublicLog) {
+                            calls.push(call);
+                        }
+                        if (isPublicLogError) {
+                            errorCalls.push(call);
+                        }
+                    }
+                }
+                ts.forEachChild(node, visit);
+            };
+            ts.forEachChild(sourceFile, visit);
+            if (calls.length > 0) {
+                publicLogCalls.unshift({ filePath: source.getFilePath(), calls });
+            }
+            if (errorCalls.length > 0) {
+                publicLogErrorCalls.push({ filePath: source.getFilePath(), calls: errorCalls });
+            }
         });
+        return publicLogCalls.concat(publicLogErrorCalls);
+    }
 
+    private getSharedSourceFiles(): string[] {
+        const program = this.project.getProgram().compilerObject;
+        return program.getSourceFiles().filter(source =>
+            !ts.isExternalModule(source) || source.statements.some(statement =>
+                ts.isModuleDeclaration(statement) &&
+                (ts.isStringLiteral(statement.name) || (statement.flags & ts.NodeFlags.GlobalAugmentation) !== 0))
+        ).map(source => source.fileName);
+    }
+
+    public prepare(): ParserWorkerResult {
+        const calls = this.collectCalls();
+        return {
+            kind: 'prepared',
+            calls,
+            sharedSourceFiles: calls.length > 0 ? this.getSharedSourceFiles() : []
+        };
+    }
+
+    private parseCalls(groups: TelemetryCalls[], parseCall: (call: CallExpression) => void): void {
+        for (const group of groups) {
+            const source = this.project.getSourceFileOrThrow(group.filePath);
+            for (const call of group.calls) {
+                const node = source.getDescendantAtStartWithWidth(call.start, call.width);
+                if (!node || !Node.isCallExpression(node)) {
+                    throw new Error(`Could not locate telemetry call in ${group.filePath} at ${call.start}`);
+                }
+                parseCall(node);
+            }
+        }
+    }
+
+    public parseFiles(calls = this.collectCalls(), previousEvents?: ParsedEvents) {
         const events = Object.create(null);
-        publicLogUse.forEach((pl) => {
+        if (previousEvents) {
+            // Structured cloning does not preserve dictionary prototypes.
+            for (const [name, properties] of Object.entries(previousEvents)) {
+                events[name] = Object.assign(Object.create(null), properties);
+            }
+        }
+        const parseCall = (pl: CallExpression): void => {
             try {
                 const typeArgs = pl.getTypeArguments();
                 if (typeArgs.length != 2) {
@@ -352,7 +536,9 @@ export class TsParser {
                 events[event_name] = {};
                 this.addEventDefinition(event_name, this.extractConflictProperties(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
             }
-        });
+        };
+
+        this.parseCalls(calls, parseCall);
         return events;
     }
 
