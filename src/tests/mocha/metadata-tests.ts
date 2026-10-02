@@ -13,9 +13,9 @@ import { TsParser } from "../../lib/ts-parser";
 describe('Metadata parsing tests', function () {
   const metadataSources = path.resolve(cwd(), 'src/tests/mocha/resources/source-3/');
 
-  it('TS Parser metadata extraction', () => {
+  it('TS Parser metadata extraction', async () => {
     const tsParser = new TsParser(metadataSources, [], true, false);
-    const declarations = tsParser.parseFiles();
+    const declarations = await tsParser.parseFiles();
     // Test that event with properties and metadata is extracted properly
     assert.ok(declarations['testEvent']);
     assert.strictEqual(declarations['testEvent']['owner'], 'lramos15');
