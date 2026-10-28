@@ -5,6 +5,7 @@ import { Event, Metadata, Wildcard, TableInfo as JsonTableInfo } from './events'
 import type { TableHeader } from './event-declarations';
 import type { Dictionary } from './object-utils';
 import * as keywords from './keywords';
+import { isMeasurementFlag } from './operations';
 
 export interface NormalizedEvent {
     event: Dictionary;
@@ -42,7 +43,7 @@ export function eventToOutput(event: Event): NormalizedEvent {
             if (existing) {
                 // A declaration can list a property more than once through fragments; a measurement flag on any of them wins.
                 if (property.isMeasurement) {
-                    existing.isMeasurement = property.isMeasurement;
+                    existing.isMeasurement = true;
                 }
                 continue;
             }
@@ -51,7 +52,8 @@ export function eventToOutput(event: Event): NormalizedEvent {
             if (property.owner) converted.owner = property.owner;
             if (property.comment) converted.comment = property.comment;
             if (property.endPoint) converted.endPoint = property.endPoint;
-            if (property.isMeasurement) converted.isMeasurement = property.isMeasurement;
+            // Explicit so that duplicate declarations which disagree are reported; false is removed when merging
+            converted.isMeasurement = property.isMeasurement === true;
             if (property.column) {
                 converted.column = { name: property.column.name ?? property.name, type: property.column.type };
             }
@@ -86,7 +88,7 @@ export function commonPropertiesToOutput(properties: readonly Property[]): Dicti
 }
 
 type TypeScriptPropertyDeclaration = {
-    isMeasurement?: boolean;
+    isMeasurement?: unknown;
     type?: unknown;
     column?: unknown;
 };
@@ -111,6 +113,8 @@ export function transformTypeScriptDeclaration(declaration: Dictionary): Normali
             continue;
         }
         const { type, column, ...property } = value as TypeScriptPropertyDeclaration;
+        // Explicit so that duplicate declarations which disagree are reported; false is removed when merging
+        property.isMeasurement = isMeasurementFlag(property.isMeasurement);
         let columnInfo: { name: string; type: ColumnType } | undefined;
         if (column !== undefined) {
             if (ColumnInfo.is(column)) {

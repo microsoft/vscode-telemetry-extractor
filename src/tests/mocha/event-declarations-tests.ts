@@ -36,11 +36,20 @@ describe('mergeEventDeclarations', () => {
 
     it('fills in property fields that only one declaration sets', () => {
         const { events, conflicts } = mergeEventDeclarations([
-            declaration('a.ts:1', { first: prop({ comment: 'Explained once' }) }),
-            declaration('b.ts:1', { first: prop({ isMeasurement: true }) })
+            declaration('a.ts:1', { first: prop({ comment: 'Explained once', isMeasurement: true }) }),
+            declaration('b.ts:1', { first: prop({ owner: 'team', isMeasurement: true }) })
         ]);
         assert.deepStrictEqual(conflicts, []);
-        assert.deepStrictEqual(plain(events.event.first), prop({ comment: 'Explained once', isMeasurement: true }));
+        assert.deepStrictEqual(plain(events.event.first), prop({ comment: 'Explained once', owner: 'team', isMeasurement: true }));
+    });
+
+    it('reports declarations which disagree on whether a property is a measurement', () => {
+        const { events, conflicts } = mergeEventDeclarations([
+            declaration('a.ts:1', { first: prop({ isMeasurement: true }), second: prop({ isMeasurement: false }) }),
+            declaration('b.ts:1', { first: prop({ isMeasurement: false }), second: prop({ isMeasurement: false }) })
+        ]);
+        assert.deepStrictEqual(conflicts.map(c => c.field), [['first', 'isMeasurement']]);
+        assert.deepStrictEqual(plain(events.event.second), prop(), 'false is not emitted');
     });
 
     it('reports every field which declarations disagree on, with each value and location', () => {

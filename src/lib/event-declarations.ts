@@ -40,6 +40,7 @@ const tableInfoField = '$tableInfo';
  * Declarations may contribute disjoint properties and fields, but every field that more than one
  * declaration sets must have the same value. Otherwise, the result would depend on discovery order,
  * so the field is reported as a conflict instead.
+ * Properties must state `isMeasurement` as `true` or `false`, since its absence would let either value win.
  */
 export function mergeEventDeclarations(declarations: readonly EventDeclaration[]): MergedDeclarations {
     const byName = new Map<string, EventDeclaration[]>();
@@ -76,6 +77,7 @@ export function mergeEventDeclarations(declarations: readonly EventDeclaration[]
         }
 
         const columns = extractColumns(event);
+        removeFalseMeasurements(event);
         events[eventName] = event;
         if (header) {
             const tableInfo = { ...(header as TableHeader), columns };
@@ -182,6 +184,15 @@ function valueAt(root: unknown, field: readonly string[]): unknown {
         }
     }
     return current;
+}
+
+/** Declarations state `isMeasurement: false` explicitly so disagreements are detected, but the output only marks measurements. */
+function removeFalseMeasurements(event: Dictionary) {
+    for (const property of Object.values(event)) {
+        if (isDictionary(property) && property.isMeasurement === false) {
+            delete property.isMeasurement;
+        }
+    }
 }
 
 /** Removes column metadata from the merged properties and returns it as table columns. */

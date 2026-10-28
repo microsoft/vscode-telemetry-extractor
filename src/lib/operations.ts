@@ -74,8 +74,8 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
                 const endpoint = currentProperty.endpoint ? currentProperty.endpoint : 'none';
                 prop.endPoint = endpoint;
             }
-            if (currentProperty.isMeasurement) {
-                prop.isMeasurement = currentProperty.isMeasurement;
+            if (isMeasurementFlag(currentProperty.isMeasurement)) {
+                prop.isMeasurement = true;
             }
             if (typeof currentProperty.type === 'string') {
                 const columnType = ColumnType.fromString(currentProperty.type);
@@ -104,4 +104,9 @@ export function makeExclusionsRelativeToSource(sourceDir: string, excludedDirs: 
         }
     }
     return relativeExclusions;
+}
+
+// Some annotations declare the flag as the string "true"
+export function isMeasurementFlag(value: unknown): boolean {
+    return value === true || value === 'true';
 }

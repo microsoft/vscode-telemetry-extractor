@@ -202,4 +202,10 @@ describe('populateProperties', () => {
     const prop = event.properties[0] as Property;
     assert.strictEqual(prop.isMeasurement, true);
   });
+
+  it('accepts isMeasurement declared as the string "true"', () => {
+    const event = new Event('event');
+    populateProperties({ asString: { classification: 'SystemMetaData', purpose: 'FeatureInsight', isMeasurement: 'true' }, asFalse: { classification: 'SystemMetaData', purpose: 'FeatureInsight', isMeasurement: 'false' } }, event);
+    assert.deepStrictEqual(event.properties.map(p => (p as Property).isMeasurement), [true, undefined]);
+  });
 });

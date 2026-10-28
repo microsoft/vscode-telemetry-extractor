@@ -96,6 +96,18 @@ describe('Measurement detection', function () {
         fs.rmSync(directory, { recursive: true, force: true });
     });
 
+    it('reports calls which send the same property as a measurement and as a property', async () => {
+        fs.writeFileSync(path.join(directory, 'event.ts'), `
+            import { publicLog2 } from './publicLog';
+            type Classification = { foo: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Foo.' } };
+            publicLog2<{ foo: number }, Classification>('MixedDataEvent', { foo: 1 });
+            publicLog2<{ foo: string }, Classification>('MixedDataEvent', { foo: '' });
+        `);
+        const { errors, result } = await captureErrors(() => extractAndResolveDeclarations([spec([directory])]));
+        await assert.rejects(result, /Validation failed/);
+        assert.ok(errors.join('\n').includes("Conflicting field 'foo > isMeasurement'"));
+    });
+
     for (const strict of [true, false]) {
         it(`treats optional numbers, booleans and numeric enums as measurements (strict: ${strict})`, async () => {
             fs.writeFileSync(path.join(directory, 'tsconfig.json'), JSON.stringify({ compilerOptions: { strict } }));

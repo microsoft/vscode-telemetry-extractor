@@ -6,7 +6,7 @@ import { Fragments } from './fragments';
 import { Property, CommonProperties } from './common-properties';
 import { Events, Event, TableInfo } from './events';
 import { Declarations } from './declarations';
-import { mergeFragments, findOrCreate, populateProperties, makeExclusionsRelativeToSource } from './operations';
+import { mergeFragments, findOrCreate, populateProperties, makeExclusionsRelativeToSource, isMeasurementFlag } from './operations';
 import { findFilesWithRipgrep } from './ripgrep';
 
 /**
@@ -71,8 +71,8 @@ export class Parser {
                 if (this.applyEndpoints) {
                     prop.endPoint = properties.endPoint ? properties.endPoint : 'none';
                 }
-                if (properties.isMeasurement) {
-                    prop.isMeasurement = properties.isMeasurement;
+                if (isMeasurementFlag(properties.isMeasurement)) {
+                    prop.isMeasurement = true;
                 }
                 commonPropertyDeclarations.properties.push(prop);
             } catch (error) {
