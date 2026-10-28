@@ -39,7 +39,7 @@
     "@eslint/js": "^10.0.1",
     "@types/command-line-args": "^5.2.3",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.5",
     "c8": "^12.0.0",
     "eslint": "^10.13.0",
     "mocha": "^12.0.3",
