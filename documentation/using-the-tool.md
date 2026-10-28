@@ -95,6 +95,42 @@ Some defaults:
 2. `excludedDirs` defaults to an empty array
 3. If the working directory provided is relative it must be relative to the current working directory
 
+`excludedDirs` apply to both `__GDPR__` comments and `publicLog2` calls.
+
+## Validation
+The extraction fails, rather than producing a partial inventory, and reports the location of each problem if:
+
+* the config file cannot be read, or a source directory does not exist
+* a `__GDPR__` comment is not valid JSON, or references a fragment which does not exist or includes itself
+* the data or classification type of a `publicLog2` call cannot be resolved, for example because of a missing import
+* a property's classification is impossible (`never`), which happens when intersected classification types declare it differently
+* a property has no `classification` or `purpose`, or mixes classification fields with nested properties
+* the event name of a classified call is not a string literal
+* an event name ends with a number, or a property is named `value`
+* duplicate declarations of an event or a common property disagree (see below)
+
+Progress messages are written to stderr, so stdout only contains the extracted JSON.
+
+## Duplicate event declarations
+An event may be declared more than once, for example by several `__GDPR__` comments, by `publicLog2` calls in different files,
+by a comment and a call, or by different source specs which share an `eventPrefix`. Every declaration of an event is resolved
+(including its fragments) and then merged into a single event:
+
+* Properties and fields declared by only some of the declarations are combined.
+* A field which more than one declaration sets must have the same value in each of them. Otherwise, the result would depend on the
+  order in which files are found, so the extraction fails and lists each conflicting field with its values and locations:
+
+```
+Duplicate telemetry event declaration 'monacoworkbench/myevent' has conflicting details at:
+ - /src/vs/a.ts:10 (GDPR)
+ - /src/vs/b.ts:42 (TS)
+   Conflicting field 'outcome > comment':
+     "The success state or failure reason." at /src/vs/a.ts:10 (GDPR)
+     "The success state." at /src/vs/b.ts:42 (TS)
+```
+
+To resolve a conflict, make the declarations agree, or keep a single declaration of the event.
+
 ## Memory use in large TypeScript scans
 
 TypeScript annotations require resolving imported types, not just reading the files

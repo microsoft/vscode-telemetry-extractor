@@ -1,6 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 import * as assert from 'assert';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import type { TsEventDeclaration } from '../../lib/ts-parser';
+import { extractAndResolveDeclarations } from '../../lib/save-declarations';
+import type { ParserOptions } from '../../lib/source-spec';
 
 export function sameValues(array1: string[], array2: string[]) {
     const hash1 = Object.create(null);
@@ -11,4 +17,47 @@ export function sameValues(array1: string[], array2: string[]) {
 
     assert.deepStrictEqual(hash1, hash2);
     assert.ok(true);
+}
+
+/** Groups the declarations returned by the TS parser by event name. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function byEventName(declarations: TsEventDeclaration[]): Record<string, any> {
+    const events = Object.create(null);
+    for (const { name, properties } of declarations) {
+        events[name] = Object.assign(events[name] ?? Object.create(null), properties);
+    }
+    return events;
+}
+
+/** Runs the callback while collecting everything written to console.error. */
+export async function captureErrors<T>(callback: () => Promise<T>): Promise<{ errors: string[]; result: Promise<T> }> {
+    const previousConsoleError = console.error;
+    const errors: string[] = [];
+    console.error = (...args: unknown[]) => errors.push(args.map(String).join(' '));
+    try {
+        const result = callback();
+        await result.catch(() => undefined);
+        return { errors, result };
+    } finally {
+        console.error = previousConsoleError;
+    }
+}
+
+/**
+ * Extracts from a temporary source directory containing `publicLog.ts` and the given files.
+ * @returns The errors written to console.error, and the result, which may have rejected
+ */
+export async function extractFromSources(files: Record<string, string>, options: Partial<ParserOptions> = {}) {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'telemetry sources '));
+    try {
+        fs.copyFileSync(path.resolve('src/tests/mocha/resources/tsparser-tests/publicLog.ts'), path.join(directory, 'publicLog.ts'));
+        for (const [file, contents] of Object.entries(files)) {
+            fs.mkdirSync(path.dirname(path.join(directory, file)), { recursive: true });
+            fs.writeFileSync(path.join(directory, file), contents);
+        }
+        const parserOptions: ParserOptions = { eventPrefix: '', applyEndpoints: false, patchDebugEvents: false, lowerCaseEvents: false, silenceOutput: true, verbose: false, ...options };
+        return await captureErrors(() => extractAndResolveDeclarations([{ sourceDirs: [directory], excludedDirs: [], parserOptions }]));
+    } finally {
+        fs.rmSync(directory, { recursive: true, force: true });
+    }
 }

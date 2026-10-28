@@ -1,9 +1,13 @@
-// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+// See https://aka.ms/devcontainer.json for format details.
 {
-	"name": "Node.js (latest LTS) & TypeScript",
-	"dockerFile": "Dockerfile",
-	"postCreateCommand": "npm install && npm run setup-repos && tsc",
-	"extensions": [
-		"ms-vscode.vscode-typescript-tslint-plugin"
-	]
+	"name": "Node.js & TypeScript",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:24",
+	"postCreateCommand": "npm ci && npm run compile",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint"
+			]
+		}
+	}
 }

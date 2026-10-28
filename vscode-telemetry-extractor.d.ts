@@ -70,14 +70,24 @@ export interface TableInfo {
     columns: { name: string; type: ColumnType; bag: { store: 'Measures' | 'Properties'; name: string }}[];
 }
 
+export interface ExtractedDeclarations {
+    events: Events;
+    commonProperties: CommonProperties;
+    /** Flat Kusto table information, keyed by table name */
+    tableInfos: { [tableName: string]: TableInfo };
+}
+
 /**
- * Extracts and resolves all typescript declarations from a series of different sources into a formatted object
+ * Extracts and resolves all telemetry declarations from a series of different sources into a formatted object.
+ * Duplicate declarations of an event are merged; the promise rejects if they disagree on any field,
+ * if an annotation cannot be parsed, or if a source directory does not exist.
  * @param sourceSpecs The various sources and their options which you would like to extract from
  */
-export declare function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<{ events: Events, commonProperties: CommonProperties, tableInfos: TableInfo[] }>;
+export declare function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<ExtractedDeclarations>;
 
 /**
  * Parses a valid extractor config file into an array of sourceSpecs that can be passed into an extract function
  * @param file The path to the configuration file
+ * @throws If the file cannot be read or is not a valid configuration
  */
 export declare function convertConfigToSourceSpecs(file: PathLike): SourceSpec[]

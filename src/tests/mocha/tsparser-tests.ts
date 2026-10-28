@@ -3,6 +3,8 @@
  *  Licensed under the MIT License.
  *--------------------------------------------------------------------------------------------*/
 import { TsParser } from '../../lib/ts-parser';
+import { extractAndResolveDeclarations } from '../../lib/save-declarations';
+import { byEventName } from './assert-helper';
 import { cwd } from 'process';
 import * as path from 'path';
 import * as assert from 'assert';
@@ -10,7 +12,7 @@ describe('TS Parser Tests', function () {
     const tsParserPath = path.resolve(cwd(), 'src/tests/mocha/resources/tsparser-tests/');
     it('Small Event Tests', async () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'small-event-tests'), [], true, false);
-        const declarations = await tsParser.parseFiles();
+        const declarations = byEventName(await tsParser.parseFiles());
         assert.ok(declarations['SmallEvent1']);
         assert.strictEqual(declarations['SmallEvent1']['baz']['expiration'], '1.57.0');
         assert.ok(declarations['SmallEvent2']);
@@ -23,25 +25,25 @@ describe('TS Parser Tests', function () {
     });
     it('Large Event Tests', async () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'large-event-tests'), [], true, false);
-        const declarations = await tsParser.parseFiles();
+        const declarations = byEventName(await tsParser.parseFiles());
         assert.ok(declarations['LargeEvent']);
         assert.strictEqual(Object.keys(declarations['LargeEvent']).length, 50);
     });
     it('Single Include Tests', async () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'single-include-tests'), [], true, false);
-        const declarations = await tsParser.parseFiles();
+        const declarations = byEventName(await tsParser.parseFiles());
         assert.ok(declarations['Event1']);
         assert.strictEqual(Object.keys(declarations['Event1']).length, 4);
     });
     it('Multiple Include Tests', async () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'multi-include-tests'), [], true, false);
-        const declarations = await tsParser.parseFiles();
+        const declarations = byEventName(await tsParser.parseFiles());
         assert.ok(declarations['SentEvent']);
         assert.strictEqual(Object.keys(declarations['SentEvent']).length, 6);
     });
     it('Single Inline Test', async () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'single-inline-tests'), [], true, false);
-        const declarations = await tsParser.parseFiles();
+        const declarations = byEventName(await tsParser.parseFiles());
         assert.ok(declarations['SingleInline']);
         assert.strictEqual(Object.keys(declarations['SingleInline']).length, 3);
         assert.ok(declarations['SingleInline']['inline.inlineprop1']);
@@ -49,7 +51,7 @@ describe('TS Parser Tests', function () {
     });
     it('Lowercase Event Test', async () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'small-event-tests'), [], true, true);
-        const declarations = await tsParser.parseFiles();
+        const declarations = byEventName(await tsParser.parseFiles());
         assert.ok(declarations['smallevent1']);
         assert.ok(declarations['smallevent2']);
         assert.ok(declarations['smallevent3']);
@@ -57,11 +59,24 @@ describe('TS Parser Tests', function () {
     // Few tests to ensure that the ts-parser also sees publicLogError2
     it('publicLogError2 Tests', async () => {
         const tsParser = new TsParser(path.resolve(tsParserPath, 'public-log-error-tests'), [], true, false);
-        const declarations = await tsParser.parseFiles();
+        const declarations = byEventName(await tsParser.parseFiles());
         assert.ok(declarations['LargeEvent']);
         assert.strictEqual(Object.keys(declarations['LargeEvent']).length, 50);
         assert.ok(declarations['SmallEvent1']);
         assert.ok(declarations['SmallEvent2']);
         assert.ok(declarations['SmallEvent3']);
+    });
+    it('Distinguishes a property named column from flat table column metadata', async () => {
+        const { events, tableInfos } = await extractAndResolveDeclarations([{
+            sourceDirs: [path.resolve(tsParserPath, 'column-property-tests')],
+            excludedDirs: [],
+            parserOptions: { eventPrefix: '', applyEndpoints: false, patchDebugEvents: false, lowerCaseEvents: false, silenceOutput: true, verbose: false }
+        }]);
+        const event = JSON.parse(JSON.stringify(events['ColumnPropertyEvent']));
+        assert.deepStrictEqual(event.column, { classification: 'CallstackOrException', purpose: 'PerformanceAndHealth', comment: 'The column of the error.', isMeasurement: true });
+        assert.deepStrictEqual(event.file, { classification: 'CallstackOrException', purpose: 'PerformanceAndHealth', comment: 'The file of the error.' });
+        assert.deepStrictEqual(JSON.parse(JSON.stringify(tableInfos['errors'].columns)), [
+            { name: 'File', type: 'string', bag: { name: 'file', store: 'Properties' } }
+        ]);
     });
 });

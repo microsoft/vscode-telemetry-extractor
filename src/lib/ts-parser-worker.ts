@@ -25,12 +25,9 @@ if (request.kind === 'prepare') {
     for (const group of request.calls) {
         project.addSourceFileAtPath(group.filePath);
     }
-    const parser = new TsProjectParser(project, request.applyEndpoints, request.lowerCaseEvents, request.definitions);
-    result = {
-        kind: 'parsed',
-        events: parser.parseFiles(request.calls, request.events),
-        definitions: [...parser.getEventDefinitions()]
-    };
+    const parser = new TsProjectParser(project, request.applyEndpoints, request.lowerCaseEvents);
+    const declarations = parser.parseFiles(request.calls);
+    result = { kind: 'parsed', declarations, errors: parser.errors };
 } else {
     throw new Error('Unknown telemetry parser worker request');
 }

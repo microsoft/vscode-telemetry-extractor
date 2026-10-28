@@ -1,170 +1,122 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Declarations, OutputtedDeclarations } from "./declarations";
-import { ColumnType, Property, ColumnInfo } from "./common-properties";
-import { Metadata, Wildcard, TableInfo as JsonTableInfo } from "./events";
+import { ColumnType, Property, ColumnInfo } from './common-properties';
+import { Event, Metadata, Wildcard, TableInfo as JsonTableInfo } from './events';
+import type { TableHeader } from './event-declarations';
+import type { Dictionary } from './object-utils';
 import * as keywords from './keywords';
+import { isMeasurementFlag } from './operations';
 
-// Converts the declarations array to an object format for easy readability.
+export interface NormalizedEvent {
+    event: Dictionary;
+    tableInfo?: TableHeader;
+}
 
-type TableInfo = OutputtedDeclarations['tableInfos'][string];
-type BagInfo = TableInfo['columns'][number]['bag'];
-
-export async function transformOutput(output: Declarations): Promise<OutputtedDeclarations> {
-    // If there's no events or common properties, we emit a null object
-    if (output.events.dataPoints.length === 0 && output.commonProperties.properties.length === 0) {
-        return { events: Object.create(null), commonProperties: Object.create(null), tableInfos: {} };
-    }
-    const newEvents = Object.create(null);
-    const oldEvents = output.events.dataPoints;
-    const tableInfos: { [key: string]: TableInfo } = {};
-    for (const event of oldEvents) {
-        // Check if event.name ends with a number, if so throw an error because we don't support event names which end with numbers
-        if (/\d$/.test(event.name)) {
-            throw new Error(`Event name ${event.name} ends with a number. Event names cannot end with numbers.`);
-        }
-        newEvents[event.name] = Object.create(null);
-        const tableInfo: TableInfo | undefined = event.tableInfo ? { ...event.tableInfo, columns: [] } : undefined;
-        if (tableInfo) {
-            tableInfos[tableInfo.name] = tableInfo;
-        }
-        //We know there won't be anymore includes or inlines because we have resolved them
-        for (const property of event.properties as Array<Property | Wildcard | Metadata>) {
-            if (property instanceof Wildcard) {
-                newEvents[event.name][keywords.wildcard] = newEvents[event.name][keywords.wildcard] ? newEvents[event.name][keywords.wildcard] : [];
-                for (const entry of property.entries) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const found = newEvents[event.name][keywords.wildcard].find((e: any) => {
-                        return e[keywords.prefix] === entry.prefix.toLowerCase();
-                    });
-                    if (found) continue;
-                    const newEntry = Object.create(null);
-                    newEntry[keywords.prefix] = entry.prefix.toLowerCase();
-                    if (entry.endpoint) {
-                        newEntry[keywords.classification] = { classification: entry.classification.classification, purpose: entry.classification.purpose, endPoint: "none" };
-                    } else {
-                        newEntry[keywords.classification] = entry.classification;
-                    }
-                    newEvents[event.name][keywords.wildcard].push(newEntry);
-                }
-            } else if (property instanceof Property) {
-                // Check if property name is 'value' and throw an error if it is
-                if (propetyNameChanger(property.name) === 'value') {
-                    throw new Error(`Property name 'value' is reserved and cannot be used due to conflicts with the SDK. Please rename the property.`);
-                }
-                // Handles the case where the comments can be inconsistent
-                // We want to ensure that if isMeasurement is ever flagged it gets propogated
-                if (newEvents[event.name][propetyNameChanger(property.name)]) {
-                    if (property.isMeasurement) newEvents[event.name][propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
+/**
+ * Converts a resolved `__GDPR__` event (includes and inlines already expanded) to its output shape.
+ */
+export function eventToOutput(event: Event): NormalizedEvent {
+    const output: Dictionary = Object.create(null);
+    for (const property of event.properties) {
+        if (property instanceof Wildcard) {
+            const entries = (output[keywords.wildcard] ??= []) as Dictionary[];
+            for (const entry of property.entries) {
+                const prefix = entry.prefix.toLowerCase();
+                if (entries.some(e => e[keywords.prefix] === prefix)) {
                     continue;
                 }
-                newEvents[event.name][propetyNameChanger(property.name)] = { classification: property.classification, purpose: property.purpose };
-                if (property.expiration) {
-                    newEvents[event.name][propetyNameChanger(property.name)]['expiration'] = property.expiration;
-                }
-                if (property.owner) {
-                    newEvents[event.name][propetyNameChanger(property.name)]['owner'] = property.owner;
-                }
-                if (property.comment) {
-                    newEvents[event.name][propetyNameChanger(property.name)]['comment'] = property.comment;
-                }
-                if (property.endPoint) {
-                    newEvents[event.name][propetyNameChanger(property.name)]['endPoint'] = property.endPoint;
-                }
-                if (property.isMeasurement) {
-                    newEvents[event.name][propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
-                }
-                if (tableInfo !== undefined && property.column) {
-                    const name = property.column.name ?? property.name;
-                    tableInfo.columns.push({ name, type: property.column.type, bag: { name: property.name.toLowerCase(), store: property.isMeasurement === true ? 'Measures' : 'Properties' } });
-                }
-            } else {
-                // Comments, expiration, and owner metadata are handled here
-                newEvents[event.name][propetyNameChanger(property.name)] = property.value;
+                const classification = entry.endpoint
+                    ? { classification: entry.classification.classification, purpose: entry.classification.purpose, endPoint: 'none' }
+                    : entry.classification;
+                entries.push({ [keywords.prefix]: prefix, [keywords.classification]: classification });
             }
-        }
-        if (tableInfo !== undefined) {
-            tableInfos[tableInfo.name] = tableInfo;
+        } else if (property instanceof Property) {
+            const name = propertyNameChanger(property.name);
+            const existing = output[name] as Dictionary | undefined;
+            if (existing) {
+                // A declaration can list a property more than once through fragments; a measurement flag on any of them wins.
+                if (property.isMeasurement) {
+                    existing.isMeasurement = true;
+                }
+                continue;
+            }
+            const converted: Dictionary = { classification: property.classification, purpose: property.purpose };
+            if (property.expiration) converted.expiration = property.expiration;
+            if (property.owner) converted.owner = property.owner;
+            if (property.comment) converted.comment = property.comment;
+            if (property.endPoint) converted.endPoint = property.endPoint;
+            // Explicit so that duplicate declarations which disagree are reported; false is removed when merging
+            converted.isMeasurement = property.isMeasurement === true;
+            if (property.column) {
+                converted.column = { name: property.column.name ?? property.name, type: property.column.type };
+            }
+            output[name] = converted;
+        } else if (property instanceof Metadata) {
+            output[propertyNameChanger(property.name)] = property.value;
         }
     }
-    const newCommonProperties = Object.create(null);
-    const oldCommonProperties = output.commonProperties.properties;
-    for (const property of oldCommonProperties) {
-        // Handles the case where the comments can be incosistent
-        // We want to ensure that if isMeasurement is ever flagged it gets propogated
-        if (newCommonProperties[propetyNameChanger(property.name)]) {
-            if (property.isMeasurement) newCommonProperties[propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
-            continue;
-        }
-        newCommonProperties[propetyNameChanger(property.name)] = { classification: property.classification, purpose: property.purpose };
-        if (property.endPoint) {
-            newCommonProperties[propetyNameChanger(property.name)]['endPoint'] = property.endPoint;
-        }
-        if (property.isMeasurement) {
-            newCommonProperties[propetyNameChanger(property.name)]['isMeasurement'] = property.isMeasurement;
-        }
-    }
-    return { events: newEvents, commonProperties: newCommonProperties, tableInfos };
+    const tableInfo = event.tableInfo
+        ? { name: event.tableInfo.name, commonProperties: event.tableInfo.commonProperties, backfill: event.tableInfo.backfill }
+        : undefined;
+    return { event: output, tableInfo };
+}
+
+/** Converts a common property to its output shape, keyed by its output name. */
+export function commonPropertyToOutput(property: Property): { name: string; property: Dictionary } {
+    const converted: Dictionary = { classification: property.classification, purpose: property.purpose };
+    if (property.endPoint) converted.endPoint = property.endPoint;
+    // Explicit so that duplicate declarations which disagree are reported; false is removed when merging
+    converted.isMeasurement = property.isMeasurement === true;
+    return { name: propertyNameChanger(property.name), property: converted };
 }
 
 type TypeScriptPropertyDeclaration = {
-    name?: string;
-    isMeasurement?: boolean;
-    type?: string;
-    column?: { name?: string; type?: string }
-}
-type TypeScriptEventDeclaration = {
-    $tableInfo?: unknown;
-    [name: string]: TypeScriptPropertyDeclaration | unknown;
+    isMeasurement?: unknown;
+    type?: unknown;
+    column?: unknown;
 };
 
-export function transformTypeScriptDeclaration(declaration: TypeScriptEventDeclaration): { declaration: object, tableInfo: TableInfo | undefined} {
-    // The property names in the TS events are already all lowercased.
-    const tableInfoProperty = declaration['$tableinfo'];
-    let tableInfo: TableInfo | undefined = undefined;
-    if (tableInfoProperty !== undefined) {
-        delete declaration['$tableinfo'];
-        const json = JsonTableInfo.fromObject(tableInfoProperty);
-        if (json !== undefined) {
-            tableInfo = { name: json.name, commonProperties: json.commonProperties, backfill: json.backfill, columns: [] };
-        }
-    }
-    for (const name of Object.keys(declaration)) {
+/**
+ * Converts the properties resolved from a `publicLog2` call to their output shape.
+ * Property names in TS declarations are already lowercased.
+ */
+export function transformTypeScriptDeclaration(declaration: Dictionary): NormalizedEvent {
+    const event: Dictionary = Object.create(null);
+    let tableInfo: TableHeader | undefined;
+    for (const [name, value] of Object.entries(declaration)) {
         if (name === '$tableinfo') {
+            const json = JsonTableInfo.fromObject(value);
+            if (json) {
+                tableInfo = { name: json.name, commonProperties: json.commonProperties, backfill: json.backfill };
+            }
             continue;
         }
-        const property = declaration[name] as TypeScriptPropertyDeclaration;
-        if (!property || typeof property !== 'object') {
+        if (!value || typeof value !== 'object') {
+            event[name] = value;
             continue;
         }
-        if (tableInfo !== undefined) {
-            if (property.column !== undefined) {
-                if (ColumnInfo.is(property.column)) {
-                    const type = ColumnType.fromString(property.column.type);
-                    if (type !== undefined) {
-                        const bag: BagInfo = { store: property.isMeasurement === true ? 'Measures' : 'Properties', name: name };
-                        tableInfo.columns.push({ name: property.column.name ?? name, type: type, bag });
-                    }
-                }
-            } else if (typeof property.type === 'string') {
-                const columnType = ColumnType.fromString(property.type);
+        const { type, column, ...property } = value as TypeScriptPropertyDeclaration;
+        // Explicit so that duplicate declarations which disagree are reported; false is removed when merging
+        property.isMeasurement = isMeasurementFlag(property.isMeasurement);
+        let columnInfo: { name: string; type: ColumnType } | undefined;
+        if (column !== undefined) {
+            if (ColumnInfo.is(column)) {
+                const columnType = ColumnType.fromString(column.type);
                 if (columnType) {
-                    const bag: BagInfo = { store: property.isMeasurement === true ? 'Measures' : 'Properties', name: name };
-                    tableInfo.columns.push({ name: name, type: columnType, bag });
+                    columnInfo = { name: column.name ?? name, type: columnType };
                 }
             }
+        } else if (typeof type === 'string') {
+            const columnType = ColumnType.fromString(type);
+            if (columnType) {
+                columnInfo = { name, type: columnType };
+            }
         }
-        delete property.type;
-        delete property.column;
+        event[name] = columnInfo ? { ...property, column: columnInfo } : property;
     }
-    return { declaration, tableInfo };
+    return { event, tableInfo };
 }
 
-
-function propetyNameChanger(name: string) {
-    name = name.toLowerCase();
-    if (name.includes('<number>')) {
-        name = name.replace('<number>', '<NUMBER>');
-    }
-    return name;
+function propertyNameChanger(name: string) {
+    return name.toLowerCase().replace('<number>', '<NUMBER>');
 }

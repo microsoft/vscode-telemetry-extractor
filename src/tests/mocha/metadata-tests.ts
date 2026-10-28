@@ -5,6 +5,7 @@ import { Property } from "../../lib/common-properties";
 import { Metadata } from "../../lib/events";
 import { Parser } from "../../lib/parser";
 import { TsParser } from "../../lib/ts-parser";
+import { byEventName } from './assert-helper';
 
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -15,7 +16,7 @@ describe('Metadata parsing tests', function () {
 
   it('TS Parser metadata extraction', async () => {
     const tsParser = new TsParser(metadataSources, [], true, false);
-    const declarations = await tsParser.parseFiles();
+    const declarations = byEventName(await tsParser.parseFiles());
     // Test that event with properties and metadata is extracted properly
     assert.ok(declarations['testEvent']);
     assert.strictEqual(declarations['testEvent']['owner'], 'lramos15');
@@ -48,7 +49,7 @@ describe('Metadata parsing tests', function () {
     assert.strictEqual(declarations.events.dataPoints[0].name, 'testEvent');
     assert.strictEqual(declarations.events.dataPoints[0].properties.length, 4);
     let currentEventProps = declarations.events.dataPoints[0].properties;
-    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', undefined, undefined, 'property'));
+    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', { comment: 'property' }));
     assert.deepStrictEqual(currentEventProps[1], new Metadata('owner', 'lramos15'));
     assert.deepStrictEqual(currentEventProps[2], new Metadata('comment', 'event'));
     assert.deepStrictEqual(currentEventProps[3], new Metadata('expiration', '1.2.3'));
@@ -65,6 +66,6 @@ describe('Metadata parsing tests', function () {
     assert.strictEqual(declarations.events.dataPoints[2].name, 'testEventNoMetadata');
     assert.strictEqual(declarations.events.dataPoints[2].properties.length, 1);
     currentEventProps = declarations.events.dataPoints[2].properties;
-    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', undefined, undefined, 'propertyNoMetadata'));
+    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', { comment: 'propertyNoMetadata' }));
   });
 });

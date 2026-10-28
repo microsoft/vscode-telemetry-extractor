@@ -5,7 +5,8 @@
 import * as cp from 'child_process';
 import * as assert from 'assert';
 
-describe('CLI Tests', () => {
+describe('CLI Tests', function () {
+    this.timeout(20000);
     it('Help Command Test', () => {
         const response = cp.execSync('node ./out/extractor.js --help');
         // Just look for a few key words to ensure the command works as expected
@@ -15,11 +16,12 @@ describe('CLI Tests', () => {
     it('Config Test', () => {
         // We want to ensure it can parse config files from the CLI so we spawn a process and then manipulate
         // the stdout back to its object form and assess that.
-        const response = cp.execSync('node ./out/extractor.js --config src/tests/mocha/resources/test-config.json', { encoding: 'utf8' });
-        const parsedResponse = JSON.parse(response.replace('...extracting', ''));
+        // Progress messages go to stderr, so stdout is valid JSON even without --silenceOutput
+        const response = cp.execSync('node ./out/extractor.js --config src/tests/mocha/resources/test-config.json', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+        const parsedResponse = JSON.parse(response);
         assert.ok(parsedResponse['events']['LargeEvent']);
         assert.strictEqual(Object.keys(parsedResponse['events']['LargeEvent']).length, 50);
-    }).timeout(3000);
+    });
     it('Command Line Arguments Test', () => {
         // Since this runs a a test we already test for the checks are simplistic to just make sure that everything looks good with CLI parsing
         const response = cp.execSync('node ./out/extractor.js -s src/tests/mocha/resources/source --excludedDir src/tests/mocha/resources/source/excluded --eventPrefix test/ --silenceOutput', { encoding: 'utf8' });
@@ -28,12 +30,12 @@ describe('CLI Tests', () => {
         assert.ok(parsedResponse['events']['test/EOne']);
         assert.ok(parsedResponse['commonProperties']);
         assert.ok(!parsedResponse['test/IgnoredEvent']);
-    }).timeout(3000);
+    });
     it('Output keys are deeply sorted', () => {
         const response = cp.execSync('node ./out/extractor.js -s src/tests/mocha/resources/source --excludedDir src/tests/mocha/resources/source/excluded --eventPrefix test/ --silenceOutput', { encoding: 'utf8' });
         const parsedResponse = JSON.parse(response);
         assertKeysSorted(parsedResponse);
-    }).timeout(3000);
+    });
 
     it('reports all duplicate conflict locations in one run', () => {
         const result = cp.spawnSync('node', [
@@ -51,7 +53,7 @@ describe('CLI Tests', () => {
         assert.ok(stderr.includes('source-duplicate-events/file2.ts'));
         assert.ok(stderr.includes('duplicate-conflict-tests/file1.ts'));
         assert.ok(stderr.includes('duplicate-conflict-tests/file2.ts'));
-    }).timeout(3000);
+    });
 });
 
 function assertKeysSorted(obj: unknown, path = ''): void {

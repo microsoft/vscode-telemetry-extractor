@@ -22,7 +22,7 @@ describe('GDPR common property extraction', () => {
 		const parser = new Parser([sourceDir], excludeDirs, true, false);
 		//@ts-expect-error accessing private method for testing
 		const commonProperties = parser.findCommonProperties(sourceDir);
-		assert.deepStrictEqual(commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-		assert.deepStrictEqual(commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined, 'MacAddressHash'));
+		assert.deepStrictEqual(commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none', location: `${path.join(cwd(), 'src/tests/mocha/resources/common-prop.ts')}:8` }));
+		assert.deepStrictEqual(commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', { endPoint: 'MacAddressHash', location: `${path.join(cwd(), 'src/tests/mocha/resources/common-prop.ts')}:10` }));
 	});
 });

@@ -6,84 +6,16 @@ import { ColumnType, ColumnInfo, Property } from "./common-properties";
 import * as keywords from './keywords';
 import * as path from 'path';
 
-export function merge(target: Fragments | Events, source: Fragments | Events) {
+// Combines fragments of the same name, since a fragment may be declared across several comments
+export function mergeFragments(target: Fragments, source: Fragments) {
     for (const item of source.dataPoints) {
-        const found = target.dataPoints.find((f) => {
-            return f.name == item.name;
-        });
-        // We combine their properties together if the event already exists
+        const found = target.dataPoints.find(f => f.name === item.name);
         if (found) {
-            if (target instanceof Events && source instanceof Events && found instanceof Event && item instanceof Event) {
-                if (!eventsAreCompatible(found, item)) {
-                    continue;
-                }
-                if (found.tableInfo === undefined) {
-                    found.tableInfo = item.tableInfo;
-                }
-                // Merge unique properties from source into target
-                for (const prop of item.properties) {
-                    if (prop instanceof Property) {
-                        const exists = found.properties.some(p => p instanceof Property && p.name === prop.name);
-                        if (!exists) {
-                            found.properties.push(prop);
-                        }
-                    } else if (prop instanceof Metadata) {
-                        const exists = found.properties.some(p => p instanceof Metadata && p.name === prop.name);
-                        if (!exists) {
-                            found.properties.push(prop);
-                        }
-                    } else if (prop instanceof Include) {
-                        const existingInclude = found.properties.find(p => p instanceof Include) as Include | undefined;
-                        if (existingInclude) {
-                            for (const name of prop.includeNames) {
-                                if (!existingInclude.includeNames.includes(name)) {
-                                    existingInclude.includeNames.push(name);
-                                }
-                            }
-                        } else {
-                            found.properties.push(new Include([...prop.includeNames]));
-                        }
-                    } else if (prop instanceof Inline) {
-                        const exists = found.properties.some(p => p instanceof Inline && p.inlineName === prop.inlineName);
-                        if (!exists) {
-                            found.properties.push(prop);
-                        }
-                    } else if (prop instanceof Wildcard) {
-                        const existingWildcard = found.properties.find(p => p instanceof Wildcard) as Wildcard | undefined;
-                        if (existingWildcard) {
-                            for (const entry of prop.entries) {
-                                const entryExists = existingWildcard.entries.some(e => e.prefix === entry.prefix);
-                                if (!entryExists) {
-                                    existingWildcard.entries.push(entry);
-                                }
-                            }
-                        } else {
-                            found.properties.push(prop);
-                        }
-                    }
-                }
-                continue;
-            }
             found.properties = found.properties.concat(item.properties);
         } else {
             target.dataPoints.push(item);
         }
     }
-}
-
-function eventsAreCompatible(left: Event, right: Event): boolean {
-    for (const leftProp of left.properties) {
-        if (!(leftProp instanceof Property)) continue;
-        for (const rightProp of right.properties) {
-            if (!(rightProp instanceof Property)) continue;
-            if (leftProp.name === rightProp.name) {
-                if (leftProp.classification !== rightProp.classification || leftProp.purpose !== rightProp.purpose) {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
 }
 
 // Searches the object for an event or fragment of the specific name
@@ -93,33 +25,23 @@ export function findOrCreate(searchTarget: Events | Fragments, name: string) {
         return item.name === name;
     });
     if (!found) {
-        if (searchTarget instanceof Events) {
-            found = new Event(name);
-        } else {
-            found = new Fragment(name);
-        }
+        found = searchTarget instanceof Events ? new Event(name) : new Fragment(name);
+        searchTarget.dataPoints.push(found);
     }
-    searchTarget.dataPoints.push(found);
     return found;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mergeWildcards(wildcard: any[], target: Event | Fragment, applyEndpoints: boolean) {
-    let wildCard = target.properties.find((item) => {
-        return item instanceof Wildcard;
-    }) as Wildcard;
-    // if we don't have a wildcard yet we make one
-    if (!wildCard) {
-        wildCard = new Wildcard();
-        target.properties.push(wildCard);
+type WildcardDeclaration = { [keywords.prefix]: string; [keywords.classification]: { classification: string; purpose: string } };
+
+export function mergeWildcards(entries: WildcardDeclaration[], target: Event | Fragment, applyEndpoints: boolean) {
+    let wildcard = target.properties.find((item): item is Wildcard => item instanceof Wildcard);
+    if (!wildcard) {
+        wildcard = new Wildcard();
+        target.properties.push(wildcard);
     }
-    wildcard.forEach(w => {
-        if (applyEndpoints) {
-            wildCard.entries.push(new WildcardEntry(w[keywords.prefix], w[keywords.classification], 'none'));
-        } else {
-            wildCard.entries.push(new WildcardEntry(w[keywords.prefix], w[keywords.classification]));
-        }
-    });
+    for (const entry of entries) {
+        wildcard.entries.push(new WildcardEntry(entry[keywords.prefix], entry[keywords.classification], applyEndpoints ? 'none' : undefined));
+    }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,13 +63,13 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
             // This is the special case when the property name matches one of our metadata properties
             target.properties.push(new Metadata(propertyName, currentProperty));
         } else {
-            const prop = new Property(propertyName, currentProperty.classification, currentProperty.purpose, currentProperty.expiration, currentProperty.owner, currentProperty.comment);
+            const { classification, purpose, expiration, owner, comment } = currentProperty;
+            const prop = new Property(propertyName, classification, purpose, { expiration, owner, comment });
             if (applyEndpoints) {
-                const endpoint = currentProperty.endpoint ? currentProperty.endpoint : 'none';
-                prop.endPoint = endpoint;
+                prop.endPoint = declaredEndpoint(currentProperty) ?? 'none';
             }
-            if (currentProperty.isMeasurement) {
-                prop.isMeasurement = currentProperty.isMeasurement;
+            if (isMeasurementFlag(currentProperty.isMeasurement)) {
+                prop.isMeasurement = true;
             }
             if (typeof currentProperty.type === 'string') {
                 const columnType = ColumnType.fromString(currentProperty.type);
@@ -176,4 +98,15 @@ export function makeExclusionsRelativeToSource(sourceDir: string, excludedDirs: 
         }
     }
     return relativeExclusions;
+}
+
+// Some annotations declare the flag as the string "true"
+export function isMeasurementFlag(value: unknown): boolean {
+    return value === true || value === 'true';
+}
+
+// Annotations spell the endpoint key both as `endPoint` and `endpoint`
+export function declaredEndpoint(declaration: { endPoint?: unknown; endpoint?: unknown }): string | undefined {
+    const endpoint = declaration.endPoint ?? declaration.endpoint;
+    return typeof endpoint === 'string' && endpoint !== '' ? endpoint : undefined;
 }

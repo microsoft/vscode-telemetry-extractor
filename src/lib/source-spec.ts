@@ -2,66 +2,61 @@
 // Licensed under the MIT license.
 import { PathLike, readFileSync } from 'fs';
 import * as path from 'path';
-import { cwd } from 'process';
+import type { ParserOptions, SourceSpec } from '../../vscode-telemetry-extractor';
 
+export type { ParserOptions, SourceSpec };
 
-export interface ParserOptions {
-    eventPrefix: string;
-    applyEndpoints: boolean;
-    patchDebugEvents: boolean;
-    lowerCaseEvents: boolean;
-    silenceOutput: boolean;
-    verbose: boolean;
+interface ConfigEntry {
+    sourceDirs?: string[];
+    excludedDirs?: string[];
+    workingDir?: string;
+    eventPrefix?: string;
+    applyEndpoints?: boolean;
+    patchDebugEvents?: boolean;
+    lowerCaseEvents?: boolean;
+    silenceOutput?: boolean;
+    /** @deprecated Misspelled alias of `silenceOutput` kept for existing configs */
+    silenceOuput?: boolean;
+    verbose?: boolean;
 }
-
-export interface SourceSpec {
-    sourceDirs: string[],
-    excludedDirs: string[],
-    parserOptions: ParserOptions
-};
 
 export function convertConfigToSourceSpecs(file: PathLike): SourceSpec[] {
+    let config: unknown;
     try {
-        const config = JSON.parse(readFileSync(file).toString());
-        const sourceSpecs: SourceSpec[] = [];
-        for (const key in config) {
-            const spec = config[key];
-            // Some defaults
-            spec.excludedDirs = spec.excludedDirs ? spec.excludedDirs : [];
-            spec.workingDir = spec.workingDir ? spec.workingDir : cwd();
-            spec.patchDebugEvents = spec.patchDebugEvents ? spec.patchDebugEvents : false;
-            spec.lowerCaseEvents = spec.lowerCaseEvents ? spec.lowerCaseEvents : false;
-            const parserOptions: ParserOptions = {
-                eventPrefix: spec.eventPrefix ? spec.eventPrefix : '',
-                applyEndpoints: spec.applyEndpoints,
-                patchDebugEvents: spec.patchDebugEvents,
-                lowerCaseEvents: spec.lowerCaseEvents,
-                silenceOutput: spec.silenceOuput,
-                verbose: spec.verbose
-            }
-            const sourceSpec: SourceSpec = {
-                sourceDirs: resolveDirectories(spec.sourceDirs, spec.workingDir),
-                excludedDirs: resolveDirectories(spec.excludedDirs, spec.workingDir),
-                parserOptions: parserOptions
-            }
-            sourceSpecs.push(sourceSpec);
-        }
-        return sourceSpecs;
-    } catch (err) {
-        console.error(err);
-        return [];
+        config = JSON.parse(readFileSync(file, 'utf8'));
+    } catch (error) {
+        throw new Error(`Unable to read extractor config ${file}: ${error instanceof Error ? error.message : error}`, { cause: error });
     }
-}
-
-// Resolves an array of paths
-function resolveDirectories(dirs: string[], workingDir?: string): string[] {
-    if (workingDir) {
-        if (path.isAbsolute(workingDir)) {
-            return dirs.map(s => path.resolve(workingDir, s));
-        } else {
-            return dirs.map(s => path.resolve(cwd(), workingDir, s));
-        }
-    } else {
-        return dirs.map(s => path.resolve(cwd(), s));
+    if (config === null || typeof config !== 'object') {
+        throw new Error(`Extractor config ${file} must contain an array of source specs`);
     }
+    // Source specs may also be keyed by name
+    const entries = Object.entries(config);
+    if (entries.length === 0) {
+        throw new Error(`Extractor config ${file} does not contain any source specs`);
+    }
+    return entries.map(([key, entry]: [string, unknown]) => {
+        if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+            throw new Error(`Source spec ${key} in ${file} must be an object`);
+        }
+        const spec = entry as ConfigEntry;
+        if (!Array.isArray(spec.sourceDirs) || spec.sourceDirs.length === 0) {
+            throw new Error(`Source spec ${key} in ${file} must list at least one entry in sourceDirs`);
+        }
+        // Relative working directories are resolved against the CWD
+        const workingDir = path.resolve(spec.workingDir ?? '');
+        const resolve = (dirs: string[]) => dirs.map(dir => path.resolve(workingDir, dir));
+        return {
+            sourceDirs: resolve(spec.sourceDirs),
+            excludedDirs: resolve(spec.excludedDirs ?? []),
+            parserOptions: {
+                eventPrefix: spec.eventPrefix ?? '',
+                applyEndpoints: spec.applyEndpoints ?? false,
+                patchDebugEvents: spec.patchDebugEvents ?? false,
+                lowerCaseEvents: spec.lowerCaseEvents ?? false,
+                silenceOutput: spec.silenceOutput ?? spec.silenceOuput ?? false,
+                verbose: spec.verbose ?? false
+            }
+        };
+    });
 }

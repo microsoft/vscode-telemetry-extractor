@@ -8,6 +8,7 @@ import * as assertHelper from './assert-helper';
 import { nameSort } from './declaration-tests';
 import { Property } from '../../lib/common-properties';
 import { getResolvedDeclaration } from '../../lib/save-declarations';
+import { expandFragment } from '../../lib/declarations';
 import { ParserOptions } from '../../lib/source-spec';
 
 const sourceDir = path.join(cwd(), 'src/tests/mocha/resources/source');
@@ -35,8 +36,8 @@ describe('GDPR Fragments', () => {
             assert.ok(fragments.dataPoints);
             fragments.dataPoints = nameSort(fragments.dataPoints);
             assert.strictEqual(fragments.dataPoints.length, 7);
-            assert.deepStrictEqual(fragments.dataPoints[0].properties[0], new Property('property_F0P1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(fragments.dataPoints[0].properties[1], new Property('property_F0P2', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
+            assert.deepStrictEqual(fragments.dataPoints[0].properties[0], new Property('property_F0P1', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(fragments.dataPoints[0].properties[1], new Property('property_F0P2', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
             assert.strictEqual(fragments.dataPoints[1].properties.length, 2);
             assert.strictEqual(fragments.dataPoints[2].properties.length, 2);
             assert.strictEqual(fragments.dataPoints[3].properties.length, 2);
@@ -54,24 +55,23 @@ describe('GDPR Fragments', () => {
                 verbose: false
             };
             const declarations = await getResolvedDeclaration([sourceDir], excludedDirs, parserOptions);
-            const resolvedFragments = declarations.fragments;
-            assert.ok(resolvedFragments.dataPoints);
-            resolvedFragments.dataPoints = nameSort(resolvedFragments.dataPoints);
-            assert.strictEqual(resolvedFragments.dataPoints[6].properties.length, 10);
-            const frag6 = resolvedFragments.dataPoints[6];
+            const fragments = nameSort(declarations.fragments.dataPoints);
+            const frag6 = expandFragment(declarations.fragments, fragments[6].name);
+            assert.deepStrictEqual(frag6.errors, []);
+            assert.strictEqual(frag6.properties.length, 10);
             // Since we know there's no inlines or includes left since it is resolved this is okay
             // They need to be sorted because the order is non deterministic when resolving more than one level deep
             frag6.properties = propertySort(frag6.properties as Array<Property>);
-            assert.deepStrictEqual(frag6.properties[0], new Property('property_F1P1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[1], new Property('property_F1P2', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[2], new Property('property_F2P1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[3], new Property('property_F2P2', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[4], new Property('property_F4P1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[5], new Property('property_F5P1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[6], new Property('property_F5P2.property_F2P1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[7], new Property('property_F5P2.property_F2P2', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[8], new Property('property_F5P2.property_F3P1', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-            assert.deepStrictEqual(frag6.properties[9], new Property('property_F5P2.property_F3P2', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
+            assert.deepStrictEqual(frag6.properties[0], new Property('property_F1P1', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[1], new Property('property_F1P2', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[2], new Property('property_F2P1', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[3], new Property('property_F2P2', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[4], new Property('property_F4P1', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[5], new Property('property_F5P1', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[6], new Property('property_F5P2.property_F2P1', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[7], new Property('property_F5P2.property_F2P2', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[8], new Property('property_F5P2.property_F3P1', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
+            assert.deepStrictEqual(frag6.properties[9], new Property('property_F5P2.property_F3P2', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none' }));
         });
 
         it('Difficult Resolves', async () => {
@@ -85,10 +85,11 @@ describe('GDPR Fragments', () => {
                 verbose: false
             };
             const declarations = await getResolvedDeclaration([hardSource], [], parserOptions);
-            assert.ok(declarations.fragments);
-            declarations.fragments.dataPoints = nameSort(declarations.fragments.dataPoints);
-            assert.strictEqual(declarations.fragments.dataPoints.length, 7);
-            assert.strictEqual(declarations.fragments.dataPoints[5].properties.length, 3);
+            const fragments = nameSort(declarations.fragments.dataPoints);
+            assert.strictEqual(fragments.length, 7);
+            const fragment = expandFragment(declarations.fragments, fragments[5].name);
+            assert.deepStrictEqual(fragment.errors, []);
+            assert.strictEqual(fragment.properties.length, 3);
 
         });
     });

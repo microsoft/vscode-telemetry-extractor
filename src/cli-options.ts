@@ -3,19 +3,6 @@
 import commandLineArgs from 'command-line-args';
 import * as path from 'path';
 
-function resolveDirectories(options: commandLineArgs.CommandLineOptions): commandLineArgs.CommandLineOptions {
-    const cwd = process.cwd();
-
-    if (options.sourceDir) {
-        options.sourceDir = (options.sourceDir as string[]).map(d => path.resolve(cwd, d));
-    }
-    if (options.outputDir) {
-        options.outputDir = path.resolve(cwd, options.outputDir);
-    }
-
-    return options;
-}
-
 export const optionDefinitions = [
     { name: 'sourceDir', alias: 's', description: 'The folder which you want to extract telemetry from (relative to the CWD)', type: String, multiple: true },
     { name: 'excludedDir', alias: 'x', description: 'A subdirectory which you would like to exclude from the extraction (relative to the CWD)', type: String, multiple: true, defaultValue: [] },
@@ -30,5 +17,17 @@ export const optionDefinitions = [
     { name: 'verbose', alias: 'v', type: Boolean, defaultValue: false },
     { name: 'tableInfo', alias: 't', type: Boolean, description: 'Outputs Kusto table information. If no filename is specified the default file name with -tableInfo is used.', defaultValue: false }
 ];
+
+function resolveDirectories(options: commandLineArgs.CommandLineOptions): commandLineArgs.CommandLineOptions {
+    const resolve = (dir: string) => path.resolve(process.cwd(), dir);
+    if (options.sourceDir) {
+        options.sourceDir = (options.sourceDir as string[]).map(resolve);
+    }
+    options.excludedDir = (options.excludedDir as string[]).map(resolve);
+    if (options.outputDir) {
+        options.outputDir = resolve(options.outputDir);
+    }
+    return options;
+}
 
 export const options = resolveDirectories(commandLineArgs(optionDefinitions, { partial: true }));
