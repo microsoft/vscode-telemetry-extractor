@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { Fragments } from "./fragments";
-import { Events, Include, Inline } from "./events";
+import { Fragment, Fragments } from "./fragments";
+import { DeclaredProperty, Events, Include, Inline } from "./events";
 import { CommonProperties, Property } from "./common-properties";
+import { logMessage } from "./logger";
 import type { ExtractedDeclarations } from "../../vscode-telemetry-extractor";
 
 export interface Declarations {
@@ -14,94 +15,86 @@ export interface Declarations {
 // We don't output Fragments as they don't really provide much context on their own
 export type OutputtedDeclarations = ExtractedDeclarations;
 
-function resolveIncludes(target: Events | Fragments, fragments: Fragments) {
-    const notResolved: Array<string> = [];
-    const usedFragments: Array<string> = [];
-    for (const item of target.dataPoints) {
-        for (let i = 0; i < item.properties.length; i++) {
-            const property = item.properties[i];
+class FragmentResolver {
+    private readonly fragments: Map<string, Fragment>;
+    public readonly used = new Set<string>();
+    public readonly errors: string[] = [];
+
+    constructor(fragments: Fragments) {
+        this.fragments = new Map(fragments.dataPoints.map(fragment => [fragment.name, fragment]));
+    }
+
+    /**
+     * Replaces `${include}` and `${inline}` references with the properties of the referenced fragments.
+     * Directly declared properties come first, so they win over fragment properties of the same name.
+     */
+    public expand(properties: readonly DeclaredProperty[], owner: string, stack: readonly string[] = []): DeclaredProperty[] {
+        const declared: DeclaredProperty[] = [];
+        const inlined: DeclaredProperty[] = [];
+        const included: DeclaredProperty[] = [];
+        for (const property of properties) {
             if (property instanceof Include) {
-                // Removes the current include from the array since we have filled it in
-                item.properties = item.properties.filter((val) => {
-                    return val != property;
-                });
-                for (let reference of property.includeNames) {
-                    reference = reference.substring(2, reference.length - 1);
-                    const fragment = fragments.dataPoints.find((f) => {
-                        return f.name === reference;
-                    });
+                for (const reference of property.includeNames) {
+                    const fragment = this.lookup(reference, owner, stack);
                     if (fragment) {
-                        item.properties = item.properties.concat(fragment.properties);
-                        usedFragments.push(fragment.name);
-                    } else {
-                        notResolved.push(reference);
+                        included.push(...this.expand(fragment.properties, owner, [...stack, fragment.name]));
                     }
-                    // This is an inefficient solution, but since adding and removing from the array
-                    // messes up the iteration we just restart it until we can get through the whole loop without any includes
-                    i = 0;
                 }
-            }
-        }
-    }
-    return { target, notResolved, usedFragments };
-}
-
-function resolveInlines(target: Events | Fragments, fragments: Fragments) {
-    const notResolved: Array<string> = [];
-    const usedFragments: Array<string> = [];
-    for (const item of target.dataPoints) {
-        for (let i = 0; i < item.properties.length; i++) {
-            const property = item.properties[i];
-            if (property instanceof Inline) {
-                // Removes the current inline from the array since we are resolving it
-                item.properties = item.properties.filter((val) => {
-                    return val !== property;
-                });
-                for (let reference of property.inlines) {
-                    // Gets rid of the ${}
-                    reference = reference.substring(2, reference.length - 1);
-                    const fragment = fragments.dataPoints.find((f) => {
-                        return f.name === reference;
-                    });
+            } else if (property instanceof Inline) {
+                for (const reference of property.inlines) {
+                    const fragment = this.lookup(reference, owner, stack);
                     if (fragment) {
-                        usedFragments.push(fragment.name);
-                        fragment.properties.forEach((prop) => {
-                            if (prop instanceof Property) {
-                                // We create the new property in the format inlineName.propName keeping the rest the same
-                                const currentProp = new Property(`${property.inlineName}.${prop.name}`, prop.classification, prop.purpose, prop.expiration, prop.owner, prop.comment);
-                                if (prop.endPoint) {
-                                    currentProp.endPoint = prop.endPoint;
-                                }
-                                if (prop.isMeasurement) {
-                                    currentProp.isMeasurement = prop.isMeasurement;
-                                }
-                                item.properties.push(currentProp);
+                        // Inlined fragments contribute their properties, prefixed with the inline name
+                        for (const inlinedProperty of this.expand(fragment.properties, owner, [...stack, fragment.name])) {
+                            if (inlinedProperty instanceof Property) {
+                                inlined.push(inlinedProperty.withName(`${property.inlineName}.${inlinedProperty.name}`));
                             }
-                        });
-                    } else {
-                        notResolved.push(reference);
+                        }
                     }
                 }
+            } else {
+                declared.push(property);
             }
         }
+        return [...declared, ...inlined, ...included];
     }
-    return { target, notResolved, usedFragments };
+
+    private lookup(reference: string, owner: string, stack: readonly string[]): Fragment | undefined {
+        const name = /^\$\{(.*)\}$/.exec(reference)?.[1] ?? reference;
+        const fragment = this.fragments.get(name);
+        if (!fragment) {
+            this.errors.push(`Unresolved fragment reference '${reference}' in ${owner}`);
+            return undefined;
+        }
+        if (stack.includes(name)) {
+            this.errors.push(`Fragment '${name}' includes itself (${[...stack, name].join(' > ')}) in ${owner}`);
+            return undefined;
+        }
+        this.used.add(name);
+        return fragment;
+    }
 }
 
+/** Expands a fragment the way an event which includes it sees it. */
+export function expandFragment(fragments: Fragments, name: string) {
+    const resolver = new FragmentResolver(fragments);
+    const properties = resolver.expand([new Include([`\${${name}}`])], `fragment '${name}'`);
+    return { properties, errors: resolver.errors };
+}
+
+/**
+ * Resolves the fragments referenced by every event.
+ * @returns The declarations with resolved events, and an error for every reference which could not be resolved
+ */
 export function resolveDeclarations(declarations: Declarations, verbose: boolean) {
-    // Fragments are resolved in place, first inlines then includes, so later steps see expanded fragments.
-    const results = [
-        resolveInlines(declarations.fragments, declarations.fragments),
-        resolveInlines(declarations.events, declarations.fragments),
-        resolveIncludes(declarations.fragments, declarations.fragments),
-        resolveIncludes(declarations.events, declarations.fragments)
-    ];
-    if (verbose) {
-        const notResolved = [...new Set(results.flatMap(result => result.notResolved))];
-        const usedFragments = new Set(results.flatMap(result => result.usedFragments));
-        const unusedFragments = [...new Set(declarations.fragments.dataPoints.map(f => f.name).filter(name => !usedFragments.has(name)))];
-        console.log(`Unresolved References: ${notResolved.length > 0 ? notResolved : ['None']}`);
-        console.log(`Unused Fragments: ${unusedFragments.length > 0 ? unusedFragments : ['None']}`);
+    const resolver = new FragmentResolver(declarations.fragments);
+    for (const event of declarations.events.dataPoints) {
+        const location = event.location ? ` at ${event.location.replace(/\\/g, '/')}` : '';
+        event.properties = resolver.expand(event.properties, `event '${event.name}'${location}`);
     }
-    return { events: declarations.events, commonProperties: declarations.commonProperties, fragments: declarations.fragments };
+    if (verbose) {
+        const unused = declarations.fragments.dataPoints.map(fragment => fragment.name).filter(name => !resolver.used.has(name));
+        logMessage(`Unused Fragments: ${unused.length > 0 ? [...new Set(unused)] : ['None']}`);
+    }
+    return { ...declarations, errors: resolver.errors };
 }

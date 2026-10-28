@@ -16,10 +16,6 @@ export interface NormalizedEvent {
  * Converts a resolved `__GDPR__` event (includes and inlines already expanded) to its output shape.
  */
 export function eventToOutput(event: Event): NormalizedEvent {
-    // Event names which end with a number are not supported by the GDPR catalog.
-    if (/\d$/.test(event.name)) {
-        throw new Error(`Event name ${event.name} ends with a number. Event names cannot end with numbers.`);
-    }
     const output: Dictionary = Object.create(null);
     for (const property of event.properties) {
         if (property instanceof Wildcard) {
@@ -36,9 +32,6 @@ export function eventToOutput(event: Event): NormalizedEvent {
             }
         } else if (property instanceof Property) {
             const name = propertyNameChanger(property.name);
-            if (name === 'value') {
-                throw new Error(`Property name 'value' is reserved and cannot be used due to conflicts with the SDK. Please rename the property.`);
-            }
             const existing = output[name] as Dictionary | undefined;
             if (existing) {
                 // A declaration can list a property more than once through fragments; a measurement flag on any of them wins.
@@ -68,23 +61,13 @@ export function eventToOutput(event: Event): NormalizedEvent {
     return { event: output, tableInfo };
 }
 
-export function commonPropertiesToOutput(properties: readonly Property[]): Dictionary {
-    const output: Dictionary = Object.create(null);
-    for (const property of properties) {
-        const name = propertyNameChanger(property.name);
-        const existing = output[name] as Dictionary | undefined;
-        if (existing) {
-            if (property.isMeasurement) {
-                existing.isMeasurement = property.isMeasurement;
-            }
-            continue;
-        }
-        const converted: Dictionary = { classification: property.classification, purpose: property.purpose };
-        if (property.endPoint) converted.endPoint = property.endPoint;
-        if (property.isMeasurement) converted.isMeasurement = property.isMeasurement;
-        output[name] = converted;
-    }
-    return output;
+/** Converts a common property to its output shape, keyed by its output name. */
+export function commonPropertyToOutput(property: Property): { name: string; property: Dictionary } {
+    const converted: Dictionary = { classification: property.classification, purpose: property.purpose };
+    if (property.endPoint) converted.endPoint = property.endPoint;
+    // Explicit so that duplicate declarations which disagree are reported; false is removed when merging
+    converted.isMeasurement = property.isMeasurement === true;
+    return { name: propertyNameChanger(property.name), property: converted };
 }
 
 type TypeScriptPropertyDeclaration = {

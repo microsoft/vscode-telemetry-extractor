@@ -49,7 +49,7 @@ describe('Metadata parsing tests', function () {
     assert.strictEqual(declarations.events.dataPoints[0].name, 'testEvent');
     assert.strictEqual(declarations.events.dataPoints[0].properties.length, 4);
     let currentEventProps = declarations.events.dataPoints[0].properties;
-    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', undefined, undefined, 'property'));
+    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', { comment: 'property' }));
     assert.deepStrictEqual(currentEventProps[1], new Metadata('owner', 'lramos15'));
     assert.deepStrictEqual(currentEventProps[2], new Metadata('comment', 'event'));
     assert.deepStrictEqual(currentEventProps[3], new Metadata('expiration', '1.2.3'));
@@ -66,6 +66,6 @@ describe('Metadata parsing tests', function () {
     assert.strictEqual(declarations.events.dataPoints[2].name, 'testEventNoMetadata');
     assert.strictEqual(declarations.events.dataPoints[2].properties.length, 1);
     currentEventProps = declarations.events.dataPoints[2].properties;
-    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', undefined, undefined, 'propertyNoMetadata'));
+    assert.deepStrictEqual(currentEventProps[0], new Property('testProperty', 'SystemMetaData', 'FeatureInsight', { comment: 'propertyNoMetadata' }));
   });
 });

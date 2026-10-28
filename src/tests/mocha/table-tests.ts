@@ -170,7 +170,7 @@ describe('Flat table - TS definition', () => {
 	it('Parse table instructions', async () => {
 		const tsParser = new TsParser(path.resolve(sourceDir, 'ts-declaration'), [], true, false);
 		const declarations = byEventName(await tsParser.parseFiles());
-		const event = declarations['Event1'];
+		const event = declarations['EndOfLifeEvent'];
 		assert.strictEqual(event.$tableinfo?.name, 'monacoworkbench_inlinecompletion.endoflife');
 		assert.strictEqual(event.$tableinfo?.commonProperties, 'standard');
 		assert.strictEqual(event.$tableinfo?.backfill, false);

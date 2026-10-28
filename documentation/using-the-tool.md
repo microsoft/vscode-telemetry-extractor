@@ -95,8 +95,21 @@ Some defaults:
 2. `excludedDirs` defaults to an empty array
 3. If the working directory provided is relative it must be relative to the current working directory
 
-The extraction fails, rather than producing a partial inventory, if the config file cannot be read, a source directory does not exist,
-or an annotation cannot be parsed. `excludedDirs` apply to both `__GDPR__` comments and `publicLog2` calls.
+`excludedDirs` apply to both `__GDPR__` comments and `publicLog2` calls.
+
+## Validation
+The extraction fails, rather than producing a partial inventory, and reports the location of each problem if:
+
+* the config file cannot be read, or a source directory does not exist
+* a `__GDPR__` comment is not valid JSON, or references a fragment which does not exist or includes itself
+* the data or classification type of a `publicLog2` call cannot be resolved, for example because of a missing import
+* a property's classification is impossible (`never`), which happens when intersected classification types declare it differently
+* a property has no `classification` or `purpose`, or mixes classification fields with nested properties
+* the event name of a classified call is not a string literal
+* an event name ends with a number, or a property is named `value`
+* duplicate declarations of an event or a common property disagree (see below)
+
+Progress messages are written to stderr, so stdout only contains the extracted JSON.
 
 ## Duplicate event declarations
 An event may be declared more than once, for example by several `__GDPR__` comments, by `publicLog2` calls in different files,

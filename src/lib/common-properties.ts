@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { IProperty } from "./telemetry-interfaces";
 
 export class CommonProperties {
     public properties: Array<Property>;
@@ -70,38 +69,49 @@ export namespace ColumnInfo {
     }
 }
 
-export class Property implements IProperty {
-    public name: string;
-    public classification: string;
-    public purpose: string;
-    public endPoint?: string;
-    public isMeasurement?: boolean;
+/** Optional details of a classified property. */
+export interface PropertyDetails {
+    expiration?: string;
+    owner?: string;
+    comment?: string;
+    endPoint?: string;
+    isMeasurement?: boolean;
+    /**
+     * The name and type of the property if mirrored into a flat table in Kusto.
+     * Flat table properties are not allowed in the GDPR catalog, so this is only emitted as table info.
+     */
+    column?: ColumnInfo;
+    /** Where the property was declared, as `path:line`. Only tracked for common properties. */
+    location?: string;
+}
+
+export class Property implements PropertyDetails {
     public expiration?: string;
     public owner?: string;
     public comment?: string;
-
-    // The name and type of the property if mirrored into a flat table in Kusto.
-    // Needs to be removed when generating the patch for the GDPR catalog as
-    // flat table properties are not allowed in the catalog.
+    public endPoint?: string;
+    public isMeasurement?: boolean;
     public column?: ColumnInfo;
+    public location?: string;
 
-    constructor (
-        name: string,
-        classification: string,
-        purpose: string,
-        expiration?: string,
-        owner?: string,
-        comment?: string,
-        endpoint?: string,
-        isMeasurement?: boolean,
+    constructor(
+        public name: string,
+        public classification: string,
+        public purpose: string,
+        details: PropertyDetails = {}
     ) {
-        this.name = name;
-        this.classification = classification;
-        this.purpose = purpose;
-        this.endPoint = endpoint;
-        this.isMeasurement = isMeasurement;
-        this.expiration = expiration;
-        this.owner = owner;
-        this.comment = comment;
+        this.expiration = details.expiration;
+        this.owner = details.owner;
+        this.comment = details.comment;
+        this.endPoint = details.endPoint;
+        this.isMeasurement = details.isMeasurement;
+        this.column = details.column;
+        this.location = details.location;
+    }
+
+    /** Copies the property under another name, as when a fragment is inlined. Column metadata is not copied. */
+    public withName(name: string): Property {
+        const { expiration, owner, comment, endPoint, isMeasurement } = this;
+        return new Property(name, this.classification, this.purpose, { expiration, owner, comment, endPoint, isMeasurement });
     }
 }

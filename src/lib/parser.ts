@@ -6,7 +6,7 @@ import { Fragments } from './fragments';
 import { Property, CommonProperties } from './common-properties';
 import { Events, Event, TableInfo } from './events';
 import { Declarations } from './declarations';
-import { mergeFragments, findOrCreate, populateProperties, makeExclusionsRelativeToSource, isMeasurementFlag } from './operations';
+import { mergeFragments, findOrCreate, populateProperties, makeExclusionsRelativeToSource, isMeasurementFlag, declaredEndpoint } from './operations';
 import { findFilesWithRipgrep } from './ripgrep';
 
 /**
@@ -62,14 +62,15 @@ export class Parser {
 
         const commonPropertyMatcher = /\/\/\s*__GDPR__COMMON__(.*)$/mg;
         const commonPropertyDeclarations = new CommonProperties();
-        this.extractComments(filesWithCommonProperties, commonPropertyMatcher, (filePath, match) => {
+        this.extractComments(filesWithCommonProperties, commonPropertyMatcher, (filePath, match, fileContents) => {
             try {
                 const commonPropertyDeclaration = JSON.parse(`{ ${match[1]} }`);
                 const propertyName = Object.keys(commonPropertyDeclaration)[0];
                 const properties = commonPropertyDeclaration[propertyName];
-                const prop = new Property(propertyName, properties.classification, properties.purpose);
+                const location = `${filePath}:${getLineNumber(fileContents, match.index)}`;
+                const prop = new Property(propertyName, properties.classification, properties.purpose, { location });
                 if (this.applyEndpoints) {
-                    prop.endPoint = properties.endPoint ? properties.endPoint : 'none';
+                    prop.endPoint = declaredEndpoint(properties) ?? 'none';
                 }
                 if (isMeasurementFlag(properties.isMeasurement)) {
                     prop.isMeasurement = true;

@@ -98,14 +98,54 @@ export function mergeEventDeclarations(declarations: readonly EventDeclaration[]
     return { events, tableInfos, conflicts };
 }
 
-export function formatConflicts(conflicts: readonly DeclarationConflict[]): string[] {
+/**
+ * Merges every declaration of each common property, which must agree in the same way as events.
+ * Each declaration's `event` is the common property itself.
+ */
+export function mergeCommonPropertyDeclarations(declarations: readonly EventDeclaration[]) {
+    const { events: commonProperties, conflicts } = mergeEventDeclarations(declarations);
+    for (const property of Object.values(commonProperties)) {
+        if (property.isMeasurement === false) {
+            delete property.isMeasurement;
+        }
+    }
+    return { commonProperties, conflicts };
+}
+
+/**
+ * Finds declarations which the GDPR catalog or the telemetry SDK would reject or misinterpret.
+ */
+export function validateDeclarations(declarations: readonly EventDeclaration[]): string[] {
+    const errors = new Set<string>();
+    for (const { name, event, location, source } of declarations) {
+        const where = formatLocation({ location, source });
+        if (/\d$/.test(name)) {
+            errors.add(`Event name '${name}' at ${where} ends with a number. Event names cannot end with numbers.`);
+        }
+        for (const [propertyName, property] of Object.entries(event)) {
+            if (!isDictionary(property)) {
+                continue;
+            }
+            if (propertyName === 'value') {
+                errors.add(`Property name 'value' on event '${name}' at ${where} is reserved and cannot be used due to conflicts with the SDK. Please rename the property.`);
+            }
+            const missing = ['classification', 'purpose'].filter(field => typeof property[field] !== 'string' || property[field] === '');
+            if (missing.length > 0) {
+                errors.add(`Property '${propertyName}' on event '${name}' at ${where} is missing ${missing.join(' and ')}.`);
+            }
+        }
+    }
+    return [...errors];
+}
+
+export function formatConflicts(conflicts: readonly DeclarationConflict[], kind = 'event'): string[] {
     const lines: string[] = [];
     const byEvent = new Map<string, DeclarationConflict[]>();
     for (const conflict of conflicts) {
         byEvent.set(conflict.eventName, [...(byEvent.get(conflict.eventName) ?? []), conflict]);
     }
     for (const [eventName, eventConflicts] of byEvent) {
-        lines.push(`Duplicate telemetry event declaration '${eventName}' has conflicting details at:`);
+        lines.push(`Duplicate telemetry ${kind} declaration '${eventName}' has conflicting details at:`);
         const locations = new Set(eventConflicts.flatMap(conflict => conflict.declarations.map(formatLocation)));
         for (const location of locations) {
             lines.push(` - ${location}`);

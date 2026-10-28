@@ -5,14 +5,13 @@ import * as path from 'path';
 import { Parser } from './parser';
 import * as fileWriter from './file-writer';
 import { resolveDeclarations, OutputtedDeclarations } from './declarations';
-import { commonPropertiesToOutput, eventToOutput, transformTypeScriptDeclaration } from './object-converter';
+import { commonPropertyToOutput, eventToOutput, transformTypeScriptDeclaration } from './object-converter';
 import { Events } from './events';
-import { Property } from './common-properties';
 import { TsParser } from './ts-parser';
 import { patchDebugEvents } from './debug-patch';
 import { ParserOptions, SourceSpec } from './source-spec';
 import { logMessage } from './logger';
-import { EventDeclaration, formatConflicts, mergeEventDeclarations } from './event-declarations';
+import { EventDeclaration, formatConflicts, mergeCommonPropertyDeclarations, mergeEventDeclarations, validateDeclarations } from './event-declarations';
 import { deepSortKeys } from './object-utils';
 
 export async function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
@@ -31,26 +30,46 @@ export async function getResolvedDeclaration(sourceDirs: Array<string>, excluded
     return resolveDeclarations(await parser.extractDeclarations(), options.verbose);
 }
 
+interface CollectedDeclarations {
+    events: EventDeclaration[];
+    commonProperties: EventDeclaration[];
+    /** Problems already reported while collecting. Specs which share a source directory report the same problem once. */
+    reported: Set<string>;
+    parseErrorCount: number;
+}
+
 /**
- * Collects every event declaration from a source spec, normalized to its output shape.
- * @returns The number of annotations which could not be parsed
+ * Collects every event and common property declaration from a source spec, normalized to its output shape.
  */
-async function collectDeclarations(spec: SourceSpec, declarations: EventDeclaration[], commonProperties: Property[]): Promise<number> {
+async function collectDeclarations(spec: SourceSpec, collected: CollectedDeclarations) {
     const { eventPrefix, applyEndpoints, lowerCaseEvents, verbose, silenceOutput } = spec.parserOptions;
     logMessage('...extracting', silenceOutput);
+    const report = (errors: readonly string[]) => {
+        for (const error of errors) {
+            if (!collected.reported.has(error)) {
+                collected.reported.add(error);
+                console.error(error);
+            }
+        }
+    };
 
     const parser = new Parser(spec.sourceDirs, spec.excludedDirs, applyEndpoints, lowerCaseEvents);
     const gdpr = resolveDeclarations(await parser.extractDeclarations(), verbose);
-    commonProperties.push(...gdpr.commonProperties.properties);
+    collected.parseErrorCount += parser.errorCount;
+    report(gdpr.errors);
+    for (const property of gdpr.commonProperties.properties) {
+        const { name, property: output } = commonPropertyToOutput(property);
+        collected.commonProperties.push({ name, location: property.location ?? 'unknown', source: 'GDPR', event: output });
+    }
     for (const event of gdpr.events.dataPoints) {
-        declarations.push({ name: eventPrefix + event.name, location: event.location ?? 'unknown', source: 'GDPR', ...eventToOutput(event) });
+        collected.events.push({ name: eventPrefix + event.name, location: event.location ?? 'unknown', source: 'GDPR', ...eventToOutput(event) });
     }
 
     if (spec.parserOptions.patchDebugEvents) {
         const patched = new Events();
         patchDebugEvents(patched, eventPrefix);
         for (const event of patched.dataPoints) {
-            declarations.push({ name: event.name, location: 'patchDebugEvents', source: 'debug-patch', ...eventToOutput(event) });
+            collected.events.push({ name: event.name, location: 'patchDebugEvents', source: 'debug-patch', ...eventToOutput(event) });
         }
     }
 
@@ -58,10 +77,10 @@ async function collectDeclarations(spec: SourceSpec, declarations: EventDeclarat
     for (const dir of spec.sourceDirs) {
         const tsParser = new TsParser(dir, spec.excludedDirs, applyEndpoints, lowerCaseEvents);
         for (const declaration of await tsParser.parseFiles()) {
-            declarations.push({ name: eventPrefix + declaration.name, location: declaration.location, source: 'TS', ...transformTypeScriptDeclaration(declaration.properties) });
+            collected.events.push({ name: eventPrefix + declaration.name, location: declaration.location, source: 'TS', ...transformTypeScriptDeclaration(declaration.properties) });
         }
+        report(tsParser.errors);
     }
-    return parser.errorCount;
 }
 
 /**
@@ -81,7 +100,7 @@ function findOverloadedProperties(declarations: OutputtedDeclarations): string[]
 
 /**
  * Extracts every event, merging duplicate declarations of the same event across all source specs.
- * Rejects if an annotation cannot be parsed, if duplicate declarations disagree, or if a source directory is missing.
+ * Rejects if an annotation cannot be parsed or resolved, if duplicate declarations disagree, or if a source directory is missing.
  */
 export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<OutputtedDeclarations> {
     // A missing checkout must not look like a repository without telemetry.
@@ -91,23 +110,27 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
         throw new Error(`${missingDirs.length} source ${missingDirs.length === 1 ? 'directory does' : 'directories do'} not exist`);
     }
 
-    const declarations: EventDeclaration[] = [];
-    const commonProperties: Property[] = [];
-    let annotationErrors = 0;
+    const collected: CollectedDeclarations = { events: [], commonProperties: [], reported: new Set(), parseErrorCount: 0 };
     for (const spec of sourceSpecs) {
-        annotationErrors += await collectDeclarations(spec, declarations, commonProperties);
+        await collectDeclarations(spec, collected);
     }
 
-    const merged = mergeEventDeclarations(declarations);
+    const events = mergeEventDeclarations(collected.events);
+    const common = mergeCommonPropertyDeclarations(collected.commonProperties);
     const output: OutputtedDeclarations = {
-        events: merged.events as OutputtedDeclarations['events'],
-        commonProperties: commonPropertiesToOutput(commonProperties) as OutputtedDeclarations['commonProperties'],
-        tableInfos: merged.tableInfos
+        events: events.events as OutputtedDeclarations['events'],
+        commonProperties: common.commonProperties as unknown as OutputtedDeclarations['commonProperties'],
+        tableInfos: events.tableInfos
     };
 
-    const errors = [...formatConflicts(merged.conflicts), ...findOverloadedProperties(output)];
+    const errors = [
+        ...validateDeclarations(collected.events),
+        ...formatConflicts(events.conflicts),
+        ...formatConflicts(common.conflicts, 'common property'),
+        ...findOverloadedProperties(output)
+    ];
     errors.forEach(error => console.error(error));
-    if (annotationErrors > 0 || errors.length > 0) {
+    if (collected.parseErrorCount > 0 || collected.reported.size > 0 || errors.length > 0) {
         throw new Error('Validation failed, please see logs for more information');
     }
     return deepSortKeys(output);

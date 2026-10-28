@@ -41,4 +41,4 @@ const sentEvent: InlineCompletionEndOfLifeEvent = {
 	preceeded: false
 };
 
-publicLog2<InlineCompletionEndOfLifeEvent, InlineCompletionsEndOfLifeClassification>('Event1', sentEvent);
+publicLog2<InlineCompletionEndOfLifeEvent, InlineCompletionsEndOfLifeClassification>('EndOfLifeEvent', sentEvent);

@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-import { IInclude, ITelemetryDataPoint, ITelemetryData, IInline, IWildcard, IWildcardEntry, IMetadata } from './telemetry-interfaces';
 import { Property } from './common-properties';
 
 
-export class Events implements ITelemetryData {
+export class Events {
     public dataPoints: Array<Event>;
     constructor () {
         this.dataPoints = [];
@@ -41,10 +40,9 @@ export namespace TableInfo {
     }
 }
 
-export class Event implements ITelemetryDataPoint {
+export class Event {
     public name: string;
-    // It gets a little more complicated here as events can have a bunch of different things
-    public properties: Array<Property | Metadata | Include | Inline | Wildcard>;
+    public properties: DeclaredProperty[];
     public tableInfo?: TableInfo;
     /** Where the event was declared, as `path:line`. */
     public location?: string;
@@ -56,14 +54,14 @@ export class Event implements ITelemetryDataPoint {
     }
 }
 
-export class Include implements IInclude {
+export class Include {
     public includeNames: Array<string>;
     constructor (includeNames: Array<string>) {
         this.includeNames = includeNames;
     }
 }
 
-export class Inline implements IInline {
+export class Inline {
     public inlineName: string;
     public inlines: Array<string>;
     constructor (name: string, inlines: Array<string>) {
@@ -72,14 +70,14 @@ export class Inline implements IInline {
     }
 }
 
-export class Wildcard implements IWildcard {
+export class Wildcard {
     public entries: Array<WildcardEntry>;
     constructor () {
         this.entries = [];
     }
 }
 
-export class WildcardEntry implements IWildcardEntry {
+export class WildcardEntry {
     public prefix: string;
     public classification: {classification: string, purpose: string};
     public endpoint: string | undefined;
@@ -90,17 +88,14 @@ export class WildcardEntry implements IWildcardEntry {
     }
 }
 
-export class Metadata implements IMetadata {
+export class Metadata {
     public name: 'owner' | 'comment' | 'expiration';
     public value: string;
     constructor (name: 'owner' | 'comment' | 'expiration', value: string) {
         this.name = name;
         this.value = value;
     }
-
-    simpleObject(): {[key: string]: string} {
-        const simple = Object.create(null);
-        simple[this.name] = this.value;
-        return simple;
-    }
 }
+
+/** Everything an event or fragment annotation can contain before fragments are resolved. */
+export type DeclaredProperty = Property | Metadata | Include | Inline | Wildcard;

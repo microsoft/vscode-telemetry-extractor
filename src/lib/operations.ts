@@ -31,23 +31,17 @@ export function findOrCreate(searchTarget: Events | Fragments, name: string) {
     return found;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function mergeWildcards(wildcard: any[], target: Event | Fragment, applyEndpoints: boolean) {
-    let wildCard = target.properties.find((item) => {
-        return item instanceof Wildcard;
-    }) as Wildcard;
-    // if we don't have a wildcard yet we make one
-    if (!wildCard) {
-        wildCard = new Wildcard();
-        target.properties.push(wildCard);
+type WildcardDeclaration = { [keywords.prefix]: string; [keywords.classification]: { classification: string; purpose: string } };
+
+export function mergeWildcards(entries: WildcardDeclaration[], target: Event | Fragment, applyEndpoints: boolean) {
+    let wildcard = target.properties.find((item): item is Wildcard => item instanceof Wildcard);
+    if (!wildcard) {
+        wildcard = new Wildcard();
+        target.properties.push(wildcard);
     }
-    wildcard.forEach(w => {
-        if (applyEndpoints) {
-            wildCard.entries.push(new WildcardEntry(w[keywords.prefix], w[keywords.classification], 'none'));
-        } else {
-            wildCard.entries.push(new WildcardEntry(w[keywords.prefix], w[keywords.classification]));
-        }
-    });
+    for (const entry of entries) {
+        wildcard.entries.push(new WildcardEntry(entry[keywords.prefix], entry[keywords.classification], applyEndpoints ? 'none' : undefined));
+    }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,10 +63,10 @@ export function populateProperties(properties: any, target: Event | Fragment, ap
             // This is the special case when the property name matches one of our metadata properties
             target.properties.push(new Metadata(propertyName, currentProperty));
         } else {
-            const prop = new Property(propertyName, currentProperty.classification, currentProperty.purpose, currentProperty.expiration, currentProperty.owner, currentProperty.comment);
+            const { classification, purpose, expiration, owner, comment } = currentProperty;
+            const prop = new Property(propertyName, classification, purpose, { expiration, owner, comment });
             if (applyEndpoints) {
-                const endpoint = currentProperty.endpoint ? currentProperty.endpoint : 'none';
-                prop.endPoint = endpoint;
+                prop.endPoint = declaredEndpoint(currentProperty) ?? 'none';
             }
             if (isMeasurementFlag(currentProperty.isMeasurement)) {
                 prop.isMeasurement = true;
@@ -109,4 +103,10 @@ export function makeExclusionsRelativeToSource(sourceDir: string, excludedDirs: 
 // Some annotations declare the flag as the string "true"
 export function isMeasurementFlag(value: unknown): boolean {
     return value === true || value === 'true';
+}
+
+// Annotations spell the endpoint key both as `endPoint` and `endpoint`
+export function declaredEndpoint(declaration: { endPoint?: unknown; endpoint?: unknown }): string | undefined {
+    const endpoint = declaration.endPoint ?? declaration.endpoint;
+    return typeof endpoint === 'string' && endpoint !== '' ? endpoint : undefined;
 }

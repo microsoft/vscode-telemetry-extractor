@@ -31,8 +31,8 @@ describe('GDPR Declaration Tests', () => {
         assert.strictEqual(declarations.events.dataPoints.length, 5);
         assert.strictEqual(declarations.fragments.dataPoints.length, 7);
         assert.strictEqual(declarations.commonProperties.properties.length, 2);
-        assert.deepStrictEqual(declarations.commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', undefined, undefined, undefined, 'none'));
-        assert.deepStrictEqual(declarations.commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', undefined, undefined, undefined, 'MacAddressHash'));
+        assert.deepStrictEqual(declarations.commonProperties.properties[0], new Property('timestamp', 'SystemMetaData', 'FeatureInsight', { endPoint: 'none', location: `${path.join(cwd(), 'src/tests/mocha/resources/source/lib/telemetry.ts')}:9` }));
+        assert.deepStrictEqual(declarations.commonProperties.properties[1], new Property('machineid', 'EndUserPseudonymizedInformation', 'FeatureInsight', { endPoint: 'MacAddressHash', location: `${path.join(cwd(), 'src/tests/mocha/resources/source/lib/telemetry.ts')}:11` }));
         // We don't care what order they're read in but we want to have a consistent order so we sort them
         declarations.events.dataPoints = nameSort(declarations.events.dataPoints);
         assert.strictEqual(declarations.events.dataPoints[0].name, 'EFour');

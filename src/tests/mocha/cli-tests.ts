@@ -16,8 +16,9 @@ describe('CLI Tests', function () {
     it('Config Test', () => {
         // We want to ensure it can parse config files from the CLI so we spawn a process and then manipulate
         // the stdout back to its object form and assess that.
-        const response = cp.execSync('node ./out/extractor.js --config src/tests/mocha/resources/test-config.json', { encoding: 'utf8' });
-        const parsedResponse = JSON.parse(response.replace('...extracting', ''));
+        // Progress messages go to stderr, so stdout is valid JSON even without --silenceOutput
+        const response = cp.execSync('node ./out/extractor.js --config src/tests/mocha/resources/test-config.json', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+        const parsedResponse = JSON.parse(response);
         assert.ok(parsedResponse['events']['LargeEvent']);
         assert.strictEqual(Object.keys(parsedResponse['events']['LargeEvent']).length, 50);
     });

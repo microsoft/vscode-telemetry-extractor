@@ -73,7 +73,7 @@ describe('TS Parser batches', function () {
                 import type { ImportedData, ImportedClassification } from 'fixture';
                 type Data = GlobalData & AmbientData & ImportedData;
                 type Classification = Readonly<GlobalClassification & AmbientClassification & ImportedClassification>;
-                const recordedEvent = 'BatchEvent${index}' as const;
+                const recordedEvent = 'Batch${index}Event' as const;
                 publicLog2<Data, Classification>(recordedEvent, {} as Data);
                 ${index === 64 ? "publicLog2<Data, Classification>('CallOrder', {} as Data);" : ''}
                 ${index === 0 ? "publicLogError2('CallOrder');" : ''}
@@ -106,7 +106,7 @@ describe('TS Parser batches', function () {
             const events = byEventName(actual);
             assert.strictEqual(Object.keys(events).length, 66);
             for (let index = 0; index < 65; index++) {
-                const event = events[lowerCaseEvents ? `batchevent${index}` : `BatchEvent${index}`];
+                const event = events[lowerCaseEvents ? `batch${index}event` : `Batch${index}Event`];
                 assert.deepStrictEqual(Object.keys(event).sort(), ['ambient', 'count', 'enabled', 'remote']);
                 assert.strictEqual(event.count.isMeasurement, true);
                 assert.strictEqual(event.enabled.isMeasurement, true);
