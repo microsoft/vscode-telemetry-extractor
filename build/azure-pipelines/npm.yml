@@ -35,11 +35,11 @@ extends:
 
         testPlatforms:
           - name: Linux
-            nodeVersions: [22.x]
+            nodeVersions: [24.x]
           - name: MacOS
-            nodeVersions: [22.x]
+            nodeVersions: [24.x]
           - name: Windows
-            nodeVersions: [22.x]
+            nodeVersions: [24.x]
 
         testSteps:
           - script: npm ci

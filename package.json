@@ -17,7 +17,7 @@
     "url": "https://github.com/microsoft/vscode-telemetry-extractor"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=24"
   },
   "scripts": {
     "compile": "tsc",
@@ -39,7 +39,7 @@
     "@eslint/js": "^10.0.1",
     "@types/command-line-args": "^5.2.3",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^20.19.43",
+    "@types/node": "^24.19.2",
     "c8": "^12.0.0",
     "eslint": "^10.13.0",
     "mocha": "^12.0.3",

@@ -1,7 +1,7 @@
 // See https://aka.ms/devcontainer.json for format details.
 {
 	"name": "Node.js & TypeScript",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:24",
 	"postCreateCommand": "npm ci && npm run compile",
 	"customizations": {
 		"vscode": {

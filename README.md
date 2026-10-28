@@ -5,7 +5,7 @@ produces a JSON file containing the telemetry events which are collected.
 
 ## Prerequisites
 
-* Node.js 20.19 or later installed and in your path
+* Node.js 24 or later installed and in your path
 
 ## Setup
 
