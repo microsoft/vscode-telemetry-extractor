@@ -46,10 +46,13 @@ export class Event implements ITelemetryDataPoint {
     // It gets a little more complicated here as events can have a bunch of different things
     public properties: Array<Property | Metadata | Include | Inline | Wildcard>;
     public tableInfo?: TableInfo;
-    constructor (name: string) {
+    /** Where the event was declared, as `path:line`. */
+    public location?: string;
+    constructor (name: string, location?: string) {
         this.name =  name;
         this.properties = [];
         this.tableInfo = undefined;
+        this.location = location;
     }
 }
 

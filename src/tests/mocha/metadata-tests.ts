@@ -5,6 +5,7 @@ import { Property } from "../../lib/common-properties";
 import { Metadata } from "../../lib/events";
 import { Parser } from "../../lib/parser";
 import { TsParser } from "../../lib/ts-parser";
+import { byEventName } from './assert-helper';
 
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -15,7 +16,7 @@ describe('Metadata parsing tests', function () {
 
   it('TS Parser metadata extraction', async () => {
     const tsParser = new TsParser(metadataSources, [], true, false);
-    const declarations = await tsParser.parseFiles();
+    const declarations = byEventName(await tsParser.parseFiles());
     // Test that event with properties and metadata is extracted properly
     assert.ok(declarations['testEvent']);
     assert.strictEqual(declarations['testEvent']['owner'], 'lramos15');

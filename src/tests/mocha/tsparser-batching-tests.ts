@@ -7,6 +7,7 @@ import * as path from 'path';
 import { Project } from 'ts-morph';
 import { runParserWorker, TsParser, TsProjectParser } from '../../lib/ts-parser';
 import { extractAndResolveDeclarations } from '../../lib/save-declarations';
+import { byEventName } from './assert-helper';
 
 describe('TS Parser batches', function () {
     this.timeout(20000);
@@ -99,20 +100,20 @@ describe('TS Parser batches', function () {
             const parser = new TsParser(directory, [], applyEndpoints, lowerCaseEvents);
             const actual = await parser.parseFiles();
 
+            // Every call is returned, in the same order, whether or not it was parsed in a batch.
             assert.deepStrictEqual(JSON.parse(JSON.stringify(actual)), JSON.parse(JSON.stringify(expected)));
-            assert.deepStrictEqual(
-                JSON.parse(JSON.stringify([...parser.getEventDefinitions()])),
-                JSON.parse(JSON.stringify([...reference.getEventDefinitions()]))
-            );
-            assert.strictEqual(Object.keys(actual).length, 66);
+            assert.strictEqual(actual.length, 67);
+            const events = byEventName(actual);
+            assert.strictEqual(Object.keys(events).length, 66);
             for (let index = 0; index < 65; index++) {
-                const event = actual[lowerCaseEvents ? `batchevent${index}` : `BatchEvent${index}`];
+                const event = events[lowerCaseEvents ? `batchevent${index}` : `BatchEvent${index}`];
                 assert.deepStrictEqual(Object.keys(event).sort(), ['ambient', 'count', 'enabled', 'remote']);
                 assert.strictEqual(event.count.isMeasurement, true);
                 assert.strictEqual(event.enabled.isMeasurement, true);
                 assert.strictEqual(event.count.endPoint, applyEndpoints ? 'MacAddressHash' : undefined);
             }
-            assert.deepStrictEqual(actual[lowerCaseEvents ? 'callorder' : 'CallOrder'], {});
+            // The unclassified publicLogError2 call must not discard the classified declaration of the same event.
+            assert.deepStrictEqual(Object.keys(events[lowerCaseEvents ? 'callorder' : 'CallOrder']).sort(), ['ambient', 'count', 'enabled', 'remote']);
 
             const resolved = await extractAndResolveDeclarations([{
                 sourceDirs: [directory],
@@ -128,7 +129,7 @@ describe('TS Parser batches', function () {
             }]);
             assert.deepStrictEqual(
                 JSON.parse(JSON.stringify(resolved.events)),
-                JSON.parse(JSON.stringify(expected))
+                JSON.parse(JSON.stringify(byEventName(expected)))
             );
         });
     }
@@ -143,8 +144,7 @@ describe('TS Parser batches', function () {
             `);
         }
         const parser = new TsParser(directory, [], true, false);
-        assert.deepStrictEqual(Object.keys(await parser.parseFiles()), []);
-        assert.strictEqual(parser.getEventDefinitions().size, 0);
+        assert.deepStrictEqual(await parser.parseFiles(), []);
     });
 
     it('propagates worker failures instead of returning partial declarations', async () => {
@@ -154,9 +154,7 @@ describe('TS Parser batches', function () {
             sharedSourceFiles: [],
             compilerOptions: {},
             applyEndpoints: true,
-            lowerCaseEvents: false,
-            events: {},
-            definitions: []
+            lowerCaseEvents: false
         }), /missing\.ts/);
     });
 

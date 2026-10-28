@@ -7,64 +7,50 @@
         {
             "type": "node",
             "request": "launch",
-            "protocol": "inspector",
             "name": "Extract Core Declarations",
-            "program": "${workspaceRoot}/out/extractor.js",
+            "program": "${workspaceFolder}/out/extractor.js",
+            "preLaunchTask": "npm: compile",
             "args": [
-                "--sourceDir=${workspaceRoot}/src/telemetry-sources/vscode",
-                "--excludedDir=src/telemetry-sources/vscode/extensions",
-                "--outputDir=${workspaceRoot}",
+                "--sourceDir=${workspaceFolder}/src/telemetry-sources/vscode",
+                "--excludedDir=${workspaceFolder}/src/telemetry-sources/vscode/extensions",
+                "--outputDir=${workspaceFolder}",
                 "--applyEndpoints",
                 "--lowerCaseEvents"
-
             ]
         },
         {
             "type": "node",
             "request": "launch",
-            "protocol": "inspector",
             "name": "Extract Extensions Declarations",
-            "program": "${workspaceRoot}/out/extractor.js",
+            "program": "${workspaceFolder}/out/extractor.js",
+            "preLaunchTask": "npm: compile",
             "args": [
-                "--sourceDir=${workspaceRoot}/src/telemetry-sources/",
-                "--outputDir=${workspaceRoot}",
+                "--sourceDir=${workspaceFolder}/src/telemetry-sources/",
+                "--outputDir=${workspaceFolder}",
                 "--applyEndpoints"
             ]
         },
         {
             "type": "node",
             "request": "launch",
-            "protocol": "inspector",
             "name": "Config Test",
-            "program": "${workspaceRoot}/out/extractor.js",
+            "program": "${workspaceFolder}/out/extractor.js",
+            "preLaunchTask": "npm: compile",
             "args": [
-                "--config=${workspaceRoot}/src/tests/mocha/resources/test-config.json"
+                "--config=${workspaceFolder}/src/tests/mocha/resources/test-config.json"
             ]
         },
         {
             "type": "node",
             "request": "launch",
-            "protocol": "inspector",
-            "name": "Merge Telemetry",
-            "program": "${workspaceRoot}/out/merge.js"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "protocol": "inspector",
-            "name": "Test Declarations",
-            "program": "${workspaceRoot}/out/tests/compareObjects.js"
-        },
-        {
-            "type": "node",
-            "request": "launch",
             "name": "Mocha All",
-            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/mocha.js",
+            "preLaunchTask": "npm: compile",
             "args": [
                 "--timeout",
                 "999999",
                 "--colors",
-                "${workspaceRoot}/out/tests/mocha"
+                "${workspaceFolder}/out/tests/mocha/*.js"
             ],
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"

@@ -3,44 +3,63 @@
   "version": "1.20.5",
   "description": "Extracts telemetry from VS Code",
   "main": "out/index.js",
-  "typings": "vscode-telemetry-extractor.d.ts",
+  "types": "vscode-telemetry-extractor.d.ts",
+  "bin": {
+    "vscode-telemetry-extractor": "./out/extractor.js"
+  },
+  "files": [
+    "out",
+    "!out/tests",
+    "vscode-telemetry-extractor.d.ts"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/vscode-telemetry-extractor"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.19.0"
   },
   "scripts": {
     "compile": "tsc",
-    "coverage": "nyc mocha out/tests/mocha/*.js",
-    "extract-core": "node ./out/extractor.js --sourceDir src/telemetry-sources/vscode --excludedDir src/telemetry-sources/vscode/extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints -f telemetry",
-    "extract-core-verbose": "node ./out/extractor.js --sourceDir src/telemetry-sources/vscode --excludedDir src/telemetry-sources/vscode/extensions --eventPrefix monacoworkbench/  --outputDir . --applyEndpoints --silent --verbose",
+    "watch": "tsc --watch",
     "lint": "eslint .",
-    "test": "mocha --timeout 5000 out/tests/mocha/*.js",
-    "watch": "tsc --watch"
-  },
-  "bin": {
-    "vscode-telemetry-extractor": "./out/extractor.js"
+    "test": "mocha --timeout 20000 out/tests/mocha/*.js",
+    "coverage": "c8 npm test",
+    "extract-core": "node ./out/extractor.js --sourceDir src/telemetry-sources/vscode --excludedDir src/telemetry-sources/vscode/extensions --eventPrefix monacoworkbench/ --outputDir . --applyEndpoints -f telemetry",
+    "extract-core-verbose": "node ./out/extractor.js --sourceDir src/telemetry-sources/vscode --excludedDir src/telemetry-sources/vscode/extensions --eventPrefix monacoworkbench/ --outputDir . --applyEndpoints --silenceOutput --verbose"
   },
   "author": "lramos15",
   "license": "MIT",
   "dependencies": {
-    "@vscode/ripgrep": "^1.15.10",
-    "command-line-args": "^6.0.1",
-    "ts-morph": "^25.0.1"
+    "@vscode/ripgrep": "^1.18.0",
+    "command-line-args": "^6.0.2",
+    "ts-morph": "^28.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^10.0.1",
     "@types/command-line-args": "^5.2.3",
-    "@types/mocha": "^10.0.6",
-    "@types/node": "^18.18.2",
-    "eslint": "^9.39.2",
-    "mocha": "^12.0.0",
-    "nyc": "^18.0.0",
-    "source-map-support": "^0.5.21",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.3.3",
-    "typescript-eslint": "^8.56.0"
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.19.43",
+    "c8": "^12.0.0",
+    "eslint": "^10.13.0",
+    "mocha": "^12.0.3",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.0"
+  },
+  "c8": {
+    "all": true,
+    "src": [
+      "src"
+    ],
+    "exclude": [
+      "out/tests/**",
+      "src/tests/**",
+      "src/telemetry-sources/**",
+      "**/*.d.ts"
+    ],
+    "reporter": [
+      "text-summary",
+      "html"
+    ]
   }
 }

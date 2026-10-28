@@ -6,6 +6,7 @@ import { Property, ColumnType, ColumnInfo } from "../../lib/common-properties";
 import { cwd } from 'process';
 import * as path from 'path';
 import { TsParser } from '../../lib/ts-parser';
+import { byEventName } from './assert-helper';
 import { extractAndResolveDeclarations } from '../../lib/save-declarations';
 import type { SourceSpec } from '../..';
 
@@ -168,7 +169,7 @@ describe('Flat table - GDPR Comment', () => {
 describe('Flat table - TS definition', () => {
 	it('Parse table instructions', async () => {
 		const tsParser = new TsParser(path.resolve(sourceDir, 'ts-declaration'), [], true, false);
-		const declarations = await tsParser.parseFiles();
+		const declarations = byEventName(await tsParser.parseFiles());
 		const event = declarations['Event1'];
 		assert.strictEqual(event.$tableinfo?.name, 'monacoworkbench_inlinecompletion.endoflife');
 		assert.strictEqual(event.$tableinfo?.commonProperties, 'standard');

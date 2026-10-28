@@ -3,7 +3,7 @@
 import { Fragments } from "./fragments";
 import { Events, Include, Inline } from "./events";
 import { CommonProperties, Property } from "./common-properties";
-import type { Events as OutputEvents, CommonProperties as OutputCommonProperties , TableInfo as OutputTableInfo } from "../../vscode-telemetry-extractor";
+import type { ExtractedDeclarations } from "../../vscode-telemetry-extractor";
 
 export interface Declarations {
     fragments: Fragments;
@@ -12,11 +12,7 @@ export interface Declarations {
 }
 
 // We don't output Fragments as they don't really provide much context on their own
-export interface OutputtedDeclarations {
-    events: OutputEvents;
-    commonProperties: OutputCommonProperties;
-    tableInfos: { [key: string]: OutputTableInfo };
-}
+export type OutputtedDeclarations = ExtractedDeclarations;
 
 function resolveIncludes(target: Events | Fragments, fragments: Fragments) {
     const notResolved: Array<string> = [];
@@ -93,41 +89,19 @@ function resolveInlines(target: Events | Fragments, fragments: Fragments) {
 }
 
 export function resolveDeclarations(declarations: Declarations, verbose: boolean) {
-    let notResolved: Array<string> = [];
-    let usedFragments: Array<string> = [];
+    // Fragments are resolved in place, first inlines then includes, so later steps see expanded fragments.
+    const results = [
+        resolveInlines(declarations.fragments, declarations.fragments),
+        resolveInlines(declarations.events, declarations.fragments),
+        resolveIncludes(declarations.fragments, declarations.fragments),
+        resolveIncludes(declarations.events, declarations.fragments)
+    ];
     if (verbose) {
-        const fragmentsResolveInlines = resolveInlines(declarations.fragments, declarations.fragments);
-        const eventsResolveInlines = resolveInlines(declarations.events, declarations.fragments);
-        const fragmentsResolveIncludes = resolveIncludes(declarations.fragments, declarations.fragments);
-        const eventsResolveIncludes = resolveIncludes(declarations.events, declarations.fragments);
-        notResolved = notResolved.concat(fragmentsResolveIncludes.notResolved);
-        notResolved = notResolved.concat(fragmentsResolveInlines.notResolved);
-        notResolved = notResolved.concat(eventsResolveIncludes.notResolved);
-        notResolved = notResolved.concat(eventsResolveInlines.notResolved);
-        // Remove duplicates
-        notResolved = [...new Set(notResolved)];
-        usedFragments = usedFragments.concat(fragmentsResolveIncludes.usedFragments);
-        usedFragments = usedFragments.concat(fragmentsResolveInlines.usedFragments);
-        usedFragments = usedFragments.concat(eventsResolveIncludes.usedFragments);
-        usedFragments = usedFragments.concat(eventsResolveInlines.usedFragments);
-        // Remove duplicates
-        const usedFragmentsSet = new Set(usedFragments);
-        const allFragments = declarations.fragments.dataPoints.map(f => f.name);
-        // The Symmetric difference of a set
-        let unusedFragments = [...new Set(allFragments.filter(x => !usedFragmentsSet.has(x)))];
-        notResolved = notResolved.length > 0 ? notResolved : ['None'];
-        unusedFragments = unusedFragments.length > 0 ? unusedFragments : ['None'];
-        console.log(`Unresolved References: ${notResolved}`);
-        console.log(`Unused Fragments: ${unusedFragments}`);
-        declarations.fragments = fragmentsResolveInlines.target;
-        declarations.events = eventsResolveInlines.target;
-        declarations.fragments = fragmentsResolveIncludes.target;
-        declarations.events = eventsResolveIncludes.target;
-    } else {
-        declarations.fragments = resolveInlines(declarations.fragments, declarations.fragments).target;
-        declarations.events = resolveInlines(declarations.events, declarations.fragments).target;
-        declarations.fragments = resolveIncludes(declarations.fragments, declarations.fragments).target;
-        declarations.events = resolveIncludes(declarations.events, declarations.fragments).target;
+        const notResolved = [...new Set(results.flatMap(result => result.notResolved))];
+        const usedFragments = new Set(results.flatMap(result => result.usedFragments));
+        const unusedFragments = [...new Set(declarations.fragments.dataPoints.map(f => f.name).filter(name => !usedFragments.has(name)))];
+        console.log(`Unresolved References: ${notResolved.length > 0 ? notResolved : ['None']}`);
+        console.log(`Unused Fragments: ${unusedFragments.length > 0 ? unusedFragments : ['None']}`);
     }
     return { events: declarations.events, commonProperties: declarations.commonProperties, fragments: declarations.fragments };
 }

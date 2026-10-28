@@ -2,18 +2,14 @@
 // Licensed under the MIT license.
 import { Project, SyntaxKind, Symbol, Node, CallExpression, Type, ts, CompilerOptions } from "ts-morph";
 import * as fs from 'fs';
-import * as cp from 'child_process';
 import * as path from 'path';
 import { Worker } from 'worker_threads';
-import { rgPath } from "@vscode/ripgrep";
 import { makeExclusionsRelativeToSource } from "./operations";
-import { Event, Metadata } from './events';
-import { Property } from "./common-properties";
-import { parseRipgrepFilePaths } from './ripgrep';
-import { EventDefinition } from './event-definition';
+import { Metadata } from './events';
+import { findFilesWithRipgrep } from './ripgrep';
+import type { Dictionary } from './object-utils';
 
 const sourceFilesPerBatch = 64;
-type ParsedEvents = Record<string, Record<string, unknown>>;
 
 interface TelemetryCall {
     start: number;
@@ -23,6 +19,13 @@ interface TelemetryCall {
 interface TelemetryCalls {
     filePath: string;
     calls: TelemetryCall[];
+}
+
+/** The classification resolved from a single `publicLog2` or `publicLogError2` call. */
+export interface TsEventDeclaration {
+    name: string;
+    location: string;
+    properties: Dictionary;
 }
 
 export type ParserWorkerRequest = {
@@ -36,8 +39,6 @@ export type ParserWorkerRequest = {
     compilerOptions: CompilerOptions;
     applyEndpoints: boolean;
     lowerCaseEvents: boolean;
-    events: ParsedEvents;
-    definitions: [string, EventDefinition[]][];
 };
 
 export type ParserWorkerResult = {
@@ -46,8 +47,7 @@ export type ParserWorkerResult = {
     sharedSourceFiles: string[];
 } | {
     kind: 'parsed';
-    events: ParsedEvents;
-    definitions: [string, EventDefinition[]][];
+    declarations: TsEventDeclaration[];
 };
 
 export function runParserWorker(request: ParserWorkerRequest): Promise<ParserWorkerResult> {
@@ -77,24 +77,12 @@ export function runParserWorker(request: ParserWorkerRequest): Promise<ParserWor
 }
 
 function isMeasurement(type: Type) {
-    if (type.isNumber()) {
+    // Optional data is sent like required data, and strict null checks must not change the result
+    const sentType = type.getNonNullableType();
+    if (sentType.isNumber() || sentType.isBoolean()) {
         return true;
     }
-    if (type.isBoolean()) {
-        return true;
-    }
-
-    if (type.isEnum()) {
-        return getEnumType(type) === 'number';
-    }
-
-    if (type.isUnion()) {
-        const unionTypes = type.getUnionTypes();
-        return unionTypes.length === 2 &&
-            (unionTypes.some(t => t.isNumber()) || unionTypes.some(t => t.isBoolean())) &&
-            unionTypes.some(t => t.isUndefined());
-    }
-    return false;
+    return sentType.isEnum() && getEnumType(sentType) === 'number';
 }
 
 function getEnumType(type: Type): 'number' | 'string' | 'mixed' | null {
@@ -159,8 +147,7 @@ class NodeVisitor {
     private inline: boolean = false;
     private original_prop_name: string;
     private applyEndpoints: boolean;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public properties: Array<any> = [];
+    public properties: Dictionary[] = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private resolved_property: any = Object.create(null);
     constructor(callexpress_node: Node, prop_name: string, applyEndpoints: boolean) {
@@ -198,7 +185,9 @@ class NodeVisitor {
             return;
         }
         const nodeName = currentNode.getEscapedName();
-        if (nodeName !== 'column') {
+        // `column` holds flat table metadata for a property, unless it is itself a classified property
+        const isColumnMetadata = nodeName === 'column' && previousNode !== undefined && !type.getProperty('classification');
+        if (!isColumnMetadata) {
             const properties = type.getProperties();
             properties.forEach((prop) => {
                 this.visitNode(prop, currentNode);
@@ -245,10 +234,7 @@ class NodeVisitor {
         }
     }
 
-    public resolveProperties(currentNode: Symbol): Array<Property | Metadata> {
-        // @lramos15 Actually this.properties is of type any[] and the property data pushing into
-        // the array is not an instance of Property.
-
+    public resolveProperties(currentNode: Symbol): Dictionary[] {
         // It could be a complex node with nested types or a simple node with a string literal
         // representing some kind of metadata, so we try both visitors.
         this.visitMetadataNode(currentNode);
@@ -257,66 +243,34 @@ class NodeVisitor {
     }
 }
 
-export class TsParser {
-    private sourceDir: string;
-    private excludedDirs: string[];
-    private applyEndpoints: boolean;
-    private lowerCaseEvents: boolean;
-    private project: Project;
-    private sourceFiles: string[] = [];
-    private eventDefinitions: Map<string, EventDefinition[]>;
-    constructor(sourceDir: string, excludedDirs: string[], applyEndpoints: boolean, lowerCaseEvents: boolean) {
-        this.sourceDir = sourceDir;
-        this.excludedDirs = excludedDirs;
-        this.applyEndpoints = applyEndpoints;
-        this.lowerCaseEvents = lowerCaseEvents;
-        this.eventDefinitions = new Map();
-        // We search for a TS config as that allows the language service to handle weird imports
-        if (fs.existsSync(path.join(this.sourceDir, 'src/tsconfig.json'))) {
-            this.project = new Project({
-                tsConfigFilePath: path.join(this.sourceDir, 'src/tsconfig.json'),
-                skipAddingFilesFromTsConfig: true
-            });
-        } else if (fs.existsSync(path.join(this.sourceDir, 'tsconfig.json'))) {
-            this.project = new Project({
-                tsConfigFilePath: path.join(this.sourceDir, 'tsconfig.json'),
-                skipAddingFilesFromTsConfig: true
-            });
-        } else {
-            this.project = new Project({});
-        }
-        const fileGlobs: string[] = [];
-        fileGlobs.push(`**/*.ts`);
-        // Excluded added lasts because order determines what takes effect
-        this.excludedDirs = makeExclusionsRelativeToSource(this.sourceDir, this.excludedDirs);
-        this.excludedDirs.forEach((dir) => {
-            fileGlobs.push(`!${dir}/**`);
-        });
-        const rgGlobs = [];
-        for (const fg of fileGlobs) {
-            rgGlobs.push('--glob');
-            rgGlobs.push(fg);
-        }
-
-        const ripgrepArgs = ['--files-with-matches', ...rgGlobs, '--no-ignore', 'publicLog2|publicLogError2', this.sourceDir]
-        try {
-            const retrievedPaths = cp.execFileSync(rgPath, ripgrepArgs, { encoding: 'ascii' });
-            this.sourceFiles = parseRipgrepFilePaths(retrievedPaths);
-            // Empty catch because this fails when there are no typescript annotations which causes weird error messages
-        } catch {
-            // No-op
+export function createProject(sourceDir: string): Project {
+    // A TS config allows the language service to resolve the repository's imports
+    for (const tsConfigFilePath of [path.join(sourceDir, 'src/tsconfig.json'), path.join(sourceDir, 'tsconfig.json')]) {
+        if (fs.existsSync(tsConfigFilePath)) {
+            return new Project({ tsConfigFilePath, skipAddingFilesFromTsConfig: true });
         }
     }
+    return new Project({});
+}
 
-    public async parseFiles() {
+/** Extracts `publicLog2` and `publicLogError2` classifications from a source directory. */
+export class TsParser {
+    private readonly project: Project;
+    private readonly sourceFiles: string[];
+
+    constructor(sourceDir: string, excludedDirs: string[], private readonly applyEndpoints: boolean, private readonly lowerCaseEvents: boolean) {
+        this.project = createProject(sourceDir);
+        const exclusions = makeExclusionsRelativeToSource(sourceDir, excludedDirs).flatMap(dir => ['--glob', `!${dir}/**`]);
+        // Exclusions are added last because the last matching glob takes effect
+        this.sourceFiles = findFilesWithRipgrep(sourceDir, ['--glob', '**/*.ts', ...exclusions, '--no-ignore', '--regexp', 'publicLog2|publicLogError2']);
+    }
+
+    public async parseFiles(): Promise<TsEventDeclaration[]> {
         if (this.sourceFiles.length <= sourceFilesPerBatch) {
             for (const file of this.sourceFiles) {
                 this.project.addSourceFileAtPathIfExists(file);
             }
-            const parser = new TsProjectParser(this.project, this.applyEndpoints, this.lowerCaseEvents, [...this.eventDefinitions]);
-            const events = parser.parseFiles();
-            this.eventDefinitions = parser.getEventDefinitions();
-            return events;
+            return new TsProjectParser(this.project, this.applyEndpoints, this.lowerCaseEvents).parseFiles();
         }
 
         const compilerOptions = this.project.getCompilerOptions();
@@ -325,7 +279,7 @@ export class TsParser {
             throw new Error('Telemetry parser worker did not return call locations');
         }
 
-        let events: ParsedEvents = Object.create(null);
+        const declarations: TsEventDeclaration[] = [];
         for (let index = 0; index < prepared.calls.length; index += sourceFilesPerBatch) {
             const parsed = await runParserWorker({
                 kind: 'parse',
@@ -333,87 +287,45 @@ export class TsParser {
                 sharedSourceFiles: prepared.sharedSourceFiles,
                 compilerOptions,
                 applyEndpoints: this.applyEndpoints,
-                lowerCaseEvents: this.lowerCaseEvents,
-                events,
-                definitions: [...this.eventDefinitions]
+                lowerCaseEvents: this.lowerCaseEvents
             });
             if (parsed.kind !== 'parsed') {
                 throw new Error('Telemetry parser worker did not return declarations');
             }
-            events = Object.assign(Object.create(null), parsed.events);
-            this.eventDefinitions = new Map(parsed.definitions);
+            declarations.push(...parsed.declarations);
         }
-        return events;
-    }
-
-    public getEventDefinitions() {
-        return new Map([...this.eventDefinitions].map(([event, entries]) => [event, [...entries]]));
+        return declarations;
     }
 }
 
 export class TsProjectParser {
-    private eventDefinitions: Map<string, EventDefinition[]>;
-
     constructor(
         private readonly project: Project,
         private readonly applyEndpoints: boolean,
-        private readonly lowerCaseEvents: boolean,
-        definitions: [string, EventDefinition[]][] = []
-    ) {
-        this.eventDefinitions = new Map(definitions);
-    }
-
-    public getEventDefinitions() {
-        const definitions = new Map<string, EventDefinition[]>();
-        for (const [eventName, entries] of this.eventDefinitions.entries()) {
-            definitions.set(eventName, [...entries]);
-        }
-        return definitions;
-    }
-
-    private addEventDefinition(eventName: string, properties: Record<string, unknown>, location: string) {
-        const existing = this.eventDefinitions.get(eventName) ?? [];
-        existing.push({ properties, location });
-        this.eventDefinitions.set(eventName, existing);
-    }
-
-    private extractConflictProperties(eventProperties: Record<string, unknown>): Record<string, unknown> {
-        return { ...eventProperties };
-    }
+        private readonly lowerCaseEvents: boolean
+    ) { }
 
     private collectCalls(): TelemetryCalls[] {
-        const publicLogCalls: TelemetryCalls[] = [];
-        const publicLogErrorCalls: TelemetryCalls[] = [];
-        this.project.getSourceFiles().forEach((source) => {
+        const groups: TelemetryCalls[] = [];
+        for (const source of this.project.getSourceFiles()) {
             const calls: TelemetryCall[] = [];
-            const errorCalls: TelemetryCall[] = [];
             const sourceFile = source.compilerNode;
             const visit = (node: ts.Node): void => {
                 if (ts.isCallExpression(node) && node.arguments.length > 0) {
                     const expression = node.expression.getText(sourceFile);
-                    const isPublicLog = expression.includes('publicLog2');
-                    const isPublicLogError = expression.includes('publicLogError2');
-                    if ((isPublicLog || isPublicLogError) && node.arguments[0].getText(sourceFile) !== 'eventName') {
-                        const call = { start: node.getStart(sourceFile), width: node.getWidth(sourceFile) };
-                        if (isPublicLog) {
-                            calls.push(call);
-                        }
-                        if (isPublicLogError) {
-                            errorCalls.push(call);
-                        }
+                    const isTelemetryCall = expression.includes('publicLog2') || expression.includes('publicLogError2');
+                    if (isTelemetryCall && node.arguments[0].getText(sourceFile) !== 'eventName') {
+                        calls.push({ start: node.getStart(sourceFile), width: node.getWidth(sourceFile) });
                     }
                 }
                 ts.forEachChild(node, visit);
             };
             ts.forEachChild(sourceFile, visit);
             if (calls.length > 0) {
-                publicLogCalls.unshift({ filePath: source.getFilePath(), calls });
+                groups.push({ filePath: source.getFilePath(), calls });
             }
-            if (errorCalls.length > 0) {
-                publicLogErrorCalls.push({ filePath: source.getFilePath(), calls: errorCalls });
-            }
-        });
-        return publicLogCalls.concat(publicLogErrorCalls);
+        }
+        return groups.sort((a, b) => a.filePath < b.filePath ? -1 : a.filePath > b.filePath ? 1 : 0);
     }
 
     private getSharedSourceFiles(): string[] {
@@ -434,112 +346,72 @@ export class TsProjectParser {
         };
     }
 
-    private parseCalls(groups: TelemetryCalls[], parseCall: (call: CallExpression) => void): void {
-        for (const group of groups) {
+    public parseFiles(calls = this.collectCalls()): TsEventDeclaration[] {
+        const declarations: TsEventDeclaration[] = [];
+        for (const group of calls) {
             const source = this.project.getSourceFileOrThrow(group.filePath);
             for (const call of group.calls) {
                 const node = source.getDescendantAtStartWithWidth(call.start, call.width);
                 if (!node || !Node.isCallExpression(node)) {
                     throw new Error(`Could not locate telemetry call in ${group.filePath} at ${call.start}`);
                 }
-                parseCall(node);
+                const declaration = this.parseCall(node);
+                if (declaration) {
+                    declarations.push(declaration);
+                }
             }
         }
+        return declarations;
     }
 
-    public parseFiles(calls = this.collectCalls(), previousEvents?: ParsedEvents) {
-        const events = Object.create(null);
-        if (previousEvents) {
-            // Structured cloning does not preserve dictionary prototypes.
-            for (const [name, properties] of Object.entries(previousEvents)) {
-                events[name] = Object.assign(Object.create(null), properties);
+    private parseCall(call: CallExpression): TsEventDeclaration | undefined {
+        const [eventArgument] = call.getArguments();
+        if (!eventArgument || eventArgument.getText() === 'eventName') {
+            return undefined;
+        }
+        const typeArguments = call.getTypeArguments();
+        const isClassified = typeArguments.length === 2;
+        const eventType = eventArgument.getType();
+        if (!eventType.isStringLiteral()) {
+            // Unclassified calls with a dynamic name are usually wrappers that forward an event name
+            if (isClassified) {
+                console.error(`Unable to resolve event name ${call.getFullText().trim()}, skipping....`);
+            }
+            return undefined;
+        }
+        const declaredName = String(eventType.getLiteralValue());
+        const name = this.lowerCaseEvents ? declaredName.toLowerCase() : declaredName;
+        const location = `${call.getSourceFile().getFilePath()}:${call.getStartLineNumber()}`;
+        if (!isClassified) {
+            // An event sent without a classification only has common properties
+            return { name, location, properties: Object.create(null) };
+        }
+        return { name, location, properties: this.resolveClassification(call, typeArguments[0].getType(), typeArguments[1].getType()) };
+    }
+
+    private resolveClassification(call: CallExpression, dataType: Type, classificationType: Type): Dictionary {
+        const properties: Dictionary = Object.create(null);
+        // publicLog2 is in the form <Event, Classification>; the classification describes each property
+        for (const prop of classificationType.getProperties()) {
+            const propName = prop.getEscapedName().toLowerCase();
+            const resolvedProperties: Dictionary[] = new NodeVisitor(call, propName, this.applyEndpoints).resolveProperties(prop);
+            for (const resolved of resolvedProperties) {
+                const propInfo = resolved[propName];
+                if (propInfo !== null && typeof propInfo === 'object') {
+                    this.captureOriginalPropNameForColumnInformation(prop.getEscapedName(), propInfo);
+                }
+                Object.assign(properties, resolved);
             }
         }
-        const parseCall = (pl: CallExpression): void => {
-            try {
-                const typeArgs = pl.getTypeArguments();
-                if (typeArgs.length != 2) {
-                    throw new Error(`Missing generic arguments on public log call ${pl}`);
-                }
-                if (pl.getArguments()[0].getText() === "eventName") {
-                    return;
-                }
-                // Create an event from the name of the first argument passed in
-                let event_name = pl.getArguments()[0].getType().isStringLiteral() ? pl.getArguments()[0].getType().getText() : '';
-                // If we can't resolve the event_name there is no use continuing
-                if (event_name === '') {
-                    console.error(`Unable to resolve event name ${pl.getFullText().trim()}, skipping....`);
-                    return;
-                } else {
-                    event_name = event_name.substring(1, event_name.length - 1);
-                }
-                event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
-                // Ensure there is at least an object available to assign props to
-                if (events[event_name] === undefined) {
-                    events[event_name] = Object.create(null);
-                }
-                const created_event = new Event(event_name);
-                // We want the second one because public log is in the form <Event, Classification> and we care about the classification
-                const type_properties = typeArgs[1].getType().getProperties();
-                type_properties.forEach((prop) => {
-                    const propName = prop.getEscapedName().toLowerCase();
-                    const node_visitor = new NodeVisitor(pl, propName, this.applyEndpoints);
-                    const resolved_properties = node_visitor.resolveProperties(prop);
-                    for (const rp of resolved_properties) {
-                        if (!(rp instanceof Metadata)) {
-                            // This cast is necessary since rp is not of type Property although
-                            // the resolveProperties claims it to be.
-                            const propInfo = (rp as unknown as { [key: string]: object })[propName];
-                            if (propInfo !== undefined) {
-                                this.captureOriginalPropNameForColumnInformation(prop.getEscapedName(), propInfo);
-                            }
-                        }
-                    }
-                    created_event.properties = created_event.properties.concat(resolved_properties);
-                });
-                created_event.properties.forEach((prop) => {
-                    Object.assign(events[event_name], prop);
-                });
-                this.addEventDefinition(event_name, this.extractConflictProperties(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
-                const eventProperties = typeArgs[0].getType().getProperties();
-                // Find all eventProperties that have a number or boolean type
-                eventProperties.forEach((prop) => {
-                    const propName = prop.getEscapedName().toLowerCase();
-                    const valueDeclaration = prop.getValueDeclaration();
-                    if (valueDeclaration === undefined) {
-                        return;
-                    }
-                    const propType = prop.getTypeAtLocation(valueDeclaration);
-                    if (isMeasurement(propType)) {
-                        const eventToUpdate = events[event_name][propName];
-                        if (!eventToUpdate) {
-                            return;
-                        }
-                        eventToUpdate.isMeasurement = true;
-                    }
-                });
-
-            } catch {
-                if (pl.getArguments()[0].getText() === "eventName") {
-                    return;
-                }
-                // If the publicLog call isn't generic that means we're just sending an event name with no classifications
-                // that are unique to that event (it just has common properties)
-                let event_name = pl.getArguments()[0].getType().isStringLiteral() ? pl.getArguments()[0].getType().getText() : '';
-                // If we can't resolve the event_name this is most likely because it is not a public log call and therefore we skip it
-                if (event_name === '') {
-                    return;
-                } else {
-                    event_name = event_name.substring(1, event_name.length - 1);
-                }
-                event_name = this.lowerCaseEvents ? event_name.toLowerCase() : event_name;
-                events[event_name] = {};
-                this.addEventDefinition(event_name, this.extractConflictProperties(events[event_name]), `${pl.getSourceFile().getFilePath()}:${pl.getStartLineNumber()}`);
+        // Numeric and boolean event data is sent as a measurement
+        for (const prop of dataType.getProperties()) {
+            const valueDeclaration = prop.getValueDeclaration();
+            const property = properties[prop.getEscapedName().toLowerCase()];
+            if (valueDeclaration && property !== null && typeof property === 'object' && isMeasurement(prop.getTypeAtLocation(valueDeclaration))) {
+                (property as Dictionary).isMeasurement = true;
             }
-        };
-
-        this.parseCalls(calls, parseCall);
-        return events;
+        }
+        return properties;
     }
 
     private captureOriginalPropNameForColumnInformation(propName: string, property: { type?: string; column?: { name?: string; type: string } }) {

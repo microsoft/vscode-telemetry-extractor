@@ -95,6 +95,29 @@ Some defaults:
 2. `excludedDirs` defaults to an empty array
 3. If the working directory provided is relative it must be relative to the current working directory
 
+The extraction fails, rather than producing a partial inventory, if the config file cannot be read, a source directory does not exist,
+or an annotation cannot be parsed. `excludedDirs` apply to both `__GDPR__` comments and `publicLog2` calls.
+
+## Duplicate event declarations
+An event may be declared more than once, for example by several `__GDPR__` comments, by `publicLog2` calls in different files,
+by a comment and a call, or by different source specs which share an `eventPrefix`. Every declaration of an event is resolved
+(including its fragments) and then merged into a single event:
+
+* Properties and fields declared by only some of the declarations are combined.
+* A field which more than one declaration sets must have the same value in each of them. Otherwise, the result would depend on the
+  order in which files are found, so the extraction fails and lists each conflicting field with its values and locations:
+
+```
+Duplicate telemetry event declaration 'monacoworkbench/myevent' has conflicting details at:
+ - /src/vs/a.ts:10 (GDPR)
+ - /src/vs/b.ts:42 (TS)
+   Conflicting field 'outcome > comment':
+     "The success state or failure reason." at /src/vs/a.ts:10 (GDPR)
+     "The success state." at /src/vs/b.ts:42 (TS)
+```
+
+To resolve a conflict, make the declarations agree, or keep a single declaration of the event.
+
 ## Memory use in large TypeScript scans
 
 TypeScript annotations require resolving imported types, not just reading the files
