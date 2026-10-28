@@ -11,7 +11,7 @@ import { TsParser } from './ts-parser';
 import { patchDebugEvents } from './debug-patch';
 import { ParserOptions, SourceSpec } from './source-spec';
 import { logMessage } from './logger';
-import { EventDeclaration, formatConflicts, mergeCommonPropertyDeclarations, mergeEventDeclarations, validateDeclarations } from './event-declarations';
+import { EventDeclaration, formatConflicts, mergeCommonPropertyDeclarations, mergeEventDeclarations, validateCommonPropertyDeclarations, validateDeclarations } from './event-declarations';
 import { deepSortKeys } from './object-utils';
 
 export async function writeToFile(outputDir: string, contents: object, fileName: string, emitProgressMessage: boolean) {
@@ -103,6 +103,10 @@ function findOverloadedProperties(declarations: OutputtedDeclarations): string[]
  * Rejects if an annotation cannot be parsed or resolved, if duplicate declarations disagree, or if a source directory is missing.
  */
 export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpec>): Promise<OutputtedDeclarations> {
+    // An empty inventory would retire every event in the catalog.
+    if (sourceSpecs.length === 0) {
+        throw new Error('No source specs to extract');
+    }
     // A missing checkout must not look like a repository without telemetry.
     const missingDirs = sourceSpecs.flatMap(spec => spec.sourceDirs).filter(dir => !fs.existsSync(dir));
     if (missingDirs.length > 0) {
@@ -125,6 +129,7 @@ export async function extractAndResolveDeclarations(sourceSpecs: Array<SourceSpe
 
     const errors = [
         ...validateDeclarations(collected.events),
+        ...validateCommonPropertyDeclarations(collected.commonProperties),
         ...formatConflicts(events.conflicts),
         ...formatConflicts(common.conflicts, 'common property'),
         ...findOverloadedProperties(output)

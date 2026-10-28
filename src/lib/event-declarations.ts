@@ -78,6 +78,7 @@ export function mergeEventDeclarations(declarations: readonly EventDeclaration[]
 
         const columns = extractColumns(event);
         removeFalseMeasurements(event);
+        sortWildcards(event);
         events[eventName] = event;
         if (header) {
             const tableInfo = { ...(header as TableHeader), columns };
@@ -129,13 +130,29 @@ export function validateDeclarations(declarations: readonly EventDeclaration[]):
             if (propertyName === 'value') {
                 errors.add(`Property name 'value' on event '${name}' at ${where} is reserved and cannot be used due to conflicts with the SDK. Please rename the property.`);
             }
-            const missing = ['classification', 'purpose'].filter(field => typeof property[field] !== 'string' || property[field] === '');
+            const missing = missingClassificationFields(property);
             if (missing.length > 0) {
                 errors.add(`Property '${propertyName}' on event '${name}' at ${where} is missing ${missing.join(' and ')}.`);
             }
         }
     }
     return [...errors];
+}
+
+/** Finds common properties without a classification or purpose. Each declaration's `event` is the common property itself. */
+export function validateCommonPropertyDeclarations(declarations: readonly EventDeclaration[]): string[] {
+    const errors = new Set<string>();
+    for (const { name, event, location, source } of declarations) {
+        const missing = missingClassificationFields(event);
+        if (missing.length > 0) {
+            errors.add(`Common property '${name}' at ${formatLocation({ location, source })} is missing ${missing.join(' and ')}.`);
+        }
+    }
+    return [...errors];
+}
+
+function missingClassificationFields(property: Dictionary) {
+    return ['classification', 'purpose'].filter(field => typeof property[field] !== 'string' || property[field] === '');
 }
 
 export function formatConflicts(conflicts: readonly DeclarationConflict[], kind = 'event'): string[] {
@@ -235,10 +252,23 @@ function removeFalseMeasurements(event: Dictionary) {
     }
 }
 
-/** Removes column metadata from the merged properties and returns it as table columns. */
+/** Arrays keep the order declarations were found in, so wildcard entries are ordered by prefix. */
+function sortWildcards(event: Dictionary) {
+    const entries = event[keywords.wildcard];
+    if (Array.isArray(entries)) {
+        entries.sort((a, b) => compareStrings(wildcardPrefix(a) ?? '', wildcardPrefix(b) ?? ''));
+    }
+}
+
+function compareStrings(a: string, b: string) {
+    return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/** Removes column metadata from the merged properties and returns it as table columns, ordered by property. */
 function extractColumns(event: Dictionary): TableInfo['columns'] {
     const columns: TableInfo['columns'] = [];
-    for (const [propertyName, property] of Object.entries(event)) {
+    for (const propertyName of Object.keys(event).sort(compareStrings)) {
+        const property = event[propertyName];
         if (!isDictionary(property) || !isDictionary(property.column)) {
             continue;
         }

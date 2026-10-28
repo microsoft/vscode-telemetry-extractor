@@ -63,6 +63,10 @@ describe('Duplicate event declarations', function () {
         assert.strictEqual(JSON.stringify(relative), JSON.stringify(absolute));
     });
 
+    it('rejects extraction without any source specs', async () => {
+        await assert.rejects(extractAndResolveDeclarations([]), /No source specs to extract/);
+    });
+
     it('rejects a source directory which does not exist', async () => {
         const missing = path.join(resources, 'missing');
         const { errors, result } = await captureErrors(() => extractAndResolveDeclarations([spec([path.join(resources, 'compatible'), missing])]));

@@ -102,6 +102,28 @@ describe('mergeEventDeclarations', () => {
         assert.deepStrictEqual(conflicting.conflicts[0].declarations.map(d => d.value), ['SystemMetaData', 'CustomerContent']);
     });
 
+    it('orders wildcard entries by prefix, whatever the declaration order', () => {
+        const wildcard = (prefix: string) => ({ '${prefix}': prefix, '${classification}': { classification: 'SystemMetaData', purpose: 'FeatureInsight' } });
+        const declarations = [
+            declaration('a.ts:1', { '${wildcard}': [wildcard('c.'), wildcard('b.')] }),
+            declaration('b.ts:1', { '${wildcard}': [wildcard('a.')] })
+        ];
+        for (const order of [declarations, [...declarations].reverse()]) {
+            assert.deepStrictEqual(plain(mergeEventDeclarations(order).events.event['${wildcard}']), [wildcard('a.'), wildcard('b.'), wildcard('c.')]);
+        }
+    });
+
+    it('orders table columns by property, whatever the declaration order', () => {
+        const tableInfo = { name: 'table', commonProperties: 'standard' as const, backfill: false };
+        const declarations = [
+            declaration('a.ts:1', { second: prop({ column: { name: 'Second', type: 'string' } }) }, { tableInfo }),
+            declaration('b.ts:1', { first: prop({ column: { name: 'First', type: 'string' } }) })
+        ];
+        for (const order of [declarations, [...declarations].reverse()]) {
+            assert.deepStrictEqual(plain(mergeEventDeclarations(order).tableInfos.table.columns).map((column: { name: string }) => column.name), ['First', 'Second']);
+        }
+    });
+
     it('builds table columns from every declaration and removes them from the properties', () => {
         const tableInfo = { name: 'table', commonProperties: 'standard' as const, backfill: false };
         const { events, tableInfos, conflicts } = mergeEventDeclarations([

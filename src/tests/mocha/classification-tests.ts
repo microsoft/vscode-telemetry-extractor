@@ -94,6 +94,19 @@ describe('Classification resolution', function () {
         assert.deepStrictEqual(measured.sort(), ['computed', 'explicit', 'implicit', 'single']);
     });
 
+    it('applies renamed imports only to direct calls, not to methods of the same name', async () => {
+        const { errors, result } = await extractFromSources({
+            'calls.ts': `
+                import { publicLog2 as log } from './publicLog';
+                type Classification = { prop: { classification: 'SystemMetaData'; purpose: 'FeatureInsight' } };
+                console.log('DiagnosticMessage2');
+                log<{ prop: string }, Classification>('AliasedEvent', { prop: '' });
+            `
+        });
+        assert.deepStrictEqual(errors, []);
+        assert.deepStrictEqual(Object.keys((await result).events), ['AliasedEvent']);
+    });
+
     it('finds calls by name, including renamed imports, element access and the RPC proxy', async () => {
         const { errors, result } = await extractFromSources({
             'calls.ts': `
@@ -134,6 +147,18 @@ describe('Validation', function () {
             `
         });
         assert.match(report, /The classification of property 'foo' of event 'UnresolvedPropertyEvent' at .*event\.ts:4 could not be resolved/);
+    });
+
+    it('rejects a classification type which is impossible (never)', async () => {
+        const report = await extractErrors({
+            'event.ts': `
+                import { publicLog2 } from './publicLog';
+                type First = { owner: 'first'; prop: { classification: 'SystemMetaData'; purpose: 'FeatureInsight' } };
+                type Second = { owner: 'second' };
+                publicLog2<{ prop: string }, First & Second>('RootNeverEvent', { prop: '' });
+            `
+        });
+        assert.match(report, /The classification type of event 'RootNeverEvent' at .*event\.ts:5 is impossible \(never\)/);
     });
 
     it('rejects a property declared differently by intersected classification types', async () => {
@@ -198,6 +223,13 @@ describe('Validation', function () {
         });
         assert.match(report, /Unresolved fragment reference '\$\{Missing\}' in event 'FragmentEvent' at .*comment\.ts:5/);
         assert.match(report, /Fragment 'Loop' includes itself \(Loop > Loop\) in event 'FragmentEvent'/);
+    });
+
+    it('rejects common properties without a classification or purpose', async () => {
+        const report = await extractErrors({
+            'common.ts': `// __GDPR__COMMON__ "common.id" : { "classification": "SystemMetaData" }`
+        });
+        assert.match(report, /Common property 'common\.id' at .*common\.ts:1 \(GDPR\) is missing purpose\./);
     });
 
     it('rejects common properties which are declared differently', async () => {

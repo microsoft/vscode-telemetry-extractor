@@ -45,4 +45,20 @@ describe('convertConfigToSourceSpecs', () => {
         fs.writeFileSync(config, JSON.stringify([{ eventPrefix: 'p/' }]));
         assert.throws(() => convertConfigToSourceSpecs(config), /must list at least one entry in sourceDirs/);
     });
+
+    it('rejects configs without any source specs, or with source specs which are not objects', () => {
+        for (const contents of ['{}', '[]']) {
+            fs.writeFileSync(config, contents);
+            assert.throws(() => convertConfigToSourceSpecs(config), /does not contain any source specs/, contents);
+        }
+        for (const contents of ['[null]', '[1]', '{ "core": "vscode" }']) {
+            fs.writeFileSync(config, contents);
+            assert.throws(() => convertConfigToSourceSpecs(config), /must be an object/, contents);
+        }
+    });
+
+    it('accepts source specs keyed by name', () => {
+        fs.writeFileSync(config, JSON.stringify({ core: { workingDir: directory, sourceDirs: ['a'] } }));
+        assert.deepStrictEqual(convertConfigToSourceSpecs(config).map(spec => spec.sourceDirs), [[path.join(directory, 'a')]]);
+    });
 });

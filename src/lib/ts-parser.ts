@@ -6,7 +6,7 @@ import * as path from 'path';
 import { Worker } from 'worker_threads';
 import { makeExclusionsRelativeToSource } from "./operations";
 import { findFilesWithRipgrep } from './ripgrep';
-import { ClassificationResolver, isMeasurement, isUnresolved } from './classification-resolver';
+import { ClassificationResolver, isImpossible, isMeasurement, isUnresolved } from './classification-resolver';
 import { Dictionary, isDictionary } from './object-utils';
 
 const sourceFilesPerBatch = 64;
@@ -90,9 +90,9 @@ export function createProject(sourceDir: string): Project {
     return new Project({});
 }
 
-/** The names a source file calls the telemetry functions by, including renamed imports. */
-function telemetryCallNames(sourceFile: ts.SourceFile): Set<string> {
-    const names = new Set(telemetryCallNamesInAnyFile);
+/** The local names of telemetry functions which a source file imports under another name. */
+function importedTelemetryAliases(sourceFile: ts.SourceFile): Set<string> {
+    const names = new Set<string>();
     for (const statement of sourceFile.statements) {
         const bindings = ts.isImportDeclaration(statement) ? statement.importClause?.namedBindings : undefined;
         if (bindings && ts.isNamedImports(bindings)) {
@@ -106,18 +106,21 @@ function telemetryCallNames(sourceFile: ts.SourceFile): Set<string> {
     return names;
 }
 
-/** The name of the called function or method, such as `publicLog2` for `this.telemetryService.publicLog2(...)`. */
-function calledName(expression: ts.Expression): string | undefined {
+/**
+ * Whether the callee is a telemetry function, such as `this.telemetryService.publicLog2`.
+ * Imported aliases only apply to direct calls; `console.log` is not `publicLog2` imported as `log`.
+ */
+function isTelemetryCallee(expression: ts.Expression, aliases: ReadonlySet<string>): boolean {
     if (ts.isIdentifier(expression)) {
-        return expression.text;
+        return telemetryCallNamesInAnyFile.includes(expression.text) || aliases.has(expression.text);
     }
     if (ts.isPropertyAccessExpression(expression)) {
-        return expression.name.text;
+        return telemetryCallNamesInAnyFile.includes(expression.name.text);
     }
     if (ts.isElementAccessExpression(expression) && ts.isStringLiteralLike(expression.argumentExpression)) {
-        return expression.argumentExpression.text;
+        return telemetryCallNamesInAnyFile.includes(expression.argumentExpression.text);
     }
-    return undefined;
+    return false;
 }
 
 /** Extracts `publicLog2` and `publicLogError2` classifications from a source directory. */
@@ -186,12 +189,11 @@ export class TsProjectParser {
         for (const source of this.project.getSourceFiles()) {
             const calls: TelemetryCall[] = [];
             const sourceFile = source.compilerNode;
-            const names = telemetryCallNames(sourceFile);
+            const aliases = importedTelemetryAliases(sourceFile);
             const visit = (node: ts.Node): void => {
                 if (ts.isCallExpression(node) && node.arguments.length > 0) {
-                    const name = calledName(node.expression);
                     // Calls which forward an `eventName` parameter are wrappers, not events
-                    if (name !== undefined && names.has(name) && node.arguments[0].getText(sourceFile) !== 'eventName') {
+                    if (isTelemetryCallee(node.expression, aliases) && node.arguments[0].getText(sourceFile) !== 'eventName') {
                         calls.push({ start: node.getStart(sourceFile), width: node.getWidth(sourceFile) });
                     }
                 }
@@ -266,6 +268,10 @@ export class TsProjectParser {
         for (const [kind, argument, type] of [['data', typeArguments[0], dataType], ['classification', typeArguments[1], classificationType]] as const) {
             if (isUnresolved(type)) {
                 this.errors.push(`The ${kind} type ${description} could not be resolved: ${argument.getText()}`);
+                return undefined;
+            }
+            if (isImpossible(type)) {
+                this.errors.push(`The ${kind} type ${description} is impossible (never): ${argument.getText()}. It is probably an intersection of types which declare a field differently, such as their owner.`);
                 return undefined;
             }
         }

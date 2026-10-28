@@ -20,6 +20,15 @@ function isObjectLike(type: Type) {
     return type.isObject() || type.isIntersection();
 }
 
+/**
+ * Whether the type is impossible. Intersected object types reduce to `never` when they declare a literal
+ * differently, such as two `owner`s or two property `comment`s; the intersection then has no properties.
+ */
+export function isImpossible(type: Type) {
+    return type.isNever() ||
+        (type.isIntersection() && type.getProperties().length === 0 && type.getIntersectionTypes().some(part => part.getProperties().length > 0));
+}
+
 /** Whether TypeScript could not resolve the type, for example because of a missing import. */
 export function isUnresolved(type: Type) {
     return type.isAny() || type.isUnknown();
@@ -88,7 +97,7 @@ export class ClassificationResolver {
     }
 
     private resolveProperty(name: string, type: Type, defaults: Dictionary = {}): [string, Dictionary][] {
-        if (type.isNever() || (type.isIntersection() && type.getProperties().length === 0)) {
+        if (isImpossible(type)) {
             this.errors.push(`The classification of property '${name}' ${this.description} is impossible (never). It is probably declared by several intersected classification types with different values.`);
             return [];
         }
